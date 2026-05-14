@@ -57,6 +57,13 @@ body {
     background-position: center;
 }
 
+.page-beats {
+    background-image: linear-gradient(rgba(7, 10, 7, 0.80), rgba(7, 10, 7, 0.80)), url('studio_bg.png');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+}
+
 /* Scanlines removed per user request */
 
 /* No scanline animation */
@@ -110,7 +117,119 @@ nav {
 .nav-links {
     display: flex;
     list-style: none;
-    gap: 2rem;
+    gap: 2.5rem;
+}
+
+/* ── NAVIGATION DROPDOWN ── */
+.nav-links li { position: relative; }
+.dropdown { display: inline-block; }
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: rgba(5, 10, 5, 0.98);
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    z-index: 1001;
+    border: 1px solid var(--text-muted);
+    top: 100%;
+    left: 0;
+}
+.dropdown-content a {
+    color: var(--text-muted);
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    font-family: 'Righteous', cursive;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+}
+.dropdown-content a:hover {
+    background-color: rgba(51, 255, 153, 0.1);
+    color: var(--text-main);
+}
+.dropdown-content.show { display: block; }
+.dropdown:hover .dropdown-content { display: block; }
+
+/* ── BEATS LIST LAYOUT ── */
+.beats-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+.beat-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 150px 100px;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(123, 225, 168, 0.1);
+    transition: background 0.2s;
+    gap: 1rem;
+}
+.beat-row:hover {
+    background: rgba(51, 255, 153, 0.03);
+}
+.beat-play-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+}
+.beat-play-btn:hover {
+    background: var(--accent);
+    color: var(--bg-dark);
+}
+.beat-info h3 {
+    font-family: 'Righteous', cursive;
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--text-main);
+}
+.beat-info p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+.beat-tags {
+    display: flex;
+    gap: 0.5rem;
+}
+.beat-tag {
+    font-size: 0.75rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 2px 6px;
+    text-transform: uppercase;
+    font-family: 'VT323', monospace;
+}
+.beat-bpm-key {
+    font-family: 'VT323', monospace;
+    color: var(--text-muted);
+    text-align: center;
+}
+.beat-price-btn {
+    text-align: right;
+}
+.beat-buy-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .beat-row {
+        grid-template-columns: 50px 1fr 80px;
+        gap: 0.5rem;
+    }
+    .beat-tags, .beat-bpm-key { display: none; }
 }
 
 .nav-links a {
@@ -373,26 +492,6 @@ h1 {
     z-index: 10;
 }
 
-/* Tape on the image */
-.kit-cover::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    margin-left: -40px;
-    width: 80px;
-    height: 30px;
-    background: rgba(220, 210, 190, 0.6);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    transform: rotate(-4deg);
-    z-index: 20;
-    background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px);
-}
-
-.kit-card:nth-child(even) .kit-cover::before {
-    transform: rotate(5deg);
-    left: 45%;
-}
 
 .kit-cover {
     width: 100%;
@@ -512,18 +611,6 @@ h1 {
     transform: scale(1.02);
 }
 
-/* Tape on the button */
-.kit-btn::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    right: -10px;
-    width: 30px;
-    height: 15px;
-    background: rgba(220, 210, 190, 0.4);
-    transform: rotate(15deg);
-    z-index: 20;
-}
 
 /* Services / Pricing Section */
 .services {
@@ -599,6 +686,84 @@ h1 {
     left: 0;
     color: var(--text-main);
     font-weight: bold;
+}
+
+/* ── TESTIMONIALS ─────────────────────────────────────────── */
+.testimonials {
+    padding: 4rem 0;
+    background: transparent;
+}
+.testimonials h2 {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 0.6rem;
+}
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 2.5rem;
+}
+.testimonial-card {
+    background: rgba(10, 15, 10, 0.85);
+    border: 1px solid var(--text-muted);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+.testimonial-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--text-main);
+    box-shadow: 0 0 20px rgba(51,255,153,0.12);
+}
+.testimonial-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 1rem;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 12px rgba(255,194,92,0.35);
+}
+.testimonial-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: sepia(0.15) contrast(1.05);
+}
+.testimonial-stars {
+    color: var(--accent);
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 6px rgba(255,194,92,0.5);
+}
+.testimonial-quote {
+    font-family: 'VT323', monospace;
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 1.2rem;
+    font-style: italic;
+}
+.testimonial-name {
+    font-family: 'Righteous', cursive;
+    color: var(--text-main);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.testimonial-loc {
+    font-family: 'VT323', monospace;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 0.2rem;
+    opacity: 0.7;
+}
+@media (max-width: 768px) {
+    .testimonials-grid { grid-template-columns: 1fr; gap: 1.2rem; }
+    .testimonials { padding: 2.5rem 0; }
 }
 
 /* Contact Section */
@@ -683,7 +848,7 @@ footer {
     nav {
         flex-direction: row;
         flex-wrap: nowrap;
-        padding: 1rem 1.2rem;
+        padding: 0.9rem 1rem;
         position: relative;
     }
     .nav-hamburger { display: flex; }
@@ -709,76 +874,89 @@ footer {
     }
 
     /* HERO */
-    h1 { font-size: 2.2rem; letter-spacing: 1px; }
-    .hero-content { padding: 1.5rem 1rem 2rem; }
-    .hero-content p { font-size: 1.2rem; margin-bottom: 1.5rem; }
-    .hero-logo { max-width: 180px; margin-bottom: 1rem; }
+    h1 { font-size: 2rem; letter-spacing: 1px; }
+    .hero-content { padding: 1.2rem 1rem 2rem; }
+    .hero-content p { font-size: 1.1rem; margin-bottom: 1.5rem; }
+    .hero-logo { max-width: 160px; margin-bottom: 0.8rem; }
     .hero-buttons { display: flex; flex-direction: column; gap: 0.8rem; align-items: center; width: 100%; }
     .hero-buttons .cta-btn { width: 85%; text-align: center; }
 
     /* SECTIONS */
-    .kits, .services, .contact, .about { padding: 2.5rem 0; }
-    h2 { font-size: 1.6rem; }
-    .section-desc { font-size: 1.1rem; padding: 0 0.5rem; }
+    .kits, .services, .contact, .about { padding: 2rem 0; }
+    h2 { font-size: 1.5rem; }
+    .section-desc { font-size: 1.05rem; padding: 0 0.5rem; }
 
-    /* SHOP FILTER TABS */
-    .kits-filter { gap: 0.6rem; margin-bottom: 2rem; }
+    /* CONTAINER */
+    .container { padding: 0 0.8rem; }
+
+    /* SHOP FILTER — full-bleed scrollable strip, left-aligned so it never clips */
+    .kits-filter {
+        gap: 0;
+        margin-bottom: 1.5rem;
+        /* break out of container padding so the strip is truly full-width */
+        margin-left: -0.8rem;
+        margin-right: -0.8rem;
+    }
     .filter-group {
         width: 100%;
-        justify-content: center;
-        gap: 0.2rem;
-        overflow-x: auto;
+        display: flex;
         flex-wrap: nowrap;
+        justify-content: flex-start;   /* left-aligned: no clipping on right */
+        align-items: center;
+        gap: 0;
+        overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 0.3rem;
+        padding: 0.3rem 0.8rem 0.5rem; /* left padding = container offset so text aligns */
         scrollbar-width: none;
     }
     .filter-group::-webkit-scrollbar { display: none; }
-    .filter-label { flex-shrink: 0; }
+    .filter-label {
+        flex-shrink: 0;
+        margin-right: 0.6rem;
+        font-size: 0.9rem;
+    }
     .filter-tab {
         flex-shrink: 0;
-        font-size: 1.1rem;
-        padding: 0.45rem 0.8rem;
-        min-height: 36px;
+        font-size: 1.05rem;
+        padding: 0.4rem 0.9rem;
+        min-height: 38px;
     }
 
-    /* SHOP GRID — single column */
+    /* SHOP GRID */
     .kits-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        padding: 0 0.5rem;
+        gap: 1.2rem;
+        padding: 0;
     }
     .kit-card { max-width: 100%; }
-    .kit-info h3 { font-size: 1.1rem; }
-    .kit-btn { font-size: 1rem; padding: 0.6rem 0.3rem; }
+    .kit-info h3 { font-size: 1rem; }
+    .kit-btn { font-size: 0.95rem; padding: 0.55rem 0.3rem; letter-spacing: 0; }
+    .kit-price { font-size: 1.1rem; }
 
     /* PRICING */
     .pricing-grid {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
-        padding: 0 0.5rem;
+        gap: 1.2rem;
+        padding: 0;
     }
-    .pricing-card { padding: 2rem 1.2rem; }
-    .pricing-card .price { font-size: 2.3rem; }
+    .pricing-card { padding: 1.8rem 1rem; }
+    .pricing-card .price { font-size: 2.2rem; }
 
     /* CONTACT */
-    .contact h2 { font-size: 1.5rem; }
+    .contact h2 { font-size: 1.4rem; }
     .contact p { font-size: 1rem; padding: 0 0.5rem; }
 
     /* FOOTER */
-    footer { padding: 1.5rem 1rem; font-size: 1rem; }
-
-    /* CONTAINER */
-    .container { padding: 0 1rem; }
+    footer { padding: 1.2rem 1rem; font-size: 0.95rem; }
 
     /* BUTTONS */
-    .cta-btn { font-size: 1rem; padding: 0.7rem 1.5rem; }
+    .cta-btn { font-size: 1rem; padding: 0.65rem 1.3rem; }
 }
 
 /* ─── VERY SMALL PHONES (≤400px) ─────────────────────────── */
 @media (max-width: 400px) {
-    h1 { font-size: 1.8rem; }
-    .kits-grid { grid-template-columns: 1fr; gap: 2rem; }
-    .hero-logo { max-width: 140px; }
+    h1 { font-size: 1.7rem; }
+    .hero-logo { max-width: 130px; }
+    .kits-grid { grid-template-columns: 1fr; gap: 1.8rem; }
+    .filter-tab { font-size: 0.95rem; padding: 0.4rem 0.7rem; }
 }
-

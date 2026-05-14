@@ -124,6 +124,22 @@ SCHEMA = [
       `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
+    ("visitor_log", """
+    CREATE TABLE IF NOT EXISTS `visitor_log` (
+      `id`           INT AUTO_INCREMENT PRIMARY KEY,
+      `ip`           VARCHAR(45)  NOT NULL,
+      `country`      VARCHAR(100) NOT NULL DEFAULT '',
+      `country_code` VARCHAR(5)   NOT NULL DEFAULT '',
+      `city`         VARCHAR(100) NOT NULL DEFAULT '',
+      `page`         VARCHAR(255) NOT NULL DEFAULT '',
+      `action`       VARCHAR(255) NOT NULL DEFAULT '',
+      `user_agent`   VARCHAR(500) NOT NULL DEFAULT '',
+      `referrer`     VARCHAR(500) NOT NULL DEFAULT '',
+      `created_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX `idx_ip` (`ip`),
+      INDEX `idx_created` (`created_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
 ]
 
 # ── Create tables ─────────────────────────────────────────────────────────────

@@ -29,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description    = trim($_POST['description'] ?? '') ?: null;
     $bpm            = trim($_POST['bpm'] ?? '') ?: null;
     $key            = trim($_POST['key'] ?? '') ?: null;
-    $is_active      = isset($_POST['is_active']) ? 1 : 0;
+    $price_premium   = $_POST['price_premium'] !== '' ? (float)$_POST['price_premium'] : null;
+    $price_exclusive = $_POST['price_exclusive'] !== '' ? (float)$_POST['price_exclusive'] : null;
+    $is_active       = isset($_POST['is_active']) ? 1 : 0;
 
     $new_cover = save_upload('cover_image', ALLOWED_IMAGES);
     $new_zip   = save_upload('zip_file', ALLOWED_FILES);
@@ -37,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cover = $new_cover ?? $product['cover_image'];
     $zip   = $new_zip   ?? $product['zip_file'];
 
-    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,is_active=? WHERE id=?')
-        ->execute([$title,$type,$genre,$price,$original_price,$author,$description,$bpm,$key,$cover,$zip,$is_active,$id]);
+    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,is_active=? WHERE id=?')
+        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$is_active,$id]);
 
     log_action($pdo, "Edited product: '{$title}'");
     flash("Product '{$title}' updated.");
@@ -135,6 +137,8 @@ $flash_msgs = get_flash();
                 </select>
             </div>
             <div class="form-group"><label>Price ($)</label><input type="number" step="0.01" name="price" value="<?= h($product['price']) ?>"></div>
+            <div class="form-group"><label>Premium Price (Stems) ($)</label><input type="number" step="0.01" name="price_premium" value="<?= h($product['price_premium'] ?? '') ?>" placeholder="Leave empty for 2x"></div>
+            <div class="form-group"><label>Exclusive Price ($)</label><input type="number" step="0.01" name="price_exclusive" value="<?= h($product['price_exclusive'] ?? '') ?>" placeholder="Leave empty for 10x"></div>
             <div class="form-group"><label>Original Price ($)</label><input type="number" step="0.01" name="original_price" value="<?= h($product['original_price'] ?? '') ?>"></div>
             <div class="form-group"><label>BPM</label><input type="text" name="bpm" value="<?= h($product['bpm'] ?? '') ?>"></div>
             <div class="form-group"><label>Key</label><input type="text" name="key" value="<?= h($product['key'] ?? '') ?>"></div>

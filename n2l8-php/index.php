@@ -5,6 +5,7 @@ require_once __DIR__ . '/includes/helpers.php';
 
 $pdo  = get_pdo();
 $site = get_site_content($pdo);
+log_visitor($pdo, 'page_view', '/');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,14 +20,20 @@ $site = get_site_content($pdo);
 <body class="page-home">
     <header class="hero">
         <nav>
-            <div class="logo-text">n2l8studio</div>
+            <a href="/index.php" class="logo-text" style="text-decoration:none;">n2l8studio</a>
             <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
             <ul class="nav-links" id="navLinks">
-                <li><a href="/shop.php"><?= h($site['nav_shop'] ?? 'Shop') ?></a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropbtn">Shop</a>
+                    <div class="dropdown-content">
+                        <a href="/shop.php">Loopkits & Drumkits</a>
+                        <a href="/beats.php">Beats</a>
+                    </div>
+                </li>
                 <li><a href="/pricing.php"><?= h($site['nav_pricing'] ?? 'Mixing & Mastering') ?></a></li>
-                <li><a href="/admin/login.php" class="nav-admin-btn">Admin Vault</a></li>
+                <li><a href="/admin/login.php" class="nav-admin-btn">Login</a></li>
             </ul>
         </nav>
         <div class="hero-content">
@@ -50,6 +57,7 @@ $site = get_site_content($pdo);
         </div>
     </section>
 
+
     <footer>
         <p><?= h($site['footer_text'] ?? '© 2026 n2l8studio. All rights reserved.') ?></p>
     </footer>
@@ -58,8 +66,29 @@ $site = get_site_content($pdo);
     const nl  = document.getElementById('navLinks');
     if (ham) {
         ham.addEventListener('click', () => { ham.classList.toggle('open'); nl.classList.toggle('open'); });
-        nl.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { ham.classList.remove('open'); nl.classList.remove('open'); }));
     }
+
+    // Dropdown toggle for mobile
+    const dropbtn = document.querySelector('.dropbtn');
+    if (dropbtn) {
+        dropbtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('.dropdown-content').classList.toggle('show');
+        });
+    }
+    // Close dropdown when clicking outside
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn')) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < dropdowns.length; i++) {
+                const openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+    nl.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { ham.classList.remove('open'); nl.classList.remove('open'); }));
     </script>
 </body>
 </html>

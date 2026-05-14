@@ -20,6 +20,24 @@ $flash_msgs = get_flash();
 
 // Which tab to show (from URL hash redirect trick)
 $tab = $_GET['tab'] ?? 'dashboard';
+
+// Visitor analytics
+try {
+    $vs_total   = (int)$pdo->query('SELECT COUNT(*) FROM visitor_log')->fetchColumn();
+    $vs_unique  = (int)$pdo->query('SELECT COUNT(DISTINCT ip) FROM visitor_log')->fetchColumn();
+    $vs_today   = (int)$pdo->query("SELECT COUNT(DISTINCT ip) FROM visitor_log WHERE DATE(created_at)=CURDATE()")->fetchColumn();
+    $vs_countries = $pdo->query('SELECT country, country_code, COUNT(*) as hits FROM visitor_log WHERE country != "" GROUP BY country,country_code ORDER BY hits DESC LIMIT 20')->fetchAll();
+    $vs_actions   = $pdo->query('SELECT action, COUNT(*) as hits FROM visitor_log GROUP BY action ORDER BY hits DESC LIMIT 20')->fetchAll();
+    $vs_visitors  = $pdo->query('SELECT ip, MAX(country) as country, MAX(country_code) as country_code, MAX(city) as city, COUNT(*) as hits, MIN(created_at) as first_at, MAX(created_at) as last_at FROM visitor_log GROUP BY ip ORDER BY last_at DESC LIMIT 200')->fetchAll();
+
+    // Popularity metrics
+    $vs_top_kits = $pdo->query("SELECT SUBSTRING_INDEX(action, ':', -1) as name, COUNT(*) as hits FROM visitor_log WHERE action LIKE 'modal_open:%' OR action LIKE 'click_buy_kit:%' GROUP BY name ORDER BY hits DESC LIMIT 10")->fetchAll();
+    $vs_top_beats = $pdo->query("SELECT SUBSTRING_INDEX(action, ':', -1) as name, COUNT(*) as hits FROM visitor_log WHERE action LIKE 'play_beat:%' OR action LIKE 'play_track:%' OR action LIKE 'click_buy_beat:%' GROUP BY name ORDER BY hits DESC LIMIT 10")->fetchAll();
+    $vs_recent = $pdo->query("SELECT * FROM visitor_log ORDER BY created_at DESC LIMIT 50")->fetchAll();
+} catch (\Throwable $e) {
+    $vs_total = $vs_unique = $vs_today = 0;
+    $vs_countries = $vs_actions = $vs_visitors = $vs_top_kits = $vs_top_beats = $vs_recent = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -186,6 +204,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
             <button class="admin-tab-btn" id="tab-btn-orders">Orders</button>
             <button class="admin-tab-btn" id="tab-btn-content">Content Editor</button>
             <button class="admin-tab-btn" id="tab-btn-logs">Audit Log</button>
+            <button class="admin-tab-btn" id="tab-btn-stats">Analytics</button>
         </div>
     </div>
     <!-- TABS: mobile dropdown -->
@@ -197,6 +216,7 @@ $tab = $_GET['tab'] ?? 'dashboard';
             <button class="admin-tab-menu-item" data-tab="orders">Orders</button>
             <button class="admin-tab-menu-item" data-tab="content">Content Editor</button>
             <button class="admin-tab-menu-item" data-tab="logs">Audit Log</button>
+            <button class="admin-tab-menu-item" data-tab="stats">Analytics</button>
         </div>
     </div>
 
@@ -251,6 +271,8 @@ $tab = $_GET['tab'] ?? 'dashboard';
                         </select>
                     </div>
                     <div class="form-group"><label>Price ($) — 0 for Free</label><input type="number" step="0.01" min="0" name="price" value="0"></div>
+                    <div class="form-group"><label>Premium Price (Stems) ($)</label><input type="number" step="0.01" min="0" name="price_premium" placeholder="Leave empty for 2x"></div>
+                    <div class="form-group"><label>Exclusive Price ($)</label><input type="number" step="0.01" min="0" name="price_exclusive" placeholder="Leave empty for 10x"></div>
                     <div class="form-group"><label>Original Price ($) — for sale</label><input type="number" step="0.01" min="0" name="original_price" placeholder="49.99"></div>
                     <div class="form-group"><label>BPM</label><input type="text" name="bpm" placeholder="140"></div>
                     <div class="form-group"><label>Key</label><input type="text" name="key" placeholder="F Minor"></div>
@@ -389,11 +411,152 @@ $tab = $_GET['tab'] ?? 'dashboard';
         </div>
     </div>
 
+    <!-- ── ANALYTICS ── -->
+    <div id="tab-stats" class="admin-panel">
+
+        <!-- Overview cards -->
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="stat-card">
+                <div class="stat-num"><?= number_format($vs_total) ?></div>
+                <div class="stat-label">Total Page Views</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num"><?= number_format($vs_unique) ?></div>
+                <div class="stat-label">Unique Visitors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num"><?= number_format($vs_today) ?></div>
+                <div class="stat-label">Unique Today</div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+
+            <!-- Countries -->
+            <div class="form-card" style="margin-bottom:0;">
+                <div class="section-title" style="font-size:1.1rem;">Top Countries</div>
+                <?php if ($vs_countries): $max_c = max(array_column($vs_countries,'hits')); foreach($vs_countries as $c): ?>
+                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;">
+                    <span style="font-size:1.3rem;line-height:1;"><?= flag_emoji($c['country_code']) ?></span>
+                    <span style="color:var(--text-muted);font-family:'VT323',monospace;font-size:1rem;width:130px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($c['country']) ?></span>
+                    <div style="flex:1;height:6px;background:rgba(255,194,92,0.15);border-radius:2px;">
+                        <div style="width:<?= round(($c['hits']/$max_c)*100) ?>%;height:100%;background:var(--accent);border-radius:2px;"></div>
+                    </div>
+                    <span style="color:var(--accent);font-family:'Righteous',cursive;font-size:0.9rem;flex-shrink:0;"><?= $c['hits'] ?></span>
+                </div>
+                <?php endforeach; else: ?>
+                <p style="color:var(--text-muted);">No data yet.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-card" style="margin-bottom:0;">
+                <div class="section-title" style="font-size:1.1rem;">Top Actions</div>
+                <?php if ($vs_actions): $max_a = max(array_column($vs_actions,'hits')); foreach($vs_actions as $a): ?>
+                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;">
+                    <span style="color:var(--text-muted);font-family:'VT323',monospace;font-size:1rem;width:170px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($a['action']) ?></span>
+                    <div style="flex:1;height:6px;background:rgba(51,255,153,0.1);border-radius:2px;">
+                        <div style="width:<?= round(($a['hits']/$max_a)*100) ?>%;height:100%;background:var(--text-main);border-radius:2px;"></div>
+                    </div>
+                    <span style="color:var(--text-main);font-family:'Righteous',cursive;font-size:0.9rem;flex-shrink:0;"><?= $a['hits'] ?></span>
+                </div>
+                <?php endforeach; else: ?>
+                <p style="color:var(--text-muted);">No data yet.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;margin-top:1.5rem;">
+            <!-- Top Kits -->
+            <div class="form-card" style="margin-bottom:0; border-color:var(--accent);">
+                <div class="section-title" style="font-size:1.1rem; color:var(--accent);">🔥 Most Popular Kits</div>
+                <?php if ($vs_top_kits): $max_k = max(array_column($vs_top_kits,'hits')); foreach($vs_top_kits as $k): ?>
+                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;">
+                    <span style="color:var(--text-main);font-family:'VT323',monospace;font-size:1rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($k['name']) ?></span>
+                    <span style="color:var(--accent);font-family:'Righteous',cursive;font-size:0.95rem;"><?= $k['hits'] ?> views</span>
+                </div>
+                <?php endforeach; else: ?>
+                <p style="color:var(--text-muted);">No kit activity yet.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Top Beats -->
+            <div class="form-card" style="margin-bottom:0; border-color:var(--text-main);">
+                <div class="section-title" style="font-size:1.1rem; color:var(--text-main);">🎧 Most Played Beats</div>
+                <?php if ($vs_top_beats): $max_b = max(array_column($vs_top_beats,'hits')); foreach($vs_top_beats as $b): ?>
+                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;">
+                    <span style="color:var(--accent);font-family:'VT323',monospace;font-size:1rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($b['name']) ?></span>
+                    <span style="color:var(--text-main);font-family:'Righteous',cursive;font-size:0.95rem;"><?= $b['hits'] ?> plays</span>
+                </div>
+                <?php endforeach; else: ?>
+                <p style="color:var(--text-muted);">No beat activity yet.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+
+            </div>
+        </div>
+
+        <div class="section-title">Live Action Feed <span style="font-size:0.8rem;color:var(--text-muted);font-family:'VT323',monospace;">— Last 50 events</span></div>
+        <div class="form-card" style="max-height:400px;overflow-y:auto;padding:0.5rem;">
+            <ul class="log-list" style="font-size:0.9rem;">
+                <?php foreach ($vs_recent as $r): ?>
+                <li style="border-bottom:1px solid rgba(123,225,168,0.05);padding:4px 0;">
+                    <span class="log-ts" style="width:140px;"><?= substr($r['created_at'],11) ?></span>
+                    <span style="color:var(--accent);width:100px;display:inline-block;"><?= h($r['ip']) ?></span>
+                    <span style="color:var(--text-main);"><?= h($r['action']) ?></span>
+                    <span style="color:var(--text-muted);font-size:0.8rem;float:right;"><?= h($r['page']) ?></span>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+
+        <!-- Visitors table (click to drill down) -->
+        <div class="section-title">All Visitors <span style="font-size:0.8rem;color:var(--text-muted);font-family:'VT323',monospace;">— click a row to view their full timeline</span></div>
+        <div class="form-card" style="padding:0;overflow-x:auto;">
+            <table class="admin-table">
+                <thead><tr>
+                    <th>IP Address</th>
+                    <th>Location</th>
+                    <th style="text-align:center;">Actions</th>
+                    <th>First Visit</th>
+                    <th>Last Seen</th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($vs_visitors as $v): ?>
+                <tr style="cursor:pointer;" onclick="window.open('/admin/visitor.php?ip=<?= urlencode($v['ip']) ?>','_blank')">
+                    <td style="font-family:'Righteous',cursive;color:var(--accent);">
+                        <?= h($v['ip']) ?>
+                    </td>
+                    <td>
+                        <?php if ($v['country']): ?>
+                        <span style="font-size:1.1rem;"><?= flag_emoji($v['country_code']) ?></span>
+                        <span style="color:var(--text-muted);font-size:0.9rem;">
+                            <?= h($v['city'] ? $v['city'] . ', ' : '') ?><?= h($v['country']) ?>
+                        </span>
+                        <?php else: ?>
+                        <span style="color:var(--text-muted);">—</span>
+                        <?php endif; ?>
+                    </td>
+                    <td style="text-align:center;font-family:'Righteous',cursive;color:var(--text-main);"><?= $v['hits'] ?></td>
+                    <td style="color:var(--text-muted);font-size:0.85rem;"><?= h(substr($v['first_at'],0,16)) ?></td>
+                    <td style="color:var(--text-muted);font-size:0.85rem;"><?= h(substr($v['last_at'],0,16)) ?></td>
+                </tr>
+                <?php endforeach; ?>
+                <?php if (empty($vs_visitors)): ?>
+                <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No visitors logged yet. Visit the site to start tracking.</td></tr>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+    </div><!-- /tab-stats -->
+
 </div><!-- /container -->
 
 <script>
 const INITIAL_TAB = '<?= h($tab) ?>';
-const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', content:'Content Editor', logs:'Audit Log' };
+const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', content:'Content Editor', logs:'Audit Log', stats:'Analytics' };
 
 function moveSlider(btn) {
     const slider = document.getElementById('tabSlider');

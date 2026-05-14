@@ -2,12 +2,14 @@
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/config.php';
 
 $pdo  = get_pdo();
 $site = get_site_content($pdo);
 
-$stmt = $pdo->query('SELECT * FROM products WHERE is_active = 1 ORDER BY id DESC');
+$stmt = $pdo->query("SELECT * FROM products WHERE is_active = 1 AND type IN ('loopkit', 'drumkit') ORDER BY id DESC");
 $products = $stmt->fetchAll();
+log_visitor($pdo, 'page_view', '/shop.php');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,6 +20,15 @@ $products = $stmt->fetchAll();
     <meta name="description" content="Shop loopkits, drumkits and beats from n2l8studio.">
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
+    <?php
+    // Only load PayPal SDK when real credentials are configured
+    $pp_ready = defined('PAYPAL_CLIENT_ID')
+             && PAYPAL_CLIENT_ID !== ''
+             && strpos(PAYPAL_CLIENT_ID, 'REPLACE_WITH') === false;
+    if ($pp_ready):
+    ?>
+    <script src="https://www.paypal.com/sdk/js?client-id=<?= h(PAYPAL_CLIENT_ID) ?>&currency=USD&intent=capture" data-sdk-integration-source="button-factory"></script>
+    <?php endif; ?>
     <style>
         /* ── MODAL OVERLAY ── */
         .modal-overlay {
@@ -143,14 +154,20 @@ $products = $stmt->fetchAll();
 <body class="page-shop">
     <header class="hero" style="min-height:auto;padding-bottom:2rem;">
         <nav>
-            <div class="logo-text">n2l8studio</div>
+            <a href="/index.php" class="logo-text" style="text-decoration:none;">n2l8studio</a>
             <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
             <ul class="nav-links" id="navLinks">
-                <li><a href="/shop.php"><?= h($site['nav_shop'] ?? 'Shop') ?></a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropbtn">Shop</a>
+                    <div class="dropdown-content">
+                        <a href="/shop.php">Loopkits & Drumkits</a>
+                        <a href="/beats.php">Beats</a>
+                    </div>
+                </li>
                 <li><a href="/pricing.php"><?= h($site['nav_pricing'] ?? 'Mixing & Mastering') ?></a></li>
-                <li><a href="/admin/login.php" class="nav-admin-btn">Admin Vault</a></li>
+                <li><a href="/admin/login.php" class="nav-admin-btn">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -163,18 +180,9 @@ $products = $stmt->fetchAll();
             <div class="kits-filter">
                 <div class="filter-group">
                     <span class="filter-label">Type</span>
-                    <button class="filter-tab active" data-filter-type="type" data-value="all">All</button>
-                    <button class="filter-tab" data-filter-type="type" data-value="loopkit">Loop Kits</button>
-                    <button class="filter-tab" data-filter-type="type" data-value="drumkit">Drumkits</button>
-                    <button class="filter-tab" data-filter-type="type" data-value="beat">Beats</button>
-                </div>
-                <div class="filter-group">
-                    <span class="filter-label">Genre</span>
-                    <button class="filter-tab active" data-filter-type="genre" data-value="all">All</button>
-                    <button class="filter-tab" data-filter-type="genre" data-value="trap">Trap</button>
-                    <button class="filter-tab" data-filter-type="genre" data-value="melodic">Melodic</button>
-                    <button class="filter-tab" data-filter-type="genre" data-value="drill">Drill</button>
-                    <button class="filter-tab" data-filter-type="genre" data-value="rnb">R&B</button>
+                    <button class="filter-tab active" data-value="all">All</button>
+                    <button class="filter-tab" data-value="loopkit">Loop Kits</button>
+                    <button class="filter-tab" data-value="drumkit">Drumkits</button>
                 </div>
             </div>
 
@@ -186,9 +194,6 @@ $products = $stmt->fetchAll();
                     <div class="kit-cover <?= $p['cover_image'] ? '' : 'placeholder-1' ?>">
                         <?php if ($p['cover_image']): ?>
                         <img src="/static/uploads/<?= h($p['cover_image']) ?>" alt="<?= h($p['title']) ?> Cover" class="kit-image">
-                        <?php endif; ?>
-                        <?php if ($p['type'] === 'beat'): ?>
-                        <span class="kit-badge">BEAT</span>
                         <?php endif; ?>
                     </div>
                     <div class="kit-info">
@@ -225,7 +230,8 @@ $products = $stmt->fetchAll();
                 <div id="modalCoverWrap"></div>
                 <div class="modal-price" id="modalPrice"></div>
                 <div class="modal-price-orig" id="modalPriceOrig"></div>
-                <a href="#" id="modalBuyBtn" class="cta-btn modal-buy-btn" style="text-align:center;margin-top:1rem;font-size:1rem;" download>Download / Buy</a>
+                <!-- PayPal button (paid) or direct download (free) -->
+                <div id="paypal-btn-wrap" style="width:100%;margin-top:1rem;"></div>
             </div>
             <div class="modal-info-col">
                 <div class="modal-title" id="modalTitle">—</div>
@@ -252,27 +258,90 @@ $products = $stmt->fetchAll();
     <audio id="audioEl" preload="metadata"></audio>
 
     <script>
+    function logAction(action, metadata = '') {
+        fetch('/api/log_action.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=' + encodeURIComponent(action) + '&metadata=' + encodeURIComponent(metadata)
+        });
+    }
+
     /* ── FILTER ── */
-    const typeTabs = document.querySelectorAll('.filter-tab[data-filter-type="type"]');
-    const genreTabs = document.querySelectorAll('.filter-tab[data-filter-type="genre"]');
+    const typeTabs = document.querySelectorAll('.filter-tab');
     const cards = document.querySelectorAll('.kit-card');
-    let currentType = 'all', currentGenre = 'all';
-    function updateTabs(tabs, val) { tabs.forEach(t => t.classList.toggle('active', t.dataset.value === val)); }
+    let currentType = 'all';
     function filterKits() {
         cards.forEach(card => {
-            const match = (currentType === 'all' || card.dataset.type === currentType)
-                       && (currentGenre === 'all' || card.dataset.genre === currentGenre);
+            const match = currentType === 'all' || card.dataset.type === currentType;
             card.style.opacity = match ? '1' : '0';
             card.style.display = match ? 'flex' : 'none';
         });
     }
-    typeTabs.forEach(t => t.addEventListener('click', () => { currentType = t.dataset.value; updateTabs(typeTabs, currentType); filterKits(); }));
-    genreTabs.forEach(t => t.addEventListener('click', () => { currentGenre = t.dataset.value; updateTabs(genreTabs, currentGenre); filterKits(); }));
+    typeTabs.forEach(t => t.addEventListener('click', () => {
+        currentType = t.dataset.value;
+        typeTabs.forEach(b => b.classList.toggle('active', b.dataset.value === currentType));
+        filterKits();
+    }));
 
     /* ── MODAL + PLAYER ── */
     const audio = document.getElementById('audioEl');
     const modal = document.getElementById('productModal');
-    let tracks = [], currentIdx = -1;
+    let tracks = [], currentIdx = -1, _currentProductId = null;
+
+    /* ── PAYPAL ── */
+    let _ppButtons = null; // store rendered instance to destroy on reopen
+
+    function renderPayPalButtons(productId, price) {
+        const wrap = document.getElementById('paypal-btn-wrap');
+        wrap.innerHTML = '';
+        if (price <= 0) return;
+
+        // PayPal SDK not configured yet — show contact fallback
+        if (typeof paypal === 'undefined') {
+            wrap.innerHTML = '<a href="mailto:contact@n2l8studio.com" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;">Contact to Purchase</a>';
+            return;
+        }
+
+        if (_ppButtons) { try { _ppButtons.close(); } catch(e) {} }
+        _ppButtons = paypal.Buttons({
+            style: { layout:'vertical', color:'gold', shape:'rect', label:'buynow', height:45 },
+            createOrder: function() {
+                return fetch('/payment/create-order.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'product_id=' + productId,
+                }).then(r => r.json()).then(data => {
+                    if (data.error) throw new Error(data.error);
+                    return data.id;
+                });
+            },
+            onApprove: function(data) {
+                wrap.innerHTML = '<div style="color:var(--text-muted);font-family:\'VT323\',monospace;text-align:center;padding:1rem;">Processing payment...</div>';
+                return fetch('/payment/capture-order.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'order_id=' + data.orderID + '&product_id=' + productId,
+                }).then(r => r.json()).then(result => {
+                    if (result.success && result.download_url) {
+                        wrap.innerHTML =
+                            '<div style="text-align:center;">'+
+                            '<div style="color:var(--text-main);font-family:\'Righteous\',cursive;font-size:1.1rem;margin-bottom:0.8rem;">✓ PAYMENT CONFIRMED</div>'+
+                            '<a href="' + result.download_url + '" class="cta-btn" style="display:block;text-align:center;" download>DOWNLOAD NOW</a>'+
+                            '<div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Receipt sent to ' + result.email + '</div>'+
+                            '</div>';
+                    } else {
+                        wrap.innerHTML = '<div style="color:#ff5c5c;text-align:center;font-family:\'VT323\',monospace;">Payment error — please try again.</div>';
+                    }
+                });
+            },
+            onError: function(err) {
+                console.error('PayPal error:', err);
+                wrap.innerHTML = '<div style="color:#ff5c5c;text-align:center;font-family:\'VT323\',monospace;">Payment failed. Please try again.</div>';
+            },
+            onCancel: function() { renderPayPalButtons(productId, price); }
+        });
+        _ppButtons.render('#paypal-btn-wrap');
+    }
 
     function fmt(secs) {
         if (!isFinite(secs)) return '0:00';
@@ -306,6 +375,7 @@ $products = $stmt->fetchAll();
         audio.src = tracks[idx].url;
         audio.play();
         document.getElementById('nowPlayingName').textContent = tracks[idx].title;
+        logAction('play_track', tracks[idx].title);
         document.getElementById('btnPlayPause').innerHTML = '&#9646;&#9646;';
         renderTrackList();
         updateNavBtns();
@@ -340,17 +410,26 @@ $products = $stmt->fetchAll();
                 document.getElementById('modalDesc').textContent = p.description || '';
                 document.getElementById('modalPrice').textContent = p.price > 0 ? `$${parseFloat(p.price).toFixed(2)}` : 'FREE';
                 document.getElementById('modalPriceOrig').textContent = p.original_price ? `$${parseFloat(p.original_price).toFixed(2)}` : '';
-                const buyBtn = document.getElementById('modalBuyBtn');
-                if (p.zip_file) {
-                    buyBtn.href = p.zip_file;
-                    buyBtn.setAttribute('download', '');
-                    buyBtn.textContent = p.price > 0 ? 'Add to Cart' : 'Free Download';
+
+                // Payment / download area
+                const wrap = document.getElementById('paypal-btn-wrap');
+                wrap.innerHTML = '';
+                _currentProductId = productId;
+
+                if (parseFloat(p.price) > 0) {
+                    // Paid — render PayPal buttons
+                    renderPayPalButtons(productId, parseFloat(p.price));
+                } else if (p.zip_file) {
+                    // Free — direct download link
+                    wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;" download>⬇ Free Download</a>`;
                 } else {
-                    buyBtn.href = '#'; buyBtn.removeAttribute('download'); buyBtn.textContent = 'Coming Soon';
+                    wrap.innerHTML = `<div style="color:var(--text-muted);text-align:center;font-family:'VT323',monospace;margin-top:0.5rem;">Coming Soon</div>`;
                 }
+
                 tracks = p.tracks || [];
                 renderTrackList();
                 modal.classList.add('open');
+                logAction('modal_open', p.title);
                 // iOS-safe body scroll lock
                 document.body.dataset.scrollY = window.scrollY;
                 document.body.style.position = 'fixed';
@@ -407,10 +486,30 @@ $products = $stmt->fetchAll();
     const ham = document.getElementById('navHamburger');
     const navLinks = document.getElementById('navLinks');
     if (ham) {
-        ham.addEventListener('click', () => {
-            ham.classList.toggle('open');
-            navLinks.classList.toggle('open');
+        ham.addEventListener('click', () => { ham.classList.toggle('open'); navLinks.classList.toggle('open'); });
+    }
+
+    // Dropdown toggle for mobile
+    const dropbtn = document.querySelector('.dropbtn');
+    if (dropbtn) {
+        dropbtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('.dropdown-content').classList.toggle('show');
         });
+    }
+    // Close dropdown when clicking outside
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn')) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < dropdowns.length; i++) {
+                const openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+    if (navLinks) {
         navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
             ham.classList.remove('open');
             navLinks.classList.remove('open');

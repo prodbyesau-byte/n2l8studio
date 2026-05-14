@@ -2,6 +2,7 @@
 // /api/product.php?id=X — returns JSON for the shop modal player
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -16,6 +17,7 @@ $stmt->execute([$id]);
 $p = $stmt->fetch();
 if (!$p) { http_response_code(404); echo json_encode(['error'=>'Not found']); exit; }
 
+
 $tracks_stmt = $pdo->prepare('SELECT id, title, filename FROM product_tracks WHERE product_id = ? ORDER BY position ASC');
 $tracks_stmt->execute([$id]);
 $tracks = $tracks_stmt->fetchAll();
@@ -26,6 +28,8 @@ echo json_encode([
     'type'           => $p['type'],
     'genre'          => $p['genre'],
     'price'          => (float)$p['price'],
+    'price_premium'  => $p['price_premium'] !== null ? (float)$p['price_premium'] : null,
+    'price_exclusive'=> $p['price_exclusive'] !== null ? (float)$p['price_exclusive'] : null,
     'original_price' => $p['original_price'] !== null ? (float)$p['original_price'] : null,
     'author'         => $p['author'],
     'description'    => $p['description'],
