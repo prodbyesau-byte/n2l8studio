@@ -13,7 +13,7 @@ log_visitor($pdo, 'page_view', '/pricing.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mixing &amp; Mastering - n2l8studio</title>
     <meta name="description" content="Professional audio engineering from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
 </head>
 <body class="page-pricing">

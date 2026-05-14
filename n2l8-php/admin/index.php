@@ -45,11 +45,11 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Terminal - n2l8studio</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
     <style>
         body { background-attachment:fixed; }
-        .admin-topbar { background:rgba(5,10,5,0.97); border-bottom:2px solid var(--brand-dark-red); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        .admin-topbar { background:rgba(18,18,21,0.97); border-bottom:2px solid var(--brand-dark-red); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
         .admin-topbar .logo-text { font-size:1.3rem; letter-spacing:3px; }
         /* ── TABS: sliding indicator ── */
         .admin-tabs-wrap { position:relative; margin:2rem 0 0 0; border-bottom:2px solid var(--text-muted); }
@@ -57,7 +57,7 @@ try {
         .tab-slider {
             position:absolute; bottom:-2px; left:0;
             height:2px; background:var(--accent);
-            box-shadow:0 0 8px rgba(255,194,92,0.7);
+            box-shadow:0 0 8px rgba(192,21,42,0.6);
             transition:left 0.28s cubic-bezier(.4,0,.2,1), width 0.28s cubic-bezier(.4,0,.2,1);
             pointer-events:none;
         }
@@ -76,7 +76,7 @@ try {
         .admin-tab-dropdown { display:none; }
         .admin-tab-toggle {
             width:100%; padding:0.8rem 1rem;
-            background:rgba(10,15,10,0.95); border:1px solid var(--text-muted);
+            background:rgba(26,26,31,0.95); border:1px solid var(--text-muted);
             color:var(--text-main); font-family:'Righteous',cursive; font-size:1.1rem;
             text-transform:uppercase; letter-spacing:1px; cursor:pointer;
             display:flex; justify-content:space-between; align-items:center;
@@ -86,18 +86,18 @@ try {
         .admin-tab-toggle.open::after { transform:rotate(180deg); }
         .admin-tab-menu {
             display:none; flex-direction:column;
-            background:rgba(7,10,7,0.98);
+            background:rgba(18,18,21,0.98);
             border:1px solid var(--text-muted); border-top:none;
         }
         .admin-tab-menu.open { display:flex; }
         .admin-tab-menu-item {
-            padding:0.9rem 1.2rem; border-bottom:1px dashed rgba(123,225,168,0.1);
+            padding:0.9rem 1.2rem; border-bottom:1px dashed rgba(192,21,42,0.1);
             color:var(--text-muted); font-family:'Righteous',cursive;
             font-size:1.1rem; text-transform:uppercase; cursor:pointer;
             background:transparent; border-left:none; border-right:none; border-top:none; text-align:left;
         }
         .admin-tab-menu-item.active { color:var(--accent); border-left:3px solid var(--accent); padding-left:0.9rem; }
-        .admin-tab-menu-item:hover { color:var(--text-main); background:rgba(57,255,20,0.05); }
+        .admin-tab-menu-item:hover { color:var(--text-main); background:rgba(192,21,42,0.06); }
         .admin-panel { display:none; padding:2rem 0; }
         .admin-panel.active { display:block; }
         @media(max-width:768px){
@@ -120,23 +120,23 @@ try {
             .action-btns { flex-direction:column; gap:0.3rem; }
         }
         .section-title { font-family:'Righteous',cursive; color:var(--accent); font-size:1.6rem; margin-bottom:1.5rem; letter-spacing:2px; text-transform:uppercase; border-bottom:1px dashed var(--text-muted); padding-bottom:0.5rem; }
-        .form-card { background:rgba(10,15,10,0.85); border:1px solid var(--text-muted); padding:2rem; margin-bottom:2rem; }
+        .form-card { background:rgba(26,26,31,0.85); border:1px solid var(--text-muted); padding:2rem; margin-bottom:2rem; }
         .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
         .form-full { grid-column:1/-1; }
         .form-group { display:flex; flex-direction:column; gap:0.4rem; }
         .form-group label { color:var(--text-muted); font-size:1rem; font-family:'VT323',monospace; letter-spacing:1px; text-transform:uppercase; }
         .form-group input, .form-group select, .form-group textarea { background:var(--bg-dark); border:1px solid var(--text-muted); color:var(--text-main); font-family:'VT323',monospace; font-size:1.1rem; padding:0.5rem 0.8rem; outline:none; transition:border-color 0.2s; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--text-main); box-shadow:0 0 8px rgba(57,255,20,0.15); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--text-main); box-shadow:0 0 8px rgba(192,21,42,0.15); }
         .form-group input[type="file"] { cursor:pointer; }
         .form-group textarea { resize:vertical; min-height:80px; }
         .checkbox-row { display:flex; align-items:center; gap:0.8rem; flex-direction:row; }
         .checkbox-row input[type="checkbox"] { width:18px; height:18px; cursor:pointer; accent-color:var(--text-main); }
         .admin-table { width:100%; border-collapse:collapse; font-size:1.05rem; }
         .admin-table th { font-family:'Righteous',cursive; color:var(--accent); text-align:left; padding:0.7rem 1rem; border-bottom:2px solid var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-size:0.95rem; }
-        .admin-table td { padding:0.7rem 1rem; border-bottom:1px dashed rgba(123,225,168,0.2); color:var(--text-main); vertical-align:middle; }
-        .admin-table tr:hover td { background:rgba(57,255,20,0.03); }
+        .admin-table td { padding:0.7rem 1rem; border-bottom:1px dashed rgba(192,21,42,0.15); color:var(--text-main); vertical-align:middle; }
+        .admin-table tr:hover td { background:rgba(192,21,42,0.04); }
         .pill { display:inline-block; padding:0.15rem 0.6rem; font-size:0.85rem; font-family:'Righteous',cursive; border-radius:2px; text-transform:uppercase; letter-spacing:1px; }
-        .pill-active { background:rgba(57,255,20,0.15); color:var(--text-main); border:1px solid var(--text-main); }
+        .pill-active { background:rgba(192,21,42,0.12); color:var(--text-main); border:1px solid var(--accent); }
         .pill-inactive { background:rgba(255,92,92,0.1); color:#ff5c5c; border:1px solid #ff5c5c; }
         .action-btns { display:flex; gap:0.4rem; flex-wrap:wrap; }
         .btn { padding:0.3rem 0.7rem; font-family:'VT323',monospace; font-size:1rem; cursor:pointer; border:1px solid; background:transparent; transition:all 0.2s; text-decoration:none; display:inline-block; text-transform:uppercase; }
@@ -149,12 +149,12 @@ try {
         .btn-muted { color:var(--text-muted); border-color:var(--text-muted); }
         .btn-muted:hover { background:var(--text-muted); color:var(--bg-dark); }
         .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem; margin-bottom:2rem; }
-        .stat-card { background:rgba(10,15,10,0.85); border:1px solid var(--text-muted); padding:1.5rem; text-align:center; }
+        .stat-card { background:rgba(26,26,31,0.85); border:1px solid var(--text-muted); padding:1.5rem; text-align:center; }
         .stat-num { font-family:'Righteous',cursive; font-size:2.5rem; color:var(--accent); line-height:1; }
         .stat-label { color:var(--text-muted); font-size:1rem; margin-top:0.3rem; }
-        .flash-box { background:rgba(57,255,20,0.1); border:1px solid var(--text-main); color:var(--text-main); padding:0.8rem 1.2rem; margin-bottom:1.5rem; font-size:1.1rem; }
+        .flash-box { background:rgba(192,21,42,0.1); border:1px solid var(--accent); color:var(--text-main); padding:0.8rem 1.2rem; margin-bottom:1.5rem; font-size:1.1rem; }
         .log-list { list-style:none; padding:0; }
-        .log-list li { padding:0.5rem 0; border-bottom:1px dashed rgba(123,225,168,0.1); font-size:0.95rem; line-height:1.4; }
+        .log-list li { padding:0.5rem 0; border-bottom:1px dashed rgba(192,21,42,0.1); font-size:0.95rem; line-height:1.4; }
         .log-ts { color:var(--text-muted); font-size:0.85rem; display:block; }
         .thumb { width:48px; height:48px; object-fit:cover; border:1px solid var(--text-muted); }
         #loadingOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; flex-direction:column; color:var(--text-main); }
@@ -162,7 +162,7 @@ try {
         .spinner { width:60px; height:60px; border:4px solid var(--text-muted); border-top-color:var(--text-main); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:1.5rem; }
         @keyframes spin { to { transform:rotate(360deg); } }
         .content-page-label { font-family:'Righteous',cursive; color:var(--text-muted); font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin:1.5rem 0 0.8rem 0; border-left:3px solid var(--text-muted); padding-left:0.8rem; }
-        .content-row { display:grid; grid-template-columns:200px 1fr auto; gap:0.8rem; align-items:center; padding:0.6rem 0; border-bottom:1px dashed rgba(123,225,168,0.1); }
+        .content-row { display:grid; grid-template-columns:200px 1fr auto; gap:0.8rem; align-items:center; padding:0.6rem 0; border-bottom:1px dashed rgba(192,21,42,0.1); }
         .content-key-label { color:var(--text-muted); font-size:0.95rem; font-family:'VT323',monospace; }
         .content-row input, .content-row textarea { background:var(--bg-dark); border:1px solid var(--text-muted); color:var(--text-main); font-family:'VT323',monospace; font-size:1rem; padding:0.4rem 0.6rem; outline:none; width:100%; }
         .content-row textarea { resize:vertical; min-height:60px; }

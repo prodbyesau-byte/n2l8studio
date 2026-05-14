@@ -26,7 +26,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beats - n2l8studio</title>
     <meta name="description" content="Premium beats from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
     <link rel="icon" href="data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==">
 </head>

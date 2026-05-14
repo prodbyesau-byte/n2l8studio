@@ -55,10 +55,10 @@ $flash_msgs = get_flash();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Product - n2l8studio Admin</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
     <style>
-        .edit-box { max-width:900px; margin:3rem auto; background:rgba(10,15,10,0.9); border:1px solid var(--text-muted); padding:2.5rem; }
+        .edit-box { max-width:900px; margin:3rem auto; background:rgba(26,26,31,0.9); border:1px solid var(--text-muted); padding:2.5rem; }
         .form-group { display:flex; flex-direction:column; gap:0.4rem; margin-bottom:1rem; }
         .form-group label { color:var(--text-muted); font-family:'VT323',monospace; font-size:1rem; text-transform:uppercase; letter-spacing:1px; }
         .form-group input, .form-group select, .form-group textarea { background:var(--bg-dark); border:1px solid var(--text-muted); color:var(--text-main); font-family:'VT323',monospace; font-size:1.1rem; padding:0.5rem 0.8rem; outline:none; }

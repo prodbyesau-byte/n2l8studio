@@ -39,28 +39,28 @@ arsort($action_counts);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visitor: <?= h($ip) ?> — Admin</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
     <style>
         body { background-attachment:scroll; }
-        .admin-topbar { background:rgba(5,10,5,0.97); border-bottom:2px solid var(--brand-dark-red); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        .admin-topbar { background:rgba(18,18,21,0.97); border-bottom:2px solid var(--brand-dark-red); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
         .admin-topbar .logo-text { font-size:1.3rem; letter-spacing:3px; }
         .section-title { font-family:'Righteous',cursive; color:var(--accent); font-size:1.4rem; margin-bottom:1rem; letter-spacing:2px; text-transform:uppercase; border-bottom:1px dashed var(--text-muted); padding-bottom:0.5rem; }
-        .form-card { background:rgba(10,15,10,0.85); border:1px solid var(--text-muted); padding:1.5rem; margin-bottom:1.5rem; }
+        .form-card { background:rgba(26,26,31,0.85); border:1px solid var(--text-muted); padding:1.5rem; margin-bottom:1.5rem; }
         .btn { padding:0.3rem 0.7rem; font-family:'VT323',monospace; font-size:1rem; cursor:pointer; border:1px solid; background:transparent; transition:all 0.2s; text-decoration:none; display:inline-block; text-transform:uppercase; }
         .btn-muted { color:var(--text-muted); border-color:var(--text-muted); }
         .btn-muted:hover { background:var(--text-muted); color:var(--bg-dark); }
         .visitor-hero { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
-        .stat-card { background:rgba(10,15,10,0.85); border:1px solid var(--text-muted); padding:1.2rem; text-align:center; }
+        .stat-card { background:rgba(26,26,31,0.85); border:1px solid var(--text-muted); padding:1.2rem; text-align:center; }
         .stat-num { font-family:'Righteous',cursive; font-size:2rem; color:var(--accent); line-height:1; }
         .stat-label { color:var(--text-muted); font-size:0.9rem; margin-top:0.3rem; }
         .admin-table { width:100%; border-collapse:collapse; font-size:1rem; }
         .admin-table th { font-family:'Righteous',cursive; color:var(--accent); text-align:left; padding:0.6rem 0.8rem; border-bottom:2px solid var(--text-muted); text-transform:uppercase; font-size:0.85rem; }
-        .admin-table td { padding:0.55rem 0.8rem; border-bottom:1px dashed rgba(123,225,168,0.15); color:var(--text-main); vertical-align:middle; font-size:0.95rem; }
-        .admin-table tr:hover td { background:rgba(57,255,20,0.03); }
-        .action-badge { display:inline-block; padding:0.1rem 0.5rem; background:rgba(51,255,153,0.1); border:1px solid rgba(51,255,153,0.3); font-family:'VT323',monospace; font-size:0.95rem; color:var(--text-main); }
-        .action-modal { background:rgba(255,194,92,0.1); border-color:rgba(255,194,92,0.4); color:var(--accent); }
-        .action-checkout { background:rgba(57,200,57,0.15); border-color:rgba(57,200,57,0.5); color:#5f5; }
+        .admin-table td { padding:0.55rem 0.8rem; border-bottom:1px dashed rgba(192,21,42,0.15); color:var(--text-main); vertical-align:middle; font-size:0.95rem; }
+        .admin-table tr:hover td { background:rgba(192,21,42,0.04); }
+        .action-badge { display:inline-block; padding:0.1rem 0.5rem; background:rgba(192,21,42,0.1); border:1px solid rgba(192,21,42,0.3); font-family:'VT323',monospace; font-size:0.95rem; color:var(--text-main); }
+        .action-modal { background:rgba(192,21,42,0.15); border-color:rgba(192,21,42,0.4); color:var(--accent); }
+        .action-checkout { background:rgba(46,204,113,0.15); border-color:rgba(46,204,113,0.5); color:#2ecc71; }
         .ua-cell { color:var(--text-muted); font-size:0.8rem; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .action-bar-row { display:flex; align-items:center; gap:0.6rem; margin-bottom:0.5rem; }
         .action-bar { height:6px; background:var(--accent); border-radius:2px; min-width:4px; }

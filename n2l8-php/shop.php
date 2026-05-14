@@ -18,7 +18,7 @@ log_visitor($pdo, 'page_view', '/shop.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop - n2l8studio</title>
     <meta name="description" content="Shop loopkits, drumkits and beats from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
     <?php
     // Only load PayPal SDK when real credentials are configured
