@@ -19,7 +19,10 @@ $site = get_site_content($pdo);
     <header class="hero" style="min-height:auto;padding-bottom:2rem;">
         <nav>
             <div class="logo-text">n2l8studio</div>
-            <ul class="nav-links">
+            <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
                 <li><a href="/shop.php"><?= h($site['nav_shop'] ?? 'Shop') ?></a></li>
                 <li><a href="/pricing.php"><?= h($site['nav_pricing'] ?? 'Mixing & Mastering') ?></a></li>
                 <li><a href="/admin/login.php" class="nav-admin-btn">Admin Vault</a></li>
@@ -57,5 +60,13 @@ $site = get_site_content($pdo);
     </section>
 
     <footer><p><?= h($site['footer_text'] ?? '© 2026 n2l8studio. All rights reserved.') ?></p></footer>
+    <script>
+    const ham = document.getElementById('navHamburger');
+    const nl  = document.getElementById('navLinks');
+    if (ham) {
+        ham.addEventListener('click', () => { ham.classList.toggle('open'); nl.classList.toggle('open'); });
+        nl.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { ham.classList.remove('open'); nl.classList.remove('open'); }));
+    }
+    </script>
 </body>
 </html>

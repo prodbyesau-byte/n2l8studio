@@ -4,10 +4,13 @@
 .ftpcredentials
 .ftpignore
 ftp_sync.py
+db_setup.py
 db_setup.sql
+setup.php
 includes/config.php
 __pycache__/
 *.pyc
 .git/
 .gitignore
 *.md
+

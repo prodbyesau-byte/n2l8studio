@@ -33,12 +33,74 @@ $tab = $_GET['tab'] ?? 'dashboard';
         body { background-attachment:fixed; }
         .admin-topbar { background:rgba(5,10,5,0.97); border-bottom:2px solid var(--brand-dark-red); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
         .admin-topbar .logo-text { font-size:1.3rem; letter-spacing:3px; }
-        .admin-tabs { display:flex; gap:0.5rem; border-bottom:2px solid var(--text-muted); margin:2rem 0 0 0; }
-        .admin-tab-btn { padding:0.6rem 1.5rem; background:transparent; color:var(--text-muted); border:none; border-bottom:3px solid transparent; font-family:'Righteous',cursive; font-size:1.1rem; text-transform:uppercase; cursor:pointer; letter-spacing:1px; transition:all 0.2s ease; margin-bottom:-2px; }
+        /* ── TABS: sliding indicator ── */
+        .admin-tabs-wrap { position:relative; margin:2rem 0 0 0; border-bottom:2px solid var(--text-muted); }
+        .admin-tabs { display:flex; gap:0; position:relative; }
+        .tab-slider {
+            position:absolute; bottom:-2px; left:0;
+            height:2px; background:var(--accent);
+            box-shadow:0 0 8px rgba(255,194,92,0.7);
+            transition:left 0.28s cubic-bezier(.4,0,.2,1), width 0.28s cubic-bezier(.4,0,.2,1);
+            pointer-events:none;
+        }
+        .admin-tab-btn {
+            padding:0.65rem 1.4rem;
+            background:transparent; color:var(--text-muted);
+            border:none; border-bottom:2px solid transparent;
+            font-family:'Righteous',cursive; font-size:1.05rem;
+            text-transform:uppercase; cursor:pointer; letter-spacing:1px;
+            transition:color 0.2s ease;
+            white-space:nowrap;
+        }
         .admin-tab-btn:hover { color:var(--text-main); }
-        .admin-tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+        .admin-tab-btn.active { color:var(--accent); }
+        /* Mobile: dropdown */
+        .admin-tab-dropdown { display:none; }
+        .admin-tab-toggle {
+            width:100%; padding:0.8rem 1rem;
+            background:rgba(10,15,10,0.95); border:1px solid var(--text-muted);
+            color:var(--text-main); font-family:'Righteous',cursive; font-size:1.1rem;
+            text-transform:uppercase; letter-spacing:1px; cursor:pointer;
+            display:flex; justify-content:space-between; align-items:center;
+            margin-top:1rem;
+        }
+        .admin-tab-toggle::after { content:'▼'; font-size:0.8rem; color:var(--accent); transition:transform 0.2s; }
+        .admin-tab-toggle.open::after { transform:rotate(180deg); }
+        .admin-tab-menu {
+            display:none; flex-direction:column;
+            background:rgba(7,10,7,0.98);
+            border:1px solid var(--text-muted); border-top:none;
+        }
+        .admin-tab-menu.open { display:flex; }
+        .admin-tab-menu-item {
+            padding:0.9rem 1.2rem; border-bottom:1px dashed rgba(123,225,168,0.1);
+            color:var(--text-muted); font-family:'Righteous',cursive;
+            font-size:1.1rem; text-transform:uppercase; cursor:pointer;
+            background:transparent; border-left:none; border-right:none; border-top:none; text-align:left;
+        }
+        .admin-tab-menu-item.active { color:var(--accent); border-left:3px solid var(--accent); padding-left:0.9rem; }
+        .admin-tab-menu-item:hover { color:var(--text-main); background:rgba(57,255,20,0.05); }
         .admin-panel { display:none; padding:2rem 0; }
         .admin-panel.active { display:block; }
+        @media(max-width:768px){
+            .admin-tabs-wrap { display:none; }
+            .admin-tab-dropdown { display:block; }
+            .stats-grid { grid-template-columns:1fr 1fr; }
+            .form-grid { grid-template-columns:1fr; }
+            .content-row { grid-template-columns:1fr; }
+            .admin-topbar { padding:0.7rem 1rem; }
+            .admin-topbar .logo-text { font-size:1rem; }
+            .admin-table { font-size:0.9rem; }
+            .admin-table th, .admin-table td { padding:0.5rem 0.6rem; }
+            .form-card { padding:1rem; }
+            .section-title { font-size:1.2rem; }
+            .stat-num { font-size:2rem; }
+        }
+        @media(max-width:480px){
+            .stats-grid { grid-template-columns:1fr 1fr; gap:0.8rem; }
+            .stat-card { padding:1rem 0.7rem; }
+            .action-btns { flex-direction:column; gap:0.3rem; }
+        }
         .section-title { font-family:'Righteous',cursive; color:var(--accent); font-size:1.6rem; margin-bottom:1.5rem; letter-spacing:2px; text-transform:uppercase; border-bottom:1px dashed var(--text-muted); padding-bottom:0.5rem; }
         .form-card { background:rgba(10,15,10,0.85); border:1px solid var(--text-muted); padding:2rem; margin-bottom:2rem; }
         .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
@@ -115,13 +177,27 @@ $tab = $_GET['tab'] ?? 'dashboard';
     </div>
     <?php endif; ?>
 
-    <!-- TABS -->
-    <div class="admin-tabs">
-        <button class="admin-tab-btn" id="tab-btn-dashboard"  onclick="showTab('dashboard')">Dashboard</button>
-        <button class="admin-tab-btn" id="tab-btn-products"   onclick="showTab('products')">Products</button>
-        <button class="admin-tab-btn" id="tab-btn-orders"     onclick="showTab('orders')">Orders</button>
-        <button class="admin-tab-btn" id="tab-btn-content"    onclick="showTab('content')">Content Editor</button>
-        <button class="admin-tab-btn" id="tab-btn-logs"       onclick="showTab('logs')">Audit Log</button>
+    <!-- TABS: desktop sliding indicator -->
+    <div class="admin-tabs-wrap">
+        <div class="admin-tabs" id="adminTabs">
+            <div class="tab-slider" id="tabSlider"></div>
+            <button class="admin-tab-btn" id="tab-btn-dashboard">Dashboard</button>
+            <button class="admin-tab-btn" id="tab-btn-products">Products</button>
+            <button class="admin-tab-btn" id="tab-btn-orders">Orders</button>
+            <button class="admin-tab-btn" id="tab-btn-content">Content Editor</button>
+            <button class="admin-tab-btn" id="tab-btn-logs">Audit Log</button>
+        </div>
+    </div>
+    <!-- TABS: mobile dropdown -->
+    <div class="admin-tab-dropdown">
+        <button class="admin-tab-toggle" id="tabToggle">Dashboard <span id="tabToggleLabel"></span></button>
+        <div class="admin-tab-menu" id="tabMenu">
+            <button class="admin-tab-menu-item" data-tab="dashboard">Dashboard</button>
+            <button class="admin-tab-menu-item" data-tab="products">Products</button>
+            <button class="admin-tab-menu-item" data-tab="orders">Orders</button>
+            <button class="admin-tab-menu-item" data-tab="content">Content Editor</button>
+            <button class="admin-tab-menu-item" data-tab="logs">Audit Log</button>
+        </div>
     </div>
 
     <!-- ── DASHBOARD ── -->
@@ -317,26 +393,65 @@ $tab = $_GET['tab'] ?? 'dashboard';
 
 <script>
 const INITIAL_TAB = '<?= h($tab) ?>';
-function showTab(name, btn) {
+const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', content:'Content Editor', logs:'Audit Log' };
+
+function moveSlider(btn) {
+    const slider = document.getElementById('tabSlider');
+    const rail   = document.getElementById('adminTabs');
+    if (!slider || !btn || !rail) return;
+    const railRect = rail.getBoundingClientRect();
+    const btnRect  = btn.getBoundingClientRect();
+    slider.style.left  = (btnRect.left - railRect.left) + 'px';
+    slider.style.width = btnRect.width + 'px';
+}
+
+function showTab(name) {
     document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    document.getElementById('tab-btn-' + name).classList.add('active');
+    document.querySelectorAll('.admin-tab-menu-item').forEach(b => b.classList.remove('active'));
+
+    const panel  = document.getElementById('tab-' + name);
+    const deskBtn = document.getElementById('tab-btn-' + name);
+    if (panel)   panel.classList.add('active');
+    if (deskBtn) { deskBtn.classList.add('active'); moveSlider(deskBtn); }
+
+    // mobile dropdown
+    document.querySelectorAll('.admin-tab-menu-item').forEach(b => {
+        if (b.dataset.tab === name) b.classList.add('active');
+    });
+    const toggle = document.getElementById('tabToggle');
+    if (toggle) toggle.textContent = TAB_NAMES[name] || name;
+    // close menu
+    document.getElementById('tabMenu')?.classList.remove('open');
+    document.getElementById('tabToggle')?.classList.remove('open');
+
     history.replaceState(null,'','/admin/index.php?tab=' + name);
 }
+
 function showLoading() { document.getElementById('loadingOverlay').classList.add('active'); }
 function showDelConfirm(id) { document.getElementById('del-confirm-' + id).style.display = 'inline'; }
 function hideDelConfirm(id) { document.getElementById('del-confirm-' + id).style.display = 'none'; }
-// Init tab
-showTab(INITIAL_TAB);
-// Override onclick to pass btn ref — handled by ID lookup above
+
+// Desktop tab click
 document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const tabName = btn.id.replace('tab-btn-','');
-        showTab(tabName);
-    });
-    btn.removeAttribute('onclick');
+    btn.addEventListener('click', () => showTab(btn.id.replace('tab-btn-','')));
 });
+
+// Mobile dropdown toggle
+const tabToggle = document.getElementById('tabToggle');
+const tabMenu   = document.getElementById('tabMenu');
+if (tabToggle) {
+    tabToggle.addEventListener('click', () => {
+        tabToggle.classList.toggle('open');
+        tabMenu.classList.toggle('open');
+    });
+}
+document.querySelectorAll('.admin-tab-menu-item').forEach(item => {
+    item.addEventListener('click', () => showTab(item.dataset.tab));
+});
+
+// Init — wait for layout so slider can measure button positions
+window.addEventListener('load', () => showTab(INITIAL_TAB));
 </script>
 </body>
 </html>

@@ -1,4 +1,3 @@
-<?php
-// Deny direct HTTP access to this directory
+# Deny direct HTTP access to this directory
 Order deny,allow
 Deny from all
