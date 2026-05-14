@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mixing & Mastering - n2l8studio</title>
+    <meta name="description" content="Professional audio engineering from n2l8studio.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body class="page-pricing">
+    <header class="hero" style="min-height: auto; padding-bottom: 2rem;">
+        <nav>
+            <div class="logo-text">n2l8studio</div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('shop') }}">{{ site.nav_shop }}</a></li>
+                <li><a href="{{ url_for('pricing') }}">{{ site.nav_pricing }}</a></li>
+                {# Subscription nav hidden for now — keep in code #}
+                <li><a href="{{ url_for('login') }}" class="nav-admin-btn">Admin Vault</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="services" class="services">
+        <div class="container">
+            <h2>{{ site.pricing_h2 }}</h2>
+            <p class="section-desc">{{ site.pricing_desc }}</p>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>{{ site.pricing_mix_title }}</h3>
+                    <div class="price">{{ site.pricing_mix_price }}<span>{{ site.pricing_mix_unit }}</span></div>
+                    <ul>
+                        <li>{{ site.pricing_mix_f1 }}</li>
+                        <li>{{ site.pricing_mix_f2 }}</li>
+                        <li>{{ site.pricing_mix_f3 }}</li>
+                    </ul>
+                    <a href="{{ url_for('index') }}#contact" class="cta-btn secondary">Get Started</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>{{ site.pricing_master_title }}</h3>
+                    <div class="price">{{ site.pricing_master_price }}<span>{{ site.pricing_master_unit }}</span></div>
+                    <ul>
+                        <li>{{ site.pricing_master_f1 }}</li>
+                        <li>{{ site.pricing_master_f2 }}</li>
+                        <li>{{ site.pricing_master_f3 }}</li>
+                    </ul>
+                    <a href="{{ url_for('index') }}#contact" class="cta-btn secondary">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>{{ site.footer_text }}</p>
+    </footer>
+</body>
+</html>

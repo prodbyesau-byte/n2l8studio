@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n2l8studio - Our Music Community</title>
+    <meta name="description" content="n2l8studio is a creative music community and studio for passionate artists, producers, and creative souls.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body class="page-home">
+    <header class="hero">
+        <nav>
+            <div class="logo-text">n2l8studio</div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('shop') }}">{{ site.nav_shop }}</a></li>
+                <li><a href="{{ url_for('pricing') }}">{{ site.nav_pricing }}</a></li>
+                {# Subscription nav hidden for now — keep in code #}
+                <li><a href="{{ url_for('login') }}" class="nav-admin-btn">Admin Vault</a></li>
+            </ul>
+        </nav>
+        <div class="hero-content">
+            <div class="logo-highlight">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="n2l8studio Logo" class="hero-logo">
+            </div>
+            <h1>{{ site.home_hero_h1 }}</h1>
+            <p>{{ site.home_hero_sub }}</p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('shop') }}" class="cta-btn">View Shop</a>
+                <a href="{{ url_for('pricing') }}" class="cta-btn secondary">Our Services</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>{{ site.home_contact_h2 }}</h2>
+            <p>{{ site.home_contact_p }}</p>
+            <a href="mailto:contact@n2l8studio.com" class="cta-btn secondary">Contact Us</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>{{ site.footer_text }}</p>
+    </footer>
+</body>
+</html>
