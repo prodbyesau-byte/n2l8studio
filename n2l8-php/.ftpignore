@@ -1,0 +1,13 @@
+# Files and directories to EXCLUDE from FTP sync
+# These stay local only — never uploaded to server
+
+.ftpcredentials
+.ftpignore
+ftp_sync.py
+db_setup.sql
+includes/config.php
+__pycache__/
+*.pyc
+.git/
+.gitignore
+*.md
