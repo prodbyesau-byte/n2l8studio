@@ -416,15 +416,8 @@ log_visitor($pdo, 'page_view', '/shop.php');
                 wrap.innerHTML = '';
                 _currentProductId = productId;
 
-                if (parseFloat(p.price) > 0) {
-                    // Paid — render PayPal buttons
-                    renderPayPalButtons(productId, parseFloat(p.price));
-                } else if (p.zip_file) {
-                    // Free — direct download link
-                    wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;" download>⬇ Free Download</a>`;
-                } else {
-                    wrap.innerHTML = `<div style="color:var(--text-muted);text-align:center;font-family:'VT323',monospace;margin-top:0.5rem;">Coming Soon</div>`;
-                }
+                // Download disabled — greyed out placeholder
+                wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323',monospace;letter-spacing:2px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
 
                 tracks = p.tracks || [];
                 renderTrackList();
