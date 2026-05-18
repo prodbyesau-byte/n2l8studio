@@ -62,7 +62,6 @@ log_visitor($pdo, 'page_view', '/beats.php');
                     </li>
                 <?php else: ?>
                     <li><a href="/login.php">Login</a></li>
-                    <li><a href="/register.php">Register</a></li>
                 <?php endif; ?>
             </ul>
         </nav>

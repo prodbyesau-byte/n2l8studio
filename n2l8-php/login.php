@@ -169,8 +169,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container">
         <div class="login-box">
-            <h2>ACCESS</h2>
-            <p>Connect to the N2L8 Studio mainframe.</p>
+            <h2>USER LOGIN</h2>
+            <p>Login to access your profile.</p>
             
             <?php 
             $flashes = get_flash();
@@ -194,14 +194,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
                 </div>
 
-                <button type="submit" class="cta-btn">EXECUTE</button>
+                <button type="submit" class="cta-btn">LOGIN</button>
             </form>
             
-            <div style="margin-top: 1.5rem; border-top: 1px dashed var(--border-color); padding-top: 1rem;">
-                <a href="/register.php" class="box-footer-link" style="color: var(--accent);">Create an Account &gt;</a>
+            <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; align-items: center;">
+                <a href="/register.php" class="box-footer-link" style="color: var(--accent); margin-top: 0;">Create an Account &gt;</a>
+                <a href="/index.php" class="box-footer-link" style="margin-top: 0;">&lt; Back to Frontpage</a>
             </div>
-            
-            <a href="/index.php" class="box-footer-link">&lt; Return to Surface</a>
         </div>
     </div>
 </body>

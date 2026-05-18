@@ -48,7 +48,6 @@ $site = get_site_content($pdo);
                     </li>
                 <?php else: ?>
                     <li><a href="/login.php">Login</a></li>
-                    <li><a href="/register.php">Register</a></li>
                 <?php endif; ?>
             </ul>
         </nav>
