@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Owner Login - N2L8 STUDIO</title>
+    <title>Admin Login - N2L8 STUDIO</title>
     <link rel="stylesheet" href="/static/style.css?v=8">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
@@ -152,8 +152,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container">
         <div class="login-box">
-            <h2>OWNER LOGIN</h2>
-            <p>Login to access the mainframe terminal.</p>
+            <h2>ADMIN LOGIN</h2>
+            <p>Login to access the admin panel.</p>
             
             <?php if ($error): ?>
             <div class="flash-msg">&gt; <?= h($error) ?></div>
