@@ -68,6 +68,7 @@ SCHEMA = [
     CREATE TABLE IF NOT EXISTS `users` (
       `id`       INT AUTO_INCREMENT PRIMARY KEY,
       `username` VARCHAR(50)  UNIQUE NOT NULL,
+      `email`    VARCHAR(100) UNIQUE NULL,
       `password` VARCHAR(255) NOT NULL,
       `role`     VARCHAR(20)  NOT NULL DEFAULT 'admin'
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -86,7 +87,8 @@ SCHEMA = [
       `key`            VARCHAR(20)   NULL,
       `cover_image`    VARCHAR(255)  NULL,
       `zip_file`       VARCHAR(255)  NULL,
-      `is_active`      TINYINT(1)    NOT NULL DEFAULT 1
+      `is_active`      TINYINT(1)    NOT NULL DEFAULT 1,
+      `allow_download` TINYINT(1)    NOT NULL DEFAULT 0
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
     ("product_tracks", """

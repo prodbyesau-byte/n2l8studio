@@ -6,8 +6,15 @@ function is_logged_in(): bool {
 }
 
 function require_login(): void {
+    if (!is_logged_in() || ($_SESSION['role'] ?? '') !== 'admin') {
+        header('Location: /login.php');
+        exit;
+    }
+}
+
+function require_client_login(): void {
     if (!is_logged_in()) {
-        header('Location: /admin/login.php');
+        header('Location: /login.php');
         exit;
     }
 }

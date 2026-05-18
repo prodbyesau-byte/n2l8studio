@@ -286,9 +286,13 @@ try {
                         <input type="file" name="audio_files[]" accept=".mp3,.wav,.ogg,.flac" multiple style="border:none;padding:1rem 0;">
                     </div>
                     <div class="form-group form-full">
-                        <div class="checkbox-row">
+                        <div class="checkbox-row" style="margin-bottom:0.5rem;">
                             <input type="checkbox" name="is_active" id="new_active" checked>
                             <label for="new_active" style="cursor:pointer;margin-bottom:0;">Active (visible on shop)</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <input type="checkbox" name="allow_download" id="new_allow_download">
+                            <label for="new_allow_download" style="cursor:pointer;margin-bottom:0;">Enable Direct Download Button (for Free Kits)</label>
                         </div>
                     </div>
                 </div>

@@ -48,7 +48,22 @@ log_visitor($pdo, 'page_view', '/beats.php');
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/admin/login.php">Login</a></li>
+                <?php if (is_logged_in()): ?>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent);">Vault</a>
+                        <div class="dropdown-content">
+                            <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                                <a href="/admin/index.php">Mainframe</a>
+                            <?php else: ?>
+                                <a href="/portal/index.php">Portal</a>
+                            <?php endif; ?>
+                            <a href="/logout.php" style="color: var(--accent) !important;">Disconnect</a>
+                        </div>
+                    </li>
+                <?php else: ?>
+                    <li><a href="/login.php">Login</a></li>
+                    <li><a href="/register.php">Register</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
     </header>
@@ -301,7 +316,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         const price = btn.dataset.price;
                         const tier = btn.dataset.name;
                         logAction('select_license', `${data.title} - ${tier}`);
-                        renderPayPalButtons(data.id, price, tier);
+                        renderPayPalButtons(data.id, price, tier, data);
                         
                         // Highlight selected
                         content.querySelectorAll('.license-card').forEach(c => c.style.borderColor = 'var(--text-muted)');
@@ -316,11 +331,15 @@ log_visitor($pdo, 'page_view', '/beats.php');
     }
     document.querySelector('.modal-close')?.addEventListener('click', closeModal);
 
-    function renderPayPalButtons(productId, price, tierName) {
+    function renderPayPalButtons(productId, price, tierName, data) {
         const wrap = document.getElementById('paypal-btn-wrap');
         wrap.innerHTML = '';
         if (parseFloat(price) <= 0) {
-            wrap.innerHTML = '<a href="#" class="cta-btn" style="display:block;text-align:center;">FREE DOWNLOAD</a>';
+            if (data && data.allow_download && data.zip_file) {
+                wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
+            } else {
+                wrap.innerHTML = `<button disabled class="cta-btn" style="display:block;width:100%;text-align:center;opacity:0.4;cursor:not-allowed;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);">FREE DOWNLOAD — COMING SOON</button>`;
+            }
             return;
         }
         if (typeof paypal !== 'undefined') {

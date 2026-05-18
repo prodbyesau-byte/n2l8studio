@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price_premium   = $_POST['price_premium'] !== '' ? (float)$_POST['price_premium'] : null;
     $price_exclusive = $_POST['price_exclusive'] !== '' ? (float)$_POST['price_exclusive'] : null;
     $is_active       = isset($_POST['is_active']) ? 1 : 0;
+    $allow_download  = isset($_POST['allow_download']) ? 1 : 0;
 
     $new_cover = save_upload('cover_image', ALLOWED_IMAGES);
     $new_zip   = save_upload('zip_file', ALLOWED_FILES);
@@ -39,8 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cover = $new_cover ?? $product['cover_image'];
     $zip   = $new_zip   ?? $product['zip_file'];
 
-    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,is_active=? WHERE id=?')
-        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$is_active,$id]);
+    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,is_active=?,allow_download=? WHERE id=?')
+        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$is_active,$allow_download,$id]);
 
     log_action($pdo, "Edited product: '{$title}'");
     flash("Product '{$title}' updated.");
@@ -159,9 +160,13 @@ $flash_msgs = get_flash();
                 <input type="file" name="zip_file" accept=".zip,.rar,.7z">
             </div>
         </div>
-        <div class="checkbox-row" style="margin-bottom:1.5rem;">
+        <div class="checkbox-row" style="margin-bottom:0.8rem;">
             <input type="checkbox" name="is_active" id="edit_active" <?= $product['is_active'] ? 'checked' : '' ?>>
             <label for="edit_active" style="cursor:pointer;color:var(--text-main);">Visible on Public Shop</label>
+        </div>
+        <div class="checkbox-row" style="margin-bottom:1.5rem;">
+            <input type="checkbox" name="allow_download" id="edit_allow_download" <?= ($product['allow_download'] ?? 0) ? 'checked' : '' ?>>
+            <label for="edit_allow_download" style="cursor:pointer;color:var(--text-main);">Enable Direct Download Button (for Free Kits)</label>
         </div>
         <button type="submit" class="cta-btn" style="width:100%;padding:1rem;font-size:1.2rem;">💾 SAVE PRODUCT SETTINGS</button>
     </form>

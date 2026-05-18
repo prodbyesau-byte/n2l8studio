@@ -20,12 +20,13 @@ $key            = trim($_POST['key'] ?? '') ?: null;
 $price_premium   = $_POST['price_premium'] !== '' ? (float)$_POST['price_premium'] : null;
 $price_exclusive = $_POST['price_exclusive'] !== '' ? (float)$_POST['price_exclusive'] : null;
 $is_active       = isset($_POST['is_active']) ? 1 : 0;
+$allow_download  = isset($_POST['allow_download']) ? 1 : 0;
 
 $cover_image = save_upload('cover_image', ALLOWED_IMAGES);
 $zip_file    = save_upload('zip_file', ALLOWED_FILES);
 
-$stmt = $pdo->prepare('INSERT INTO products (title,type,genre,price,price_premium,price_exclusive,original_price,author,description,bpm,`key`,cover_image,zip_file,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-$stmt->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover_image,$zip_file,$is_active]);
+$stmt = $pdo->prepare('INSERT INTO products (title,type,genre,price,price_premium,price_exclusive,original_price,author,description,bpm,`key`,cover_image,zip_file,is_active,allow_download) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+$stmt->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover_image,$zip_file,$is_active,$allow_download]);
 $product_id = $pdo->lastInsertId();
 
 // Handle multiple preview tracks

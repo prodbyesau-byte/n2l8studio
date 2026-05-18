@@ -37,6 +37,7 @@ echo json_encode([
     'key'            => $p['key'],
     'cover_image'    => $p['cover_image'] ? UPLOAD_URL . $p['cover_image'] : null,
     'zip_file'       => $p['zip_file']    ? UPLOAD_URL . $p['zip_file']    : null,
+    'allow_download' => (int)($p['allow_download'] ?? 0),
     'tracks'         => array_map(fn($t) => [
         'id'    => (int)$t['id'],
         'title' => $t['title'],

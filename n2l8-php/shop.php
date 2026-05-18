@@ -180,7 +180,22 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/admin/login.php">Login</a></li>
+                <?php if (is_logged_in()): ?>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent);">Vault</a>
+                        <div class="dropdown-content">
+                            <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                                <a href="/admin/index.php">Mainframe</a>
+                            <?php else: ?>
+                                <a href="/portal/index.php">Portal</a>
+                            <?php endif; ?>
+                            <a href="/logout.php" style="color: var(--accent) !important;">Disconnect</a>
+                        </div>
+                    </li>
+                <?php else: ?>
+                    <li><a href="/login.php">Login</a></li>
+                    <li><a href="/register.php">Register</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
     </header>
@@ -441,8 +456,16 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 wrap.innerHTML = '';
                 _currentProductId = productId;
 
-                // Download disabled — greyed out placeholder
-                wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323',monospace;letter-spacing:2px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
+                if (parseFloat(p.price) > 0) {
+                    renderPayPalButtons(productId, p.price);
+                } else {
+                    if (p.allow_download && p.zip_file) {
+                        wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323',monospace;letter-spacing:2px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
+                    } else {
+                        // Download disabled — greyed out placeholder
+                        wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323',monospace;letter-spacing:2px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
+                    }
+                }
 
                 tracks = p.tracks || [];
                 renderTrackList();

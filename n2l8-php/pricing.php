@@ -35,7 +35,22 @@ log_visitor($pdo, 'page_view', '/pricing.php');
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/admin/login.php">Login</a></li>
+                <?php if (is_logged_in()): ?>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent);">Vault</a>
+                        <div class="dropdown-content">
+                            <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                                <a href="/admin/index.php">Mainframe</a>
+                            <?php else: ?>
+                                <a href="/portal/index.php">Portal</a>
+                            <?php endif; ?>
+                            <a href="/logout.php" style="color: var(--accent) !important;">Disconnect</a>
+                        </div>
+                    </li>
+                <?php else: ?>
+                    <li><a href="/login.php">Login</a></li>
+                    <li><a href="/register.php">Register</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
     </header>
