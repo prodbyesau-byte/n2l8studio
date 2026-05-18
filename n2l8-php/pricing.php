@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/helpers.php';
 
 $pdo  = get_pdo();
@@ -35,7 +36,7 @@ log_visitor($pdo, 'page_view', '/pricing.php');
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/admin/login.php">Login</a></li>
+                <li><a href="<?= is_logged_in() ? '/profile.php' : '/login.php' ?>"><?= is_logged_in() ? 'Profile' : 'Login' ?></a></li>
             </ul>
         </nav>
     </header>

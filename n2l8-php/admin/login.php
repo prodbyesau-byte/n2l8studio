@@ -5,8 +5,10 @@ require_once __DIR__ . '/../includes/helpers.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-if (is_logged_in()) {
+if (is_owner()) {
     redirect('/admin/index.php');
+} elseif (is_logged_in()) {
+    redirect('/profile.php');
 }
 
 $error = '';
@@ -15,12 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    $stmt = $pdo->prepare('SELECT id, password FROM users WHERE username = ?');
+    $stmt = $pdo->prepare('SELECT id, username, password, role FROM users WHERE username = ?');
     $stmt->execute([$username]);
     $user = $stmt->fetch();
 
-    if ($user && password_verify($password, $user['password'])) {
+    if ($user && password_verify($password, $user['password']) && in_array($user['role'], ['admin', 'owner'], true)) {
         $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['user_role'] = $user['role'];
         log_action($pdo, "Admin logged in: {$username}");
         redirect('/admin/index.php');
     } else {
@@ -33,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Login - n2l8studio</title>
+    <title>Owner Login - n2l8studio</title>
     <link rel="stylesheet" href="/static/style.css?v=2">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
@@ -48,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="page-home">
     <div class="container">
         <div class="login-box">
-            <h2>User Login</h2>
+            <h2>Owner Login</h2>
             <p style="color:var(--text-muted);margin-bottom:2rem;">Please authenticate.</p>
             <?php if ($error): ?>
             <div class="flash-msg">&gt; <?= h($error) ?></div>

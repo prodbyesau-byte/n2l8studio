@@ -639,6 +639,30 @@ h1 span.highlight {
     box-shadow: var(--accent-glow);
 }
 
+.kit-save-btn {
+    width: 100%;
+    margin-top: 0.6rem;
+    padding: 0.62rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-muted);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.kit-save-btn:hover,
+.kit-save-btn.saved {
+    color: #ffffff;
+    border-color: rgba(192, 21, 42, 0.55);
+    background: rgba(192, 21, 42, 0.12);
+}
+
 /* ── BEATS SECTION ── */
 .beats-container {
     max-width: 900px;

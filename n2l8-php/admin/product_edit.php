@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
-require_login();
+require_owner();
 $pdo = get_pdo();
 
 $id = (int)($_GET['id'] ?? 0);
@@ -76,6 +76,9 @@ $flash_msgs = get_flash();
         .track-num { color:var(--accent); font-family:'Righteous',cursive; font-size:1.4rem; min-width:32px; }
         .track-title-display { flex:1; color:var(--text-main); font-family:'VT323',monospace; font-size:1.2rem; }
         .track-body { display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; }
+        .preview-range-form { display:grid; grid-template-columns:1fr 1fr auto; gap:0.8rem; align-items:end; margin-top:0.8rem; padding-top:0.8rem; border-top:1px dashed rgba(123,225,168,0.15); }
+        .preview-range-form .form-group { margin-bottom:0; }
+        .preview-range-hint { grid-column:1/-1; color:var(--text-muted); font-family:'VT323',monospace; font-size:1rem; }
         audio { flex:1; height:36px; min-width:200px; }
         .btn { padding:0.4rem 1rem; font-family:'VT323',monospace; font-size:1rem; cursor:pointer; border:1px solid; background:transparent; transition:all 0.2s; text-decoration:none; display:inline-block; text-transform:uppercase; }
         .btn-green { color:var(--text-main); border-color:var(--text-main); }
@@ -89,6 +92,7 @@ $flash_msgs = get_flash();
         #loadingOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; flex-direction:column; color:var(--text-main); }
         #loadingOverlay.active { display:flex; }
         .spinner { width:50px; height:50px; border:3px solid var(--text-muted); border-top-color:var(--text-main); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:1rem; }
+        @media(max-width:700px){ .preview-range-form { grid-template-columns:1fr; } }
         @keyframes spin { to { transform:rotate(360deg); } }
     </style>
 </head>
@@ -199,6 +203,20 @@ $flash_msgs = get_flash();
             <small style="color:var(--text-muted);"><?= h($t['filename']) ?></small>
             <button type="button" class="btn btn-red btn-small" onclick="showConfirm(<?= (int)$t['id'] ?>)">DELETE</button>
         </div>
+        <form class="preview-range-form" action="/admin/track_preview_update.php" method="POST">
+            <input type="hidden" name="product_id" value="<?= (int)$product['id'] ?>">
+            <input type="hidden" name="track_id" value="<?= (int)$t['id'] ?>">
+            <div class="form-group">
+                <label>Preview Start (seconds)</label>
+                <input type="number" name="preview_start" min="0" step="0.01" value="<?= h(number_format((float)($t['preview_start'] ?? 0), 2, '.', '')) ?>">
+            </div>
+            <div class="form-group">
+                <label>Preview End (seconds)</label>
+                <input type="number" name="preview_end" min="0" step="0.01" placeholder="Full file" value="<?= isset($t['preview_end']) && $t['preview_end'] !== null ? h(number_format((float)$t['preview_end'], 2, '.', '')) : '' ?>">
+            </div>
+            <button type="submit" class="btn btn-green">Save Range</button>
+            <div class="preview-range-hint">Leave end empty to play from the start point to the end of the file.</div>
+        </form>
         <div class="confirm-bar" id="confirm-<?= (int)$t['id'] ?>">
             ⚠ Confirm permanent deletion of "<?= h($t['title']) ?>"?
             <form action="/admin/track_delete.php" method="POST" style="display:inline;margin:0;">

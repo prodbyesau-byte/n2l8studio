@@ -36,7 +36,7 @@ log_visitor($pdo, 'page_view', '/');
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/admin/login.php">Login</a></li>
+                <li><a href="<?= is_logged_in() ? '/profile.php' : '/login.php' ?>"><?= is_logged_in() ? 'Profile' : 'Login' ?></a></li>
             </ul>
         </nav>
         <div class="hero-content">

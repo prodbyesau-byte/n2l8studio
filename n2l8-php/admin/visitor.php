@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
-require_login();
+require_owner();
 
 $ip  = $_GET['ip'] ?? '';
 if (!$ip || !filter_var($ip, FILTER_VALIDATE_IP)) {
