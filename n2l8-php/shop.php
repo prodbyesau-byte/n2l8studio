@@ -13,6 +13,12 @@ $stmt = $is_graphics_page
     ? $pdo->query("SELECT * FROM products WHERE is_active = 1 AND type = 'graphics' ORDER BY id DESC")
     : $pdo->query("SELECT * FROM products WHERE is_active = 1 AND type IN ('loopkit', 'drumkit') ORDER BY id DESC");
 $products = $stmt->fetchAll();
+$saved_ids = [];
+if (is_customer_user()) {
+    $saved_stmt = $pdo->prepare('SELECT product_id FROM user_saved_products WHERE user_id = ?');
+    $saved_stmt->execute([$_SESSION['user_id']]);
+    $saved_ids = array_map('intval', array_column($saved_stmt->fetchAll(), 'product_id'));
+}
 log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php');
 ?>
 <!DOCTYPE html>
@@ -184,10 +190,10 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent);">Vault</a>
                         <div class="dropdown-content">
-                            <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                            <a href="/profile.php">My Profile</a>
+                            <a href="/portal/index.php">Client Vault</a>
+                            <?php if (is_owner()): ?>
                                 <a href="/admin/index.php">Mainframe</a>
-                            <?php else: ?>
-                                <a href="/portal/index.php">Portal</a>
                             <?php endif; ?>
                             <a href="/logout.php" style="color: var(--accent) !important;">Disconnect</a>
                         </div>
@@ -243,6 +249,11 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                             <?php endif; ?>
                         </div>
                         <button class="cta-btn kit-btn" onclick="openModal(<?= (int)$p['id'] ?>)">Preview &amp; Buy</button>
+                        <?php if (!is_owner()): ?>
+                        <button class="kit-save-btn <?= in_array((int)$p['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="saveProduct(this, <?= (int)$p['id'] ?>)">
+                            <?= in_array((int)$p['id'], $saved_ids, true) ? 'Saved' : 'Save' ?>
+                        </button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endforeach; endif; ?>
@@ -292,11 +303,27 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     <audio id="audioEl" preload="metadata"></audio>
 
     <script>
-    function logAction(action, metadata = '') {
+    function logAction(action, metadata = '', productId = '') {
         fetch('/api/log_action.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'action=' + encodeURIComponent(action) + '&metadata=' + encodeURIComponent(metadata)
+            body: 'action=' + encodeURIComponent(action) + '&metadata=' + encodeURIComponent(metadata) + '&product_id=' + encodeURIComponent(productId)
+        });
+    }
+    function saveProduct(btn, productId) {
+        fetch('/api/save_product.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'product_id=' + encodeURIComponent(productId)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) {
+                window.location.href = '/login.php';
+                return;
+            }
+            btn.classList.toggle('saved', data.saved);
+            btn.textContent = data.saved ? 'Saved' : 'Save';
         });
     }
 
@@ -392,6 +419,24 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         document.getElementById('btnPrev').disabled = onlyOne || currentIdx <= 0;
         document.getElementById('btnNext').disabled = onlyOne || currentIdx >= tracks.length - 1;
     }
+    function getSegment(track = tracks[currentIdx]) {
+        if (!track) return { start: 0, end: null, duration: audio.duration || 0 };
+        const start = Math.max(0, parseFloat(track.preview_start || 0));
+        const rawEnd = track.preview_end === null || track.preview_end === undefined || track.preview_end === '' ? null : parseFloat(track.preview_end);
+        const fileEnd = audio.duration || 0;
+        const end = rawEnd && rawEnd > start ? Math.min(rawEnd, fileEnd || rawEnd) : null;
+        const duration = end ? Math.max(0, end - start) : Math.max(0, fileEnd - start);
+        return { start, end, duration };
+    }
+    function finishCurrentTrack() {
+        if (currentIdx < tracks.length - 1) loadTrack(currentIdx + 1);
+        else {
+            audio.pause();
+            document.getElementById('btnPlayPause').innerHTML = '&#9654;';
+            currentIdx = -1;
+            renderTrackList();
+        }
+    }
     function renderTrackList() {
         const list = document.getElementById('modalTrackList');
         list.innerHTML = '';
@@ -412,8 +457,13 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     }
     function loadTrack(idx) {
         currentIdx = idx;
+        const start = Math.max(0, parseFloat(tracks[idx].preview_start || 0));
         audio.src = tracks[idx].url;
-        audio.play();
+        audio.addEventListener('loadedmetadata', () => {
+            if (start > 0 && start < audio.duration) audio.currentTime = start;
+            audio.play();
+        }, { once: true });
+        audio.load();
         document.getElementById('nowPlayingName').textContent = tracks[idx].title;
         logAction('play_track', tracks[idx].title);
         document.getElementById('btnPlayPause').innerHTML = '&#9646;&#9646;';
@@ -470,7 +520,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 tracks = p.tracks || [];
                 renderTrackList();
                 modal.classList.add('open');
-                logAction('modal_open', p.title);
+                logAction('view_product', p.title, productId);
                 // iOS-safe body scroll lock
                 document.body.dataset.scrollY = window.scrollY;
                 document.body.style.position = 'fixed';
@@ -500,8 +550,15 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     document.getElementById('btnNext').addEventListener('click', () => { if (currentIdx < tracks.length-1) loadTrack(currentIdx+1); });
     audio.addEventListener('timeupdate', () => {
         if (!audio.duration) return;
-        document.getElementById('progressBar').style.width = (audio.currentTime/audio.duration*100)+'%';
-        document.getElementById('playerTime').textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
+        const segment = getSegment();
+        if (segment.end && audio.currentTime >= segment.end) {
+            finishCurrentTrack();
+            return;
+        }
+        const elapsed = Math.max(0, audio.currentTime - segment.start);
+        const duration = segment.duration || audio.duration;
+        document.getElementById('progressBar').style.width = (Math.min(1, elapsed / duration) * 100) + '%';
+        document.getElementById('playerTime').textContent = `${fmt(elapsed)} / ${fmt(duration)}`;
     });
     // Progress bar: click + touch seek
     function seekFromEvent(e) {
@@ -509,15 +566,15 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         const rect = document.getElementById('progressWrap').getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-        audio.currentTime = pct * audio.duration;
+        const segment = getSegment();
+        audio.currentTime = segment.start + pct * (segment.duration || audio.duration);
     }
     const pw = document.getElementById('progressWrap');
     pw.addEventListener('click', seekFromEvent);
     pw.addEventListener('touchstart', e => { e.preventDefault(); seekFromEvent(e); }, { passive: false });
     pw.addEventListener('touchmove',  e => { e.preventDefault(); seekFromEvent(e); }, { passive: false });
     audio.addEventListener('ended', () => {
-        if (currentIdx < tracks.length-1) loadTrack(currentIdx+1);
-        else { document.getElementById('btnPlayPause').innerHTML = '&#9646;&#9646;'; currentIdx=-1; renderTrackList(); }
+        finishCurrentTrack();
     });
     window.onload = () => {
         const previewId = new URLSearchParams(window.location.search).get('preview');

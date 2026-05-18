@@ -97,6 +97,8 @@ SCHEMA = [
       `product_id` INT          NOT NULL,
       `title`      VARCHAR(150) NOT NULL,
       `filename`   VARCHAR(255) NOT NULL,
+      `preview_start` DECIMAL(8,2) NOT NULL DEFAULT 0.00,
+      `preview_end`   DECIMAL(8,2) NULL,
       `position`   INT          NOT NULL DEFAULT 0,
       FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -142,6 +144,32 @@ SCHEMA = [
       INDEX `idx_created` (`created_at`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
+    ("user_saved_products", """
+    CREATE TABLE IF NOT EXISTS `user_saved_products` (
+      `id`         INT AUTO_INCREMENT PRIMARY KEY,
+      `user_id`    INT NOT NULL,
+      `product_id` INT NOT NULL,
+      `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY `uniq_user_product` (`user_id`, `product_id`),
+      INDEX `idx_user_saved` (`user_id`),
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
+    ("user_activity", """
+    CREATE TABLE IF NOT EXISTS `user_activity` (
+      `id`         INT AUTO_INCREMENT PRIMARY KEY,
+      `user_id`    INT NOT NULL,
+      `product_id` INT NULL,
+      `action`     VARCHAR(80) NOT NULL,
+      `metadata`   VARCHAR(255) NOT NULL DEFAULT '',
+      `page`       VARCHAR(255) NOT NULL DEFAULT '',
+      `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX `idx_user_activity` (`user_id`, `created_at`),
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
 ]
 
 # ── Create tables ─────────────────────────────────────────────────────────────
@@ -152,6 +180,23 @@ for name, sql in SCHEMA:
         print(f"  ✅ {name}")
     except Exception as e:
         print(f"  ❌ {name}: {e}")
+
+conn.commit()
+
+print("\nApplying schema upgrades...")
+UPGRADES = [
+    ("product_tracks.preview_start", "ALTER TABLE product_tracks ADD COLUMN preview_start DECIMAL(8,2) NOT NULL DEFAULT 0.00 AFTER filename"),
+    ("product_tracks.preview_end", "ALTER TABLE product_tracks ADD COLUMN preview_end DECIMAL(8,2) NULL AFTER preview_start"),
+]
+for label, sql in UPGRADES:
+    try:
+        cur.execute(sql)
+        print(f"  ✅ {label}")
+    except Exception as e:
+        if "Duplicate column" in str(e) or "1060" in str(e):
+            print(f"  ⚠️  {label} already exists — skipped.")
+        else:
+            print(f"  ❌ {label}: {e}")
 
 conn.commit()
 

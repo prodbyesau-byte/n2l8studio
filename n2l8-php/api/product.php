@@ -18,7 +18,7 @@ $p = $stmt->fetch();
 if (!$p) { http_response_code(404); echo json_encode(['error'=>'Not found']); exit; }
 
 
-$tracks_stmt = $pdo->prepare('SELECT id, title, filename FROM product_tracks WHERE product_id = ? ORDER BY position ASC');
+$tracks_stmt = $pdo->prepare('SELECT id, title, filename, preview_start, preview_end FROM product_tracks WHERE product_id = ? ORDER BY position ASC');
 $tracks_stmt->execute([$id]);
 $tracks = $tracks_stmt->fetchAll();
 
@@ -42,5 +42,7 @@ echo json_encode([
         'id'    => (int)$t['id'],
         'title' => $t['title'],
         'url'   => UPLOAD_URL . $t['filename'],
+        'preview_start' => isset($t['preview_start']) ? (float)$t['preview_start'] : 0,
+        'preview_end'   => $t['preview_end'] !== null ? (float)$t['preview_end'] : null,
     ], $tracks),
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

@@ -6,10 +6,10 @@ require_once __DIR__ . '/includes/helpers.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (is_logged_in()) {
-    if (($_SESSION['role'] ?? '') === 'admin') {
+    if (is_owner()) {
         redirect('/admin/index.php');
     } else {
-        redirect('/portal/index.php');
+        redirect('/profile.php');
     }
 }
 
@@ -18,7 +18,7 @@ $content = get_site_content($pdo);
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $login_input = trim($_POST['login_input'] ?? '');
+    $login_input = trim($_POST['login_input'] ?? $_POST['username'] ?? '');
     $password    = $_POST['password'] ?? '';
 
     if (empty($login_input) || empty($password)) {
@@ -30,17 +30,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id']  = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['role']     = $user['role'];
-            $_SESSION['email']    = $user['email'];
+            $_SESSION['user_id']   = $user['id'];
+            $_SESSION['username']  = $user['username'];
+            $_SESSION['role']      = $user['role'];
+            $_SESSION['user_role'] = $user['role'];
+            $_SESSION['email']     = $user['email'];
 
             log_action($pdo, "User logged in: {$user['username']} ({$user['role']})");
 
-            if ($user['role'] === 'admin') {
+            if (is_owner()) {
                 redirect('/admin/index.php');
             } else {
-                redirect('/portal/index.php');
+                redirect('/profile.php');
             }
         } else {
             $error = 'Invalid credentials — access denied.';

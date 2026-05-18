@@ -38,10 +38,10 @@ $site = get_site_content($pdo);
                     <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent);">Vault</a>
                         <div class="dropdown-content">
-                            <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                            <a href="/profile.php">My Profile</a>
+                            <a href="/portal/index.php">Client Vault</a>
+                            <?php if (is_owner()): ?>
                                 <a href="/admin/index.php">Mainframe</a>
-                            <?php else: ?>
-                                <a href="/portal/index.php">Portal</a>
                             <?php endif; ?>
                             <a href="/logout.php" style="color: var(--accent) !important;">Disconnect</a>
                         </div>

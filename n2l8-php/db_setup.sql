@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS `product_tracks` (
   `product_id` INT          NOT NULL,
   `title`      VARCHAR(150) NOT NULL,
   `filename`   VARCHAR(255) NOT NULL,
+  `preview_start` DECIMAL(8,2) NOT NULL DEFAULT 0.00,
+  `preview_end`   DECIMAL(8,2) NULL,
   `position`   INT          NOT NULL DEFAULT 0,
   FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -65,6 +67,31 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   `id`         INT AUTO_INCREMENT PRIMARY KEY,
   `action`     VARCHAR(255) NOT NULL,
   `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- User saved kits and profile history
+CREATE TABLE IF NOT EXISTS `user_saved_products` (
+  `id`         INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id`    INT NOT NULL,
+  `product_id` INT NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uniq_user_product` (`user_id`, `product_id`),
+  INDEX `idx_user_saved` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `user_activity` (
+  `id`         INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id`    INT NOT NULL,
+  `product_id` INT NULL,
+  `action`     VARCHAR(80) NOT NULL,
+  `metadata`   VARCHAR(255) NOT NULL DEFAULT '',
+  `page`       VARCHAR(255) NOT NULL DEFAULT '',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_user_activity` (`user_id`, `created_at`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
