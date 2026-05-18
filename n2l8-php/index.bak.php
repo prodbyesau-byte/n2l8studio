@@ -14,15 +14,13 @@ log_visitor($pdo, 'page_view', '/');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>n2l8studio - Our Music Community</title>
     <meta name="description" content="n2l8studio is a creative music community and studio for passionate artists, producers, and creative souls.">
-    <link rel="stylesheet" href="/static/style.css?v=3">
-    <link rel="icon" type="image/png" href="/static/logo.png">
-    <link rel="apple-touch-icon" href="/static/logo.png">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
 </head>
 <body class="page-home">
     <header class="hero">
         <nav>
-            <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
+            <a href="/index.php" class="logo-text" style="text-decoration:none;">n2l8studio</a>
             <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
@@ -30,27 +28,38 @@ log_visitor($pdo, 'page_view', '/');
                 <li class="dropdown">
                     <a href="javascript:void(0)" class="dropbtn">Shop</a>
                     <div class="dropdown-content">
-                        <a href="/shop.php">Kits</a>
-                        <a href="/graphics.php">Graphics</a>
+                        <a href="/shop.php">Loopkits & Drumkits</a>
                         <a href="/beats.php">Beats</a>
                     </div>
                 </li>
-                <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/admin/login.php">Login</a></li>
+                <li><a href="/pricing.php"><?= h($site['nav_pricing'] ?? 'Mixing & Mastering') ?></a></li>
+                <li><a href="/admin/login.php" class="nav-admin-btn">Login</a></li>
             </ul>
         </nav>
         <div class="hero-content">
             <div class="logo-highlight">
-                <img src="/static/logo.png" alt="N2L8 STUDIO Logo" class="hero-logo">
+                <img src="/static/logo.png" alt="n2l8studio Logo" class="hero-logo">
             </div>
-            <div class="hero-brand-wordmark">N<span>2</span>L8studios</div>
-            <p>PREMIUM SOUND &amp; ART COLLECTIVE SINCE 2025</p>
+            <h1><?= h($site['home_hero_h1'] ?? 'n2l8studio') ?></h1>
+            <p><?= h($site['home_hero_sub'] ?? '') ?></p>
+            <div class="hero-buttons">
+                <a href="/shop.php" class="cta-btn">View Shop</a>
+                <a href="/pricing.php" class="cta-btn secondary">Our Services</a>
+            </div>
         </div>
     </header>
 
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2><?= h($site['home_contact_h2'] ?? 'Join n2l8studio') ?></h2>
+            <p><?= h($site['home_contact_p'] ?? '') ?></p>
+            <a href="mailto:contact@n2l8studio.com" class="cta-btn secondary">Contact Us</a>
+        </div>
+    </section>
+
+
     <footer>
         <p><?= h($site['footer_text'] ?? '© 2026 n2l8studio. All rights reserved.') ?></p>
-        <a href="/admin/login.php" class="nav-admin-btn">Owner Login</a>
     </footer>
     <script>
     const ham = document.getElementById('navHamburger');

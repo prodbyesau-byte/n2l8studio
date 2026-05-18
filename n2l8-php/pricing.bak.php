@@ -11,17 +11,15 @@ log_visitor($pdo, 'page_view', '/pricing.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mixing &amp; Mastering - N2L8 STUDIO</title>
+    <title>Mixing &amp; Mastering - n2l8studio</title>
     <meta name="description" content="Professional audio engineering from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css?v=3">
-    <link rel="icon" type="image/png" href="/static/logo.png">
-    <link rel="apple-touch-icon" href="/static/logo.png">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
 </head>
 <body class="page-pricing">
     <header class="hero" style="min-height:auto;padding-bottom:2rem;">
         <nav>
-            <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
+            <a href="/index.php" class="logo-text" style="text-decoration:none;">n2l8studio</a>
             <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
@@ -29,13 +27,12 @@ log_visitor($pdo, 'page_view', '/pricing.php');
                 <li class="dropdown">
                     <a href="javascript:void(0)" class="dropbtn">Shop</a>
                     <div class="dropdown-content">
-                        <a href="/shop.php">Kits</a>
-                        <a href="/graphics.php">Graphics</a>
+                        <a href="/shop.php">Loopkits & Drumkits</a>
                         <a href="/beats.php">Beats</a>
                     </div>
                 </li>
-                <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/admin/login.php">Login</a></li>
+                <li><a href="/pricing.php"><?= h($site['nav_pricing'] ?? 'Mixing & Mastering') ?></a></li>
+                <li><a href="/admin/login.php" class="nav-admin-btn">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -69,10 +66,7 @@ log_visitor($pdo, 'page_view', '/pricing.php');
         </div>
     </section>
 
-    <footer>
-        <p><?= h($site['footer_text'] ?? '© 2026 n2l8studio. All rights reserved.') ?></p>
-        <a href="/admin/login.php" class="nav-admin-btn">Owner Login</a>
-    </footer>
+    <footer><p><?= h($site['footer_text'] ?? '© 2026 n2l8studio. All rights reserved.') ?></p></footer>
     <script>
     const ham = document.getElementById('navHamburger');
     const nl  = document.getElementById('navLinks');

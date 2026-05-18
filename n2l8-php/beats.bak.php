@@ -24,17 +24,16 @@ log_visitor($pdo, 'page_view', '/beats.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beats - N2L8 STUDIO</title>
+    <title>Beats - n2l8studio</title>
     <meta name="description" content="Premium beats from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css?v=3">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="/static/logo.png">
-    <link rel="apple-touch-icon" href="/static/logo.png">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==">
 </head>
 <body class="page-beats">
     <header class="hero" style="min-height:auto;padding-bottom:1rem;">
         <nav>
-            <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
+            <a href="/index.php" class="logo-text" style="text-decoration:none;">n2l8studio</a>
             <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
@@ -42,13 +41,12 @@ log_visitor($pdo, 'page_view', '/beats.php');
                 <li class="dropdown">
                     <a href="javascript:void(0)" class="dropbtn">Shop</a>
                     <div class="dropdown-content">
-                        <a href="/shop.php">Kits</a>
-                        <a href="/graphics.php">Graphics</a>
+                        <a href="/shop.php">Loopkits & Drumkits</a>
                         <a href="/beats.php">Beats</a>
                     </div>
                 </li>
-                <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/admin/login.php">Login</a></li>
+                <li><a href="/pricing.php"><?= h($site['nav_pricing'] ?? 'Mixing & Mastering') ?></a></li>
+                <li><a href="/admin/login.php" class="nav-admin-btn">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -84,17 +82,17 @@ log_visitor($pdo, 'page_view', '/beats.php');
     </main>
 
     <!-- Global Player Bar (Hidden by default, shows when playing) -->
-    <div id="playerBar" style="position:fixed; bottom:0; left:0; width:100%; background:rgba(5,5,8,0.96); border-top:1.5px solid var(--accent); padding:1.2rem; display:none; z-index:1000; box-shadow: 0 -5px 25px rgba(0,0,0,0.5);">
-        <div class="container" style="display:flex; align-items:center; gap:2rem; justify-content:space-between;">
+    <div id="playerBar" style="position:fixed; bottom:0; left:0; width:100%; background:rgba(5,10,5,0.95); border-top:2px solid var(--accent); padding:1rem; display:none; z-index:1000;">
+        <div class="container" style="display:flex; align-items:center; gap:1.5rem;">
             <div id="playerInfo" style="flex:1;">
-                <div id="playerTitle" style="font-family:'Montserrat',sans-serif; font-weight:700; color:var(--text-main); font-size: 0.95rem;"></div>
-                <div id="playerArtist" style="font-size:0.75rem; color:var(--text-muted); font-family:'Montserrat',sans-serif; margin-top: 0.2rem;"></div>
+                <div id="playerTitle" style="font-family:'Righteous'; color:var(--text-main);"></div>
+                <div id="playerArtist" style="font-size:0.85rem; color:var(--text-muted);"></div>
             </div>
-            <div class="player-controls" style="display:flex; align-items:center; gap:1.2rem; flex:2;">
+            <div class="player-controls" style="display:flex; align-items:center; gap:1rem;">
                 <button id="globalPlayBtn" class="beat-play-btn">▶</button>
-                <div style="font-family:'Montserrat',sans-serif; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="currentTime">0:00</div>
-                <input type="range" id="seekSlider" style="flex:1; accent-color:var(--accent); cursor:pointer; height:4px; border-radius:2px;" value="0" step="0.1">
-                <div style="font-family:'Montserrat',sans-serif; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="durationTime">0:00</div>
+                <div style="font-family:'VT323'; color:var(--accent); min-width:40px;" id="currentTime">0:00</div>
+                <input type="range" id="seekSlider" style="flex:1; accent-color:var(--accent);" value="0" step="0.1">
+                <div style="font-family:'VT323'; color:var(--accent); min-width:40px;" id="durationTime">0:00</div>
             </div>
         </div>
     </div>
@@ -109,10 +107,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
         </div>
     </div>
 
-    <footer>
-        <p><?= h($site['footer_text'] ?? '© 2026 n2l8studio. All rights reserved.') ?></p>
-        <a href="/admin/login.php" class="nav-admin-btn">Owner Login</a>
-    </footer>
+    <footer><p><?= h($site['footer_text'] ?? '© 2026 n2l8studio. All rights reserved.') ?></p></footer>
 
     <?php $pp_id = defined('PAYPAL_CLIENT_ID') ? PAYPAL_CLIENT_ID : 'test'; ?>
     <script src="https://www.paypal.com/sdk/js?client-id=<?= h($pp_id) ?>&currency=USD&intent=capture" data-sdk-integration-source="button-factory"></script>

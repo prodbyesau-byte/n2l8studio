@@ -257,6 +257,7 @@ try {
                         <select name="type">
                             <option value="loopkit">Loop &amp; Melody Pack</option>
                             <option value="drumkit">Drumkit</option>
+                            <option value="graphics">Graphic Art</option>
                             <option value="beat">Beat</option>
                         </select>
                     </div>

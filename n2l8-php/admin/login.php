@@ -33,8 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - n2l8studio</title>
+    <title>User Login - n2l8studio</title>
     <link rel="stylesheet" href="/static/style.css?v=2">
+    <link rel="icon" type="image/png" href="/static/logo.png">
+    <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
     <style>
         .login-box { max-width:400px; margin:100px auto; background:rgba(26,26,31,0.9); padding:3rem 2rem; border:2px solid var(--text-muted); text-align:center; box-shadow:inset 0 0 10px rgba(192,21,42,0.1),0 0 15px rgba(192,21,42,0.15); }
@@ -46,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="page-home">
     <div class="container">
         <div class="login-box">
-            <h2>Admin Login</h2>
+            <h2>User Login</h2>
             <p style="color:var(--text-muted);margin-bottom:2rem;">Please authenticate.</p>
             <?php if ($error): ?>
             <div class="flash-msg">&gt; <?= h($error) ?></div>

@@ -123,6 +123,7 @@ $flash_msgs = get_flash();
                 <select name="type">
                     <option value="loopkit" <?= $product['type']==='loopkit'?'selected':'' ?>>Loop Kit</option>
                     <option value="drumkit"  <?= $product['type']==='drumkit' ?'selected':'' ?>>Drumkit</option>
+                    <option value="graphics" <?= $product['type']==='graphics'?'selected':'' ?>>Graphic Art</option>
                     <option value="beat"     <?= $product['type']==='beat'    ?'selected':'' ?>>Beat</option>
                 </select>
             </div>
