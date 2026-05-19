@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($user && password_verify($password, $user['password'])) {
             if ($user['role'] !== 'admin' && empty($user['is_approved'])) {
-                $error = 'Din konto afventer administrativ godkendelse. Du kan logge ind, så snart din profil er godkendt.';
+                $error = 'Your account is pending administrative approval. You will be able to log in once your profile has been verified.';
             } else {
                 $_SESSION['user_id']   = $user['id'];
                 $_SESSION['username']  = $user['username'];

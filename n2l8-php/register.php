@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('INSERT INTO users (username, email, password, role, is_approved) VALUES (?, ?, ?, "user", 0)');
             if ($stmt->execute([$username, $email, $hash])) {
                 log_action($pdo, "New user registered (pending approval): {$username} ({$email})");
-                flash('Bruger oprettet! Din konto afventer nu administrativ godkendelse. Du kan logge ind, så snart din konto er godkendt.');
+                flash('Account created! Your account is now pending administrative approval. You will be able to log in as soon as your account has been verified.');
                 redirect('/login.php');
             } else {
                 $error = 'Registration failed. Please try again.';
