@@ -170,6 +170,18 @@ SCHEMA = [
       FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
+    ("messages", """
+    CREATE TABLE IF NOT EXISTS `messages` (
+      `id`           INT AUTO_INCREMENT PRIMARY KEY,
+      `sender_id`    INT NULL,
+      `recipient_id` INT NOT NULL,
+      `subject`      VARCHAR(255) NOT NULL,
+      `message`      TEXT NOT NULL,
+      `is_read`      TINYINT(1) NOT NULL DEFAULT 0,
+      `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (`recipient_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
 ]
 
 # ── Create tables ─────────────────────────────────────────────────────────────
@@ -187,6 +199,7 @@ print("\nApplying schema upgrades...")
 UPGRADES = [
     ("product_tracks.preview_start", "ALTER TABLE product_tracks ADD COLUMN preview_start DECIMAL(8,2) NOT NULL DEFAULT 0.00 AFTER filename"),
     ("product_tracks.preview_end", "ALTER TABLE product_tracks ADD COLUMN preview_end DECIMAL(8,2) NULL AFTER preview_start"),
+    ("users.profile_picture", "ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255) NULL AFTER email"),
 ]
 for label, sql in UPGRADES:
     try:

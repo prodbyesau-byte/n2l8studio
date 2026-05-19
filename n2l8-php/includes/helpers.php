@@ -92,7 +92,7 @@ function save_upload_multiple(string $file_key, array $allowed_exts): array {
 
 // ─── ALLOWED TYPE SETS ──────────────────────────────────────────────────────
 
-const ALLOWED_IMAGES = ['png', 'jpg', 'jpeg', 'webp'];
+const ALLOWED_IMAGES = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
 const ALLOWED_FILES  = ['zip', 'rar', '7z', 'wav', 'mp3'];
 const ALLOWED_AUDIO  = ['mp3', 'wav', 'ogg', 'flac'];
 

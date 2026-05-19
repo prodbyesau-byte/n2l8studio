@@ -12,6 +12,14 @@ $orders   = $pdo->query('SELECT o.*, p.title as product_title FROM orders o LEFT
 $logs     = $pdo->query('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 30')->fetchAll();
 $contents = $pdo->query('SELECT * FROM content ORDER BY page, section_key')->fetchAll();
 
+$all_users = $pdo->query('SELECT id, username, email, role FROM users ORDER BY username ASC')->fetchAll();
+$sent_messages = $pdo->query('
+    SELECT m.*, u.username as recipient_username 
+    FROM messages m 
+    JOIN users u ON m.recipient_id = u.id 
+    ORDER BY m.id DESC
+')->fetchAll();
+
 $active_count = count(array_filter($products, fn($p) => $p['is_active']));
 $pages = array_unique(array_column($contents, 'page'));
 sort($pages);
@@ -202,6 +210,7 @@ try {
             <button class="admin-tab-btn" id="tab-btn-dashboard">Dashboard</button>
             <button class="admin-tab-btn" id="tab-btn-products">Products</button>
             <button class="admin-tab-btn" id="tab-btn-orders">Orders</button>
+            <button class="admin-tab-btn" id="tab-btn-messages">Messages</button>
             <button class="admin-tab-btn" id="tab-btn-content">Content Editor</button>
             <button class="admin-tab-btn" id="tab-btn-logs">Audit Log</button>
             <button class="admin-tab-btn" id="tab-btn-stats">Analytics</button>
@@ -214,6 +223,7 @@ try {
             <button class="admin-tab-menu-item" data-tab="dashboard">Dashboard</button>
             <button class="admin-tab-menu-item" data-tab="products">Products</button>
             <button class="admin-tab-menu-item" data-tab="orders">Orders</button>
+            <button class="admin-tab-menu-item" data-tab="messages">Messages</button>
             <button class="admin-tab-menu-item" data-tab="content">Content Editor</button>
             <button class="admin-tab-menu-item" data-tab="logs">Audit Log</button>
             <button class="admin-tab-menu-item" data-tab="stats">Analytics</button>
@@ -371,6 +381,61 @@ try {
                     <?php if (empty($orders)): ?>
                     <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:2rem;">No orders yet.</td></tr>
                     <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── MESSAGES ── -->
+    <div id="tab-messages" class="admin-panel">
+        <div class="section-title">Send Message to User</div>
+        <div class="form-card">
+            <form action="/admin/send_message.php" method="POST">
+                <div class="form-grid">
+                    <div class="form-group form-full">
+                        <label>Recipient *</label>
+                        <select name="recipient_id" required>
+                            <option value="">-- Select Recipient --</option>
+                            <?php foreach ($all_users as $u): ?>
+                                <option value="<?= (int)$u['id'] ?>"><?= h($u['username']) ?> (<?= h($u['email'] ?: 'No email') ?>) [<?= h($u['role']) ?>]</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group form-full">
+                        <label>Subject *</label>
+                        <input type="text" name="subject" required placeholder="e.g. Welcome to N2L8 Studio Premium!">
+                    </div>
+                    <div class="form-group form-full">
+                        <label>Message *</label>
+                        <textarea name="message" required placeholder="Type your message here..." style="min-height: 150px;"></textarea>
+                    </div>
+                </div>
+                <br>
+                <button type="submit" class="cta-btn" style="font-size:1.1rem;padding:0.8rem 3rem;">Send Message</button>
+            </form>
+        </div>
+
+        <div class="section-title">Sent Messages History</div>
+        <div class="form-card" style="padding:0;overflow-x:auto;">
+            <table class="admin-table">
+                <thead><tr><th>Recipient</th><th>Subject</th><th>Sent Date</th><th>Status</th></tr></thead>
+                <tbody>
+                    <?php if (empty($sent_messages)): ?>
+                        <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:2rem;">No messages sent yet.</td></tr>
+                    <?php else: foreach ($sent_messages as $msg): ?>
+                        <tr>
+                            <td><strong><?= h($msg['recipient_username']) ?></strong></td>
+                            <td><?= h($msg['subject']) ?></td>
+                            <td style="color:var(--text-muted);font-size:0.9rem;"><?= h($msg['created_at']) ?></td>
+                            <td>
+                                <?php if ($msg['is_read']): ?>
+                                    <span class="pill pill-active">Read</span>
+                                <?php else: ?>
+                                    <span class="pill pill-inactive" style="background:rgba(255,194,92,0.1);color:#ffc25c;border-color:#ffc25c;">Unread</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
@@ -561,7 +626,7 @@ try {
 
 <script>
 const INITIAL_TAB = '<?= h($tab) ?>';
-const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', content:'Content Editor', logs:'Audit Log', stats:'Analytics' };
+const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', messages:'Messages', content:'Content Editor', logs:'Audit Log', stats:'Analytics' };
 
 function moveSlider(btn) {
     const slider = document.getElementById('tabSlider');

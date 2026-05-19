@@ -13,7 +13,18 @@ $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 $user_email = $_SESSION['email'] ?? '';
 
-// 1. Fetch purchased products
+// 1. Fetch user profile info (avatar picture)
+$user_stmt = $pdo->prepare('SELECT profile_picture FROM users WHERE id = ?');
+$user_stmt->execute([$user_id]);
+$profile_pic = $user_stmt->fetchColumn() ?: '';
+
+// 2. Fetch inbox messages and unread count
+$msg_stmt = $pdo->prepare('SELECT * FROM messages WHERE recipient_id = ? ORDER BY id DESC');
+$msg_stmt->execute([$user_id]);
+$messages = $msg_stmt->fetchAll();
+$unread_count = count(array_filter($messages, fn($m) => !$m['is_read']));
+
+// 3. Fetch purchased products
 $stmt = $pdo->prepare('
     SELECT o.id as order_id, p.* 
     FROM orders o 
@@ -24,44 +35,74 @@ $stmt = $pdo->prepare('
 $stmt->execute([$user_email]);
 $purchased_products = $stmt->fetchAll();
 
-// 2. Fetch free products from shop
+// 4. Fetch free products from shop
 $free_products = $pdo->query('
     SELECT * FROM products 
     WHERE price = 0.00 AND is_active = 1 
     ORDER BY id DESC
 ')->fetchAll();
 
-// 3. Handle password change request
+// 5. Form handling
 $success_msg = '';
 $error_msg = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
-    $current_pass = $_POST['current_password'] ?? '';
-    $new_pass     = $_POST['new_password'] ?? '';
-    $confirm_pass = $_POST['confirm_password'] ?? '';
 
-    if (empty($current_pass) || empty($new_pass) || empty($confirm_pass)) {
-        $error_msg = 'All password fields are required.';
-    } elseif ($new_pass !== $confirm_pass) {
-        $error_msg = 'New passwords do not match.';
-    } elseif (strlen($new_pass) < 6) {
-        $error_msg = 'New password must be at least 6 characters.';
-    } else {
-        // Verify current password
-        $stmt = $pdo->prepare('SELECT password FROM users WHERE id = ?');
-        $stmt->execute([$user_id]);
-        $user_pass = $stmt->fetchColumn();
-
-        if ($user_pass && password_verify($current_pass, $user_pass)) {
-            $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
-            if ($stmt->execute([$new_hash, $user_id])) {
-                $success_msg = 'Password changed successfully.';
-                log_action($pdo, "User {$username} changed their password.");
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 5a. Profile Picture Upload
+    if (isset($_POST['upload_avatar'])) {
+        $avatar = save_upload('avatar_file', ALLOWED_IMAGES);
+        if ($avatar) {
+            // Delete old avatar from filesystem if any
+            if (!empty($profile_pic)) {
+                $old_avatar_path = rtrim(UPLOAD_DIR, '/') . '/' . basename($profile_pic);
+                if (file_exists($old_avatar_path)) {
+                    @unlink($old_avatar_path);
+                }
+            }
+            
+            // Save to DB
+            $upd_stmt = $pdo->prepare('UPDATE users SET profile_picture = ? WHERE id = ?');
+            if ($upd_stmt->execute([$avatar, $user_id])) {
+                $profile_pic = $avatar; // update display state
+                $success_msg = 'Profile picture updated successfully.';
+                log_action($pdo, "User {$username} uploaded a new profile picture.");
             } else {
-                $error_msg = 'Failed to update password. Please try again.';
+                $error_msg = 'Failed to save avatar filename in the database.';
             }
         } else {
-            $error_msg = 'Incorrect current password.';
+            $error_msg = 'Invalid image file or upload failed. Supported formats: PNG, JPG, JPEG, WEBP, GIF (Max 2MB).';
+        }
+    }
+    
+    // 5b. Password Change
+    if (isset($_POST['change_password'])) {
+        $current_pass = $_POST['current_password'] ?? '';
+        $new_pass     = $_POST['new_password'] ?? '';
+        $confirm_pass = $_POST['confirm_password'] ?? '';
+
+        if (empty($current_pass) || empty($new_pass) || empty($confirm_pass)) {
+            $error_msg = 'All password fields are required.';
+        } elseif ($new_pass !== $confirm_pass) {
+            $error_msg = 'New passwords do not match.';
+        } elseif (strlen($new_pass) < 6) {
+            $error_msg = 'New password must be at least 6 characters.';
+        } else {
+            // Verify current password
+            $stmt = $pdo->prepare('SELECT password FROM users WHERE id = ?');
+            $stmt->execute([$user_id]);
+            $user_pass = $stmt->fetchColumn();
+
+            if ($user_pass && password_verify($current_pass, $user_pass)) {
+                $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
+                if ($stmt->execute([$new_hash, $user_id])) {
+                    $success_msg = 'Password changed successfully.';
+                    log_action($pdo, "User {$username} changed their password.");
+                } else {
+                    $error_msg = 'Failed to update password. Please try again.';
+                }
+            } else {
+                $error_msg = 'Incorrect current password.';
+            }
         }
     }
 }
@@ -363,10 +404,19 @@ $tab = $_GET['tab'] ?? 'library';
 
     <div class="portal-container">
         
-        <div class="portal-header">
-            <div class="portal-welcome">
-                <h2>CLIENT PORTAL</h2>
-                <p>Welcome back, <span><?= h($username) ?></span> &nbsp;|&nbsp; Credentials: <span><?= h($user_email) ?></span></p>
+        <div class="portal-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1.5rem;">
+            <div style="display:flex; align-items:center; gap:1.2rem;">
+                <?php if ($profile_pic): ?>
+                    <img src="/static/uploads/<?= h($profile_pic) ?>" alt="Avatar" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); box-shadow: var(--accent-glow);">
+                <?php else: ?>
+                    <div style="width:64px; height:64px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-family:'Syncopate',sans-serif; font-size:1.5rem; font-weight:700; color:#fff; text-shadow:0 0 10px rgba(255,255,255,0.2);">
+                        <?= strtoupper(substr($username, 0, 1)) ?>
+                    </div>
+                <?php endif; ?>
+                <div class="portal-welcome">
+                    <h2>CLIENT PORTAL</h2>
+                    <p>Welcome back, <span><?= h($username) ?></span> &nbsp;|&nbsp; Credentials: <span><?= h($user_email) ?></span></p>
+                </div>
             </div>
             <div>
                 <a href="/logout.php" class="cta-btn secondary" style="font-size: 0.72rem; padding: 0.6rem 1.2rem;">LOGOUT</a>
@@ -376,6 +426,7 @@ $tab = $_GET['tab'] ?? 'library';
         <div class="portal-tabs">
             <button class="portal-tab-btn <?= $tab === 'library' ? 'active' : '' ?>" onclick="switchTab('library')">My Library (<?= count($purchased_products) ?>)</button>
             <button class="portal-tab-btn <?= $tab === 'free' ? 'active' : '' ?>" onclick="switchTab('free')">Claim Free Kits (<?= count($free_products) ?>)</button>
+            <button class="portal-tab-btn <?= $tab === 'inbox' ? 'active' : '' ?>" onclick="switchTab('inbox')">Inbox (<?= $unread_count ?>)</button>
             <button class="portal-tab-btn <?= $tab === 'settings' ? 'active' : '' ?>" onclick="switchTab('settings')">Account Settings</button>
         </div>
 
@@ -452,19 +503,90 @@ $tab = $_GET['tab'] ?? 'library';
             <?php endif; ?>
         </div>
 
+        <!-- ── TAB: INBOX ── -->
+        <div id="tab-inbox" class="portal-tab <?= $tab === 'inbox' ? 'active' : '' ?>">
+            <div class="portal-card" style="padding: 0; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <div style="padding: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff;">INBOX</h3>
+                    <p style="color:var(--text-muted); font-size:0.82rem; margin:0; font-family:'Montserrat',sans-serif; font-weight:500;">View private messages and community notifications sent by N2L8 Studio.</p>
+                </div>
+                
+                <?php if (empty($messages)): ?>
+                    <div style="text-align:center; padding:5rem 2rem; color:var(--text-muted);">
+                        <div style="font-size:3rem; margin-bottom:1rem; opacity:0.4;">📬</div>
+                        <h4 style="font-family:'Syncopate',sans-serif; color:#fff; font-size:0.95rem; margin-bottom:0.5rem; letter-spacing:1px;">Your inbox is empty</h4>
+                        <p style="font-size:0.8rem; margin:0; font-family:'Montserrat',sans-serif;">We will notify you here when you have new messages or updates.</p>
+                    </div>
+                <?php else: ?>
+                    <div style="list-style:none; padding:0; margin:0;">
+                        <?php foreach ($messages as $msg): ?>
+                            <div class="message-row <?= $msg['is_read'] ? 'read' : 'unread' ?>" onclick="toggleMessage(<?= (int)$msg['id'] ?>)" id="msg-row-<?= (int)$msg['id'] ?>" style="border-bottom:1px solid rgba(255,255,255,0.05); padding:1.2rem 2rem; cursor:pointer; transition:background 0.2s ease; display:grid; grid-template-columns: 24px 1fr auto; align-items:center; gap:1.2rem; text-align:left;">
+                                <div>
+                                    <?php if (!$msg['is_read']): ?>
+                                        <span class="unread-dot" id="dot-<?= (int)$msg['id'] ?>" style="display:inline-block; width:8px; height:8px; background:var(--accent); border-radius:50%; box-shadow:0 0 6px var(--accent);"></span>
+                                    <?php else: ?>
+                                        <span style="display:inline-block; width:8px; height:8px; background:rgba(255,255,255,0.1); border-radius:50%;"></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div>
+                                    <div class="msg-subject" style="font-family:'Montserrat',sans-serif; font-size:0.92rem; font-weight:<?= $msg['is_read'] ? '600' : '700' ?>; color:#fff; letter-spacing:0.02em; margin-bottom:0.25rem;">
+                                        <?= h($msg['subject']) ?>
+                                    </div>
+                                    <div class="msg-snippet" id="snippet-<?= (int)$msg['id'] ?>" style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:650px; font-family:'Montserrat',sans-serif;">
+                                        <?= h(substr(strip_tags($msg['message']), 0, 100)) ?>...
+                                    </div>
+                                </div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); font-family:'Montserrat',sans-serif; font-weight:500;">
+                                    <?= date('M j, Y H:i', strtotime($msg['created_at'])) ?>
+                                </div>
+                                
+                                <div class="msg-body" id="body-<?= (int)$msg['id'] ?>" style="display:none; grid-column:1/-1; padding:1rem 0 0.5rem 0; border-top:1px dashed rgba(255,255,255,0.05); margin-top:0.8rem; font-family:'Montserrat',sans-serif; font-size:0.88rem; color:#e0e0e0; line-height:1.6; white-space:pre-wrap; text-transform:none; letter-spacing:0.02em;">
+                                    <?= h($msg['message']) ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- ── TAB: SETTINGS ── -->
         <div id="tab-settings" class="portal-tab <?= $tab === 'settings' ? 'active' : '' ?>">
-            <div class="portal-card">
-                <h3>ACCOUNT SETTINGS</h3>
-                <p>Configure security settings and update password.</p>
+            
+            <?php if ($error_msg): ?>
+                <div class="flash-msg flash-error">&gt; <?= h($error_msg) ?></div>
+            <?php endif; ?>
 
-                <?php if ($error_msg): ?>
-                    <div class="flash-msg flash-error">&gt; <?= h($error_msg) ?></div>
-                <?php endif; ?>
+            <?php if ($success_msg): ?>
+                <div class="flash-msg flash-success">&gt; <?= h($success_msg) ?></div>
+            <?php endif; ?>
 
-                <?php if ($success_msg): ?>
-                    <div class="flash-msg flash-success">&gt; <?= h($success_msg) ?></div>
-                <?php endif; ?>
+            <div class="portal-card" style="margin-bottom: 2rem; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff;">PROFILE PICTURE</h3>
+                <p style="color:var(--text-muted); font-size:0.82rem; margin:0 0 1.5rem 0; font-family:'Montserrat',sans-serif; font-weight:500;">Upload an avatar or animated GIF (Max 2MB).</p>
+                
+                <div style="display:flex; align-items:center; gap:2rem; flex-wrap:wrap; text-align:left;">
+                    <?php if ($profile_pic): ?>
+                        <img src="/static/uploads/<?= h($profile_pic) ?>" alt="Avatar" style="width:96px; height:96px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); box-shadow: var(--accent-glow);">
+                    <?php else: ?>
+                        <div style="width:96px; height:96px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-family:'Syncopate',sans-serif; font-size:2.2rem; font-weight:700; color:#fff; text-shadow:0 0 10px rgba(255,255,255,0.2);">
+                            <?= strtoupper(substr($username, 0, 1)) ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <form method="POST" enctype="multipart/form-data" style="flex:1; min-width:250px;">
+                        <input type="hidden" name="upload_avatar" value="1">
+                        <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
+                            <input type="file" name="avatar_file" accept=".png,.jpg,.jpeg,.webp,.gif" required style="font-family:'Montserrat',sans-serif; font-size:0.8rem; border:1px dashed var(--border-color); padding:0.8rem; width:100%; border-radius:4px; cursor:pointer; background:var(--bg-dark); color:var(--text-main); outline:none;">
+                        </div>
+                        <button type="submit" class="cta-btn" style="padding:0.7rem 1.8rem; font-size:0.75rem; width:auto; display:inline-block; margin-top:0;">UPLOAD AVATAR</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="portal-card" style="background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff;">ACCOUNT SECURITY</h3>
+                <p style="color:var(--text-muted); font-size:0.82rem; margin:0 0 1.5rem 0; font-family:'Montserrat',sans-serif; font-weight:500;">Configure security settings and update password.</p>
 
                 <form method="POST">
                     <input type="hidden" name="change_password" value="1">
@@ -509,6 +631,56 @@ $tab = $_GET['tab'] ?? 'library';
 
             // Update URL
             history.replaceState(null, '', '/portal/index.php?tab=' + tabId);
+        }
+
+        function toggleMessage(id) {
+            const body = document.getElementById('body-' + id);
+            const snippet = document.getElementById('snippet-' + id);
+            const row = document.getElementById('msg-row-' + id);
+            const dot = document.getElementById('dot-' + id);
+            
+            if (!body) return;
+            
+            const isExpanding = body.style.display === 'none';
+            body.style.display = isExpanding ? 'block' : 'none';
+            if (snippet) snippet.style.display = isExpanding ? 'none' : 'block';
+            if (row) {
+                if (isExpanding) {
+                    row.style.background = 'rgba(255,255,255,0.02)';
+                } else {
+                    row.style.background = '';
+                }
+            }
+            
+            // Mark as read asynchronously if it's currently unread
+            if (isExpanding && row && row.classList.contains('unread')) {
+                fetch('/portal/read_message.php?id=' + id)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            row.classList.remove('unread');
+                            row.classList.add('read');
+                            if (dot) {
+                                dot.style.background = 'rgba(255,255,255,0.1)';
+                                dot.style.boxShadow = 'none';
+                            }
+                            
+                            // Dynamically update unread count in header tab
+                            const inboxBtn = Array.from(document.querySelectorAll('.portal-tab-btn')).find(btn => btn.innerText.toLowerCase().includes('inbox'));
+                            if (inboxBtn) {
+                                const match = inboxBtn.innerText.match(/\((\d+)\)/);
+                                if (match) {
+                                    let currentCount = parseInt(match[1]);
+                                    if (currentCount > 0) {
+                                        currentCount--;
+                                        inboxBtn.innerText = 'Inbox (' + currentCount + ')';
+                                    }
+                                }
+                            }
+                        }
+                    })
+                    .catch(err => console.error("Error marking read:", err));
+            }
         }
     </script>
 </body>
