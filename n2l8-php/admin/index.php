@@ -12,7 +12,9 @@ $orders   = $pdo->query('SELECT o.*, p.title as product_title FROM orders o LEFT
 $logs     = $pdo->query('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 30')->fetchAll();
 $contents = $pdo->query('SELECT * FROM content ORDER BY page, section_key')->fetchAll();
 
-$all_users = $pdo->query('SELECT id, username, email, role FROM users ORDER BY username ASC')->fetchAll();
+$all_users = $pdo->query('SELECT id, username, email, role, is_approved FROM users ORDER BY id DESC')->fetchAll();
+$pending_users = array_filter($all_users, fn($u) => !$u['is_approved'] && $u['role'] !== 'admin');
+$approved_users = array_filter($all_users, fn($u) => $u['is_approved'] && $u['role'] !== 'admin');
 $sent_messages = $pdo->query('
     SELECT m.*, u.username as recipient_username 
     FROM messages m 
@@ -211,6 +213,7 @@ try {
             <button class="admin-tab-btn" id="tab-btn-products">Products</button>
             <button class="admin-tab-btn" id="tab-btn-orders">Orders</button>
             <button class="admin-tab-btn" id="tab-btn-messages">Messages</button>
+            <button class="admin-tab-btn" id="tab-btn-users">Users</button>
             <button class="admin-tab-btn" id="tab-btn-content">Content Editor</button>
             <button class="admin-tab-btn" id="tab-btn-logs">Audit Log</button>
             <button class="admin-tab-btn" id="tab-btn-stats">Analytics</button>
@@ -224,6 +227,7 @@ try {
             <button class="admin-tab-menu-item" data-tab="products">Products</button>
             <button class="admin-tab-menu-item" data-tab="orders">Orders</button>
             <button class="admin-tab-menu-item" data-tab="messages">Messages</button>
+            <button class="admin-tab-menu-item" data-tab="users">Users</button>
             <button class="admin-tab-menu-item" data-tab="content">Content Editor</button>
             <button class="admin-tab-menu-item" data-tab="logs">Audit Log</button>
             <button class="admin-tab-menu-item" data-tab="stats">Analytics</button>
@@ -622,11 +626,80 @@ try {
 
     </div><!-- /tab-stats -->
 
+    <!-- ── USERS (APPROVAL & MANAGEMENT) ── -->
+    <div id="tab-users" class="admin-panel">
+        <div class="section-title">Pending User Approvals (<?= count($pending_users) ?>)</div>
+        <div class="form-card" style="margin-bottom: 2rem;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($pending_users as $u): ?>
+                    <tr>
+                        <td style="font-family:'Righteous',cursive;color:var(--text-main);"><?= h($u['username']) ?></td>
+                        <td><?= h($u['email'] ?? '—') ?></td>
+                        <td><span class="pill pill-inactive">Pending</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="/admin/user_action.php?action=approve&id=<?= $u['id'] ?>" class="btn btn-green">Approve</a>
+                                <a href="/admin/user_action.php?action=reject&id=<?= $u['id'] ?>" class="btn btn-red" onclick="return confirm('Er du sikker på, at du vil afvise og slette denne bruger registrering?');">Reject</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php if (empty($pending_users)): ?>
+                    <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">No pending approvals at the moment. All clear!</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section-title">Approved User Accounts (<?= count($approved_users) ?>)</div>
+        <div class="form-card">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($approved_users as $u): ?>
+                    <tr>
+                        <td style="font-family:'Righteous',cursive;color:var(--text-main);"><?= h($u['username']) ?></td>
+                        <td><?= h($u['email'] ?? '—') ?></td>
+                        <td style="font-family:'VT323';font-size:1.1rem;text-transform:uppercase;color:var(--accent);"><?= h($u['role']) ?></td>
+                        <td><span class="pill pill-active">Approved</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="/admin/user_action.php?action=deactivate&id=<?= $u['id'] ?>" class="btn btn-amber">Deactivate</a>
+                                <a href="/admin/user_action.php?action=reject&id=<?= $u['id'] ?>" class="btn btn-red" onclick="return confirm('Er du sikker på, at du vil slette denne brugerkonto permanent?');">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php if (empty($approved_users)): ?>
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No approved user accounts found.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div><!-- /tab-users -->
+
 </div><!-- /container -->
 
 <script>
 const INITIAL_TAB = '<?= h($tab) ?>';
-const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', messages:'Messages', content:'Content Editor', logs:'Audit Log', stats:'Analytics' };
+const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', messages:'Messages', users:'Users', content:'Content Editor', logs:'Audit Log', stats:'Analytics' };
 
 function moveSlider(btn) {
     const slider = document.getElementById('tabSlider');

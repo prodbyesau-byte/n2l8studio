@@ -30,18 +30,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id']   = $user['id'];
-            $_SESSION['username']  = $user['username'];
-            $_SESSION['role']      = $user['role'];
-            $_SESSION['user_role'] = $user['role'];
-            $_SESSION['email']     = $user['email'];
-
-            log_action($pdo, "User logged in: {$user['username']} ({$user['role']})");
-
-            if (is_owner()) {
-                redirect('/admin/index.php');
+            if ($user['role'] !== 'admin' && empty($user['is_approved'])) {
+                $error = 'Din konto afventer administrativ godkendelse. Du kan logge ind, så snart din profil er godkendt.';
             } else {
-                redirect('/portal/index.php');
+                $_SESSION['user_id']   = $user['id'];
+                $_SESSION['username']  = $user['username'];
+                $_SESSION['role']      = $user['role'];
+                $_SESSION['user_role'] = $user['role'];
+                $_SESSION['email']     = $user['email'];
+
+                log_action($pdo, "User logged in: {$user['username']} ({$user['role']})");
+
+                if (is_owner()) {
+                    redirect('/admin/index.php');
+                } else {
+                    redirect('/portal/index.php');
+                }
             }
         } else {
             $error = 'Invalid credentials — access denied.';

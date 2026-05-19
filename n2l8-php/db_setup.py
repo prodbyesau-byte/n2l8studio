@@ -70,7 +70,9 @@ SCHEMA = [
       `username` VARCHAR(50)  UNIQUE NOT NULL,
       `email`    VARCHAR(100) UNIQUE NULL,
       `password` VARCHAR(255) NOT NULL,
-      `role`     VARCHAR(20)  NOT NULL DEFAULT 'admin'
+      `role`     VARCHAR(20)  NOT NULL DEFAULT 'admin',
+      `profile_picture` VARCHAR(255) NULL,
+      `is_approved` TINYINT(1) NOT NULL DEFAULT 0
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
     ("products", """
@@ -200,6 +202,7 @@ UPGRADES = [
     ("product_tracks.preview_start", "ALTER TABLE product_tracks ADD COLUMN preview_start DECIMAL(8,2) NOT NULL DEFAULT 0.00 AFTER filename"),
     ("product_tracks.preview_end", "ALTER TABLE product_tracks ADD COLUMN preview_end DECIMAL(8,2) NULL AFTER preview_start"),
     ("users.profile_picture", "ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255) NULL AFTER email"),
+    ("users.is_approved", "ALTER TABLE users ADD COLUMN is_approved TINYINT(1) NOT NULL DEFAULT 1"),
 ]
 for label, sql in UPGRADES:
     try:

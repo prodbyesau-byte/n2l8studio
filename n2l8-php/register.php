@@ -40,12 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->fetch()) {
             $error = 'Username or Email is already registered.';
         } else {
-            // Hash password and insert as 'user'
+            // Hash password and insert as 'user' (is_approved = 0 by default)
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, "user")');
+            $stmt = $pdo->prepare('INSERT INTO users (username, email, password, role, is_approved) VALUES (?, ?, ?, "user", 0)');
             if ($stmt->execute([$username, $email, $hash])) {
-                log_action($pdo, "New user registered: {$username} ({$email})");
-                flash('Account created successfully! You can now log in.');
+                log_action($pdo, "New user registered (pending approval): {$username} ({$email})");
+                flash('Bruger oprettet! Din konto afventer nu administrativ godkendelse. Du kan logge ind, så snart din konto er godkendt.');
                 redirect('/login.php');
             } else {
                 $error = 'Registration failed. Please try again.';
