@@ -26,6 +26,26 @@ function format_price(float $price): string {
     return $price > 0 ? '$' . number_format($price, 2) : 'FREE';
 }
 
+function get_user_avatar_nav(PDO $pdo): string {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (!isset($_SESSION['user_id'])) return '';
+    try {
+        $stmt = $pdo->prepare('SELECT username, profile_picture FROM users WHERE id = ?');
+        $stmt->execute([$_SESSION['user_id']]);
+        $u = $stmt->fetch();
+        if ($u) {
+            $username = $u['username'];
+            $profile_pic = $u['profile_picture'];
+            if ($profile_pic) {
+                return '<img src="/static/uploads/' . htmlspecialchars($profile_pic, ENT_QUOTES, 'UTF-8') . '" style="width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid var(--accent); vertical-align:middle; margin-right:4px; box-shadow:0 0 4px var(--accent);">';
+            } else {
+                return '<span style="display:inline-block; width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); text-align:center; line-height:18px; font-family:\'Syncopate\',sans-serif; font-size:0.65rem; font-weight:700; color:#fff; vertical-align:middle; margin-right:4px;">' . strtoupper(substr($username, 0, 1)) . '</span>';
+            }
+        }
+    } catch (Throwable $e) {}
+    return '';
+}
+
 // ─── DATABASE HELPERS ───────────────────────────────────────────────────────
 
 function get_site_content(PDO $pdo): array {

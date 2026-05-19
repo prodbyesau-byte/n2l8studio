@@ -50,9 +50,12 @@ log_visitor($pdo, 'page_view', '/beats.php');
                 <li><a href="/pricing.php">Services</a></li>
                 <?php if (is_logged_in()): ?>
                     <li class="dropdown">
-                        <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent);">Portal</a>
+                        <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent); display: inline-flex; align-items: center; gap: 4px; padding-top: 4px; padding-bottom: 4px;">
+                            <?= get_user_avatar_nav($pdo) ?>
+                            <span>Portal</span>
+                        </a>
                         <div class="dropdown-content">
-                            <a href="/profile.php">My Profile</a>
+                            <a href="/portal/index.php?tab=settings">Account Settings</a>
                             <a href="/portal/index.php">Client Portal</a>
                             <?php if (is_owner()): ?>
                                 <a href="/admin/index.php">Admin Portal</a>
