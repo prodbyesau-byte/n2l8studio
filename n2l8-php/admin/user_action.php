@@ -39,8 +39,8 @@ switch ($action) {
                 
                 $headers = "MIME-Version: 1.0\r\n";
                 $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                $headers .= "From: N2L8 STUDIO <noreply@n2l8studios.com>\r\n";
-                $headers .= "Reply-To: noreply@n2l8studios.com\r\n";
+                $headers .= "From: N2L8 STUDIO <admin@n2l8studios.com>\r\n";
+                $headers .= "Reply-To: admin@n2l8studios.com\r\n";
                 $headers .= "X-Mailer: PHP/" . phpversion();
 
                 $body = "
