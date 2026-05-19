@@ -51,12 +51,12 @@ function require_client_login(): void {
 
 function require_owner(): void {
     if (!is_logged_in()) {
-        header('Location: /admin/login.php');
+        header('Location: /login.php');
         exit;
     }
     if (!is_owner()) {
         http_response_code(403);
-        header('Location: /profile.php');
+        header('Location: /portal/index.php');
         exit;
     }
 }
