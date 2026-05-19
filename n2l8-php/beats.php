@@ -50,12 +50,12 @@ log_visitor($pdo, 'page_view', '/beats.php');
                 <li><a href="/pricing.php">Services</a></li>
                 <?php if (is_logged_in()): ?>
                     <li class="dropdown">
-                        <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent);">Vault</a>
+                        <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent);">Portal</a>
                         <div class="dropdown-content">
                             <a href="/profile.php">My Profile</a>
-                            <a href="/portal/index.php">Client Vault</a>
+                            <a href="/portal/index.php">Client Portal</a>
                             <?php if (is_owner()): ?>
-                                <a href="/admin/index.php">Mainframe</a>
+                                <a href="/admin/index.php">Admin Portal</a>
                             <?php endif; ?>
                             <a href="/logout.php" style="color: var(--accent) !important;">Disconnect</a>
                         </div>
@@ -92,7 +92,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
             </div>
             <?php endforeach; ?>
             <?php if (empty($beats)): ?>
-            <p style="text-align:center; color:var(--text-muted); padding:3rem;">NO BEATS DETECTED IN THE VAULT.</p>
+            <p style="text-align:center; color:var(--text-muted); padding:3rem;">NO BEATS DETECTED IN THE PORTAL.</p>
             <?php endif; ?>
         </div>
     </main>

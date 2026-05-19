@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form method="POST">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" name="username" required autocomplete="username" placeholder="e.g. wanderer">
+                    <input type="text" name="username" required autocomplete="username" placeholder="e.g. alex">
                 </div>
                 
                 <div class="form-group">

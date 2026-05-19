@@ -74,7 +74,7 @@ $tab = $_GET['tab'] ?? 'library';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Vault - N2L8 STUDIO</title>
+    <title>Client Portal - N2L8 STUDIO</title>
     <link rel="stylesheet" href="/static/style.css?v=8">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
@@ -353,7 +353,7 @@ $tab = $_GET['tab'] ?? 'library';
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
             <ul class="nav-links">
-                <li><a href="/index.php">Surface</a></li>
+                <li><a href="/index.php">Home</a></li>
                 <li><a href="/shop.php">Shop</a></li>
                 <li><a href="/pricing.php">Services</a></li>
                 <li><a href="/logout.php" style="color: var(--accent);">Disconnect</a></li>
@@ -365,7 +365,7 @@ $tab = $_GET['tab'] ?? 'library';
         
         <div class="portal-header">
             <div class="portal-welcome">
-                <h2>CLIENT VAULT TERMINAL</h2>
+                <h2>CLIENT PORTAL</h2>
                 <p>Welcome back, <span><?= h($username) ?></span> &nbsp;|&nbsp; Credentials: <span><?= h($user_email) ?></span></p>
             </div>
             <div>
@@ -376,7 +376,7 @@ $tab = $_GET['tab'] ?? 'library';
         <div class="portal-tabs">
             <button class="portal-tab-btn <?= $tab === 'library' ? 'active' : '' ?>" onclick="switchTab('library')">My Library (<?= count($purchased_products) ?>)</button>
             <button class="portal-tab-btn <?= $tab === 'free' ? 'active' : '' ?>" onclick="switchTab('free')">Claim Free Kits (<?= count($free_products) ?>)</button>
-            <button class="portal-tab-btn <?= $tab === 'settings' ? 'active' : '' ?>" onclick="switchTab('settings')">Mainframe Settings</button>
+            <button class="portal-tab-btn <?= $tab === 'settings' ? 'active' : '' ?>" onclick="switchTab('settings')">Account Settings</button>
         </div>
 
         <!-- ── TAB: LIBRARY ── -->
@@ -396,9 +396,8 @@ $tab = $_GET['tab'] ?? 'library';
                                 <h3><?= h($p['title']) ?></h3>
                                 <div class="author">By <?= h($p['author'] ?: 'N2L8 STUDIO') ?></div>
                                 <span class="tag"><?= h($p['type']) ?></span>
-                            </div>
-                            <?php if ($p['zip_file']): ?>
-                                <a href="/static/uploads/<?= h($p['zip_file']) ?>" class="cta-btn" download>DOWNLOAD MODULE</a>
+                                                         <?php if ($p['zip_file']): ?>
+                                <a href="/static/uploads/<?= h($p['zip_file']) ?>" class="cta-btn" download>DOWNLOAD KIT</a>
                             <?php else: ?>
                                 <button class="cta-btn secondary" style="cursor: not-allowed; opacity: 0.6;" disabled>NO FILE LOADED</button>
                             <?php endif; ?>
@@ -407,10 +406,10 @@ $tab = $_GET['tab'] ?? 'library';
                 </div>
             <?php else: ?>
                 <div class="empty-library">
-                    <h3>No Acquired Audio Modules</h3>
+                    <h3>No Purchased Kits</h3>
                     <p>It looks like you haven't purchased any drumkits, loopkits, or beats yet under this account email address (<?= h($user_email) ?>).</p>
                     <p style="font-size:0.8rem;color:rgba(192,21,42,0.8);border:1px dashed var(--border-color);padding:1rem;display:inline-block;border-radius:4px;">
-                        💡 <strong>Mainframe Sync TIP</strong>: Any purchases made with your registered email will automatically sync and populate here. If you buy something via PayPal, ensure you register/use the same email address!
+                        💡 <strong>Library Sync TIP</strong>: Any purchases made with your registered email will automatically sync and populate here. If you buy something via PayPal, ensure you register/use the same email address!
                     </p>
                     <div style="margin-top: 2rem;">
                         <a href="/shop.php" class="cta-btn">BROWSE SHOP</a>
@@ -447,7 +446,7 @@ $tab = $_GET['tab'] ?? 'library';
                 </div>
             <?php else: ?>
                 <div class="empty-library">
-                    <h3>No Free Loot Available</h3>
+                    <h3>No Free Kits Available</h3>
                     <p>There are currently no free sample packs active on the shop server. Check back soon!</p>
                 </div>
             <?php endif; ?>
@@ -456,8 +455,8 @@ $tab = $_GET['tab'] ?? 'library';
         <!-- ── TAB: SETTINGS ── -->
         <div id="tab-settings" class="portal-tab <?= $tab === 'settings' ? 'active' : '' ?>">
             <div class="portal-card">
-                <h3>MAINFRAME SETTINGS</h3>
-                <p>Configure security protocols and update passwords.</p>
+                <h3>ACCOUNT SETTINGS</h3>
+                <p>Configure security settings and update password.</p>
 
                 <?php if ($error_msg): ?>
                     <div class="flash-msg flash-error">&gt; <?= h($error_msg) ?></div>
@@ -471,12 +470,12 @@ $tab = $_GET['tab'] ?? 'library';
                     <input type="hidden" name="change_password" value="1">
                     
                     <div class="form-group">
-                        <label>Current Mainframe Password</label>
+                        <label>Current Password</label>
                         <input type="password" name="current_password" required placeholder="••••••••">
                     </div>
 
                     <div class="form-group">
-                        <label>New Mainframe Password</label>
+                        <label>New Password</label>
                         <input type="password" name="new_password" required placeholder="•••••••• (Min 6 chars)">
                     </div>
 
@@ -485,7 +484,7 @@ $tab = $_GET['tab'] ?? 'library';
                         <input type="password" name="confirm_password" required placeholder="••••••••">
                     </div>
 
-                    <button type="submit" class="cta-btn">UPDATE SECURITY PROTOCOLS</button>
+                    <button type="submit" class="cta-btn">UPDATE PASSWORD</button>
                 </form>
             </div>
         </div>

@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <div class="login-box">
             <h2>REGISTER</h2>
-            <p>Join the N2L8 Studio mainframe to claim products.</p>
+            <p>Join the N2L8 Studio portal to access your products.</p>
             
             <?php if ($error): ?>
             <div class="flash-msg">&gt; <?= h($error) ?></div>
@@ -184,12 +184,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form method="POST">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" name="username" required autocomplete="username" placeholder="e.g. wanderer">
+                    <input type="text" name="username" required autocomplete="username" placeholder="e.g. alex">
                 </div>
 
                 <div class="form-group">
                     <label>Email Address</label>
-                    <input type="email" name="email" required autocomplete="email" placeholder="e.g. wanderer@wasteland.com">
+                    <input type="email" name="email" required autocomplete="email" placeholder="e.g. alex@example.com">
                 </div>
                 
                 <div class="form-group">
@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="/login.php" class="box-footer-link" style="color: var(--accent);">Already have an account? Login here &gt;</a>
             </div>
             
-            <a href="/index.php" class="box-footer-link">&lt; Return to Surface</a>
+            <a href="/index.php" class="box-footer-link">&lt; Return to Home</a>
         </div>
     </div>
 </body>

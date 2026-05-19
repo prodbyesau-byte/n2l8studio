@@ -57,8 +57,8 @@ $content_rows = [
     ['pricing_master_f2',   'Pricing',      'Mastering Feature 2',       'EQ & compression'],
     ['pricing_master_f3',   'Pricing',      'Mastering Feature 3',       'Streaming platform ready'],
     // SUBSCRIPTION
-    ['sub_h2',              'Subscription', 'Subscription Heading',      'Monthly Rations'],
-    ['sub_desc',            'Subscription', 'Subscription Description',  'Sign up for a monthly supply drop to claim free loopkits of your choice from the wasteland shop.'],
+    ['sub_h2',              'Subscription', 'Subscription Heading',      'Monthly Subscription'],
+    ['sub_desc',            'Subscription', 'Subscription Description',  'Sign up for a monthly plan to claim free loopkits of your choice from our shop.'],
     ['sub_pro_price',       'Subscription', 'Pro Plan Price',            '$19'],
     ['sub_pro_unit',        'Subscription', 'Pro Plan Price Unit',       '.99/mo'],
     ['sub_pro_f1',          'Subscription', 'Pro Feature 1',             '3 Free Loopkits per month'],

@@ -17,7 +17,7 @@ $content_rows = [
     ['login_title',         'Login',        'Title',                     'Admin Login'],
     ['login_subtitle',      'Login',        'Subtitle',                  'Please authenticate.'],
     ['login_button',        'Login',        'Button Text',               'ACCESS'],
-    ['login_return',        'Login',        'Return Link',               '< Return to Surface'],
+    ['login_return',        'Login',        'Return Link',               '< Return to Home'],
     ['login_error',         'Login',        'Error Message',             'Invalid credentials — access denied.'],
 ];
 
