@@ -376,5 +376,5 @@ conn.close()
 
 print(f"\n{'='*60}")
 print("  ✅ Database setup + sync complete!")
-print("  Site: https://n2l8studio.dk/")
+print("  Site: https://www.n2l8studios.com/")
 print(f"{'='*60}\n")

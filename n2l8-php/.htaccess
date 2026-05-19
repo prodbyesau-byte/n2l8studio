@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # ── Redirect old .dk domain to new .com domain ────────────────────────────
+    RewriteCond %{HTTP_HOST} ^(www\.)?n2l8studio\.dk [NC]
+    RewriteRule ^(.*)$ https://www.n2l8studios.com/$1 [L,R=301]
+    
+    # ── Enforce HTTPS & WWW on the new .com domain ────────────────────────────
+    RewriteCond %{HTTPS} off [OR]
+    RewriteCond %{HTTP_HOST} ^n2l8studios\.com$ [NC]
+    RewriteRule ^(.*)$ https://www.n2l8studios.com/$1 [L,R=301]
+</IfModule>

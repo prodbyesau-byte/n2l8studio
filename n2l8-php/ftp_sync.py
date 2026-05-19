@@ -164,7 +164,7 @@ def main():
             print(f"     {rel}: {err}")
     else:
         print(f"✅  All {total} files uploaded successfully.")
-    print(f"    Site: https://n2l8studio.dk/")
+    print(f"    Site: https://www.n2l8studios.com/")
     print(f"{'=' * 60}\n")
 
     # ── Auto-run DB sync after upload ────────────────────────────────────────
