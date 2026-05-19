@@ -73,7 +73,6 @@ $site = get_site_content($pdo);
 
     <footer>
         <p><?= h($site['footer_text'] ?? '© 2026 n2l8studio. All rights reserved.') ?></p>
-        <a href="/admin/login.php" class="nav-admin-btn">Owner Login</a>
     </footer>
     <script>
     const ham = document.getElementById('navHamburger');

@@ -263,7 +263,6 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
 
     <footer>
         <p><?= h($site['footer_text'] ?? '© 2026 n2l8studio.') ?></p>
-        <a href="/admin/login.php" class="nav-admin-btn">Owner Login</a>
     </footer>
 
     <!-- MODAL -->

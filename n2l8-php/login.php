@@ -9,7 +9,7 @@ if (is_logged_in()) {
     if (is_owner()) {
         redirect('/admin/index.php');
     } else {
-        redirect('/profile.php');
+        redirect('/portal/index.php');
     }
 }
 
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (is_owner()) {
                 redirect('/admin/index.php');
             } else {
-                redirect('/profile.php');
+                redirect('/portal/index.php');
             }
         } else {
             $error = 'Invalid credentials — access denied.';
