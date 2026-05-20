@@ -7,17 +7,15 @@ FTP_PASS = "y2Bf39FwbgkxGa6DctRE"
 print("Connecting to FTP...")
 ftp = ftplib.FTP(FTP_HOST)
 ftp.login(FTP_USER, FTP_PASS)
-ftp.cwd("/n2l8studios.com/includes")
 
-print("Files in remote includes folder:")
+print("\nRemote root contents:")
 print(ftp.nlst())
 
-print("\nReading remote config.php:")
-lines = []
+print("\nRemote n2l8studios.com contents:")
 try:
-    ftp.retrlines("RETR config.php", lines.append)
-    print("\n".join(lines))
+    ftp.cwd("/n2l8studios.com")
+    print(ftp.nlst())
 except Exception as e:
-    print("❌ Error reading config.php:", e)
+    print("❌ Error:", e)
 
 ftp.quit()

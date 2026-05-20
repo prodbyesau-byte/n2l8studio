@@ -249,6 +249,7 @@ function send_platform_email(string $to, string $subject, string $html_body, str
             $mail->SMTPAuth   = true;
             $mail->Username   = defined('SMTP_USER') ? SMTP_USER : '';
             $mail->Password   = defined('SMTP_PASS') ? SMTP_PASS : '';
+            $mail->AuthType   = 'LOGIN'; // Force LOGIN authentication to bypass CRAM-MD5 issues
             $mail->Port       = defined('SMTP_PORT') ? (int)SMTP_PORT : 587;
             
             $secure = defined('SMTP_SECURE') ? SMTP_SECURE : 'tls';
