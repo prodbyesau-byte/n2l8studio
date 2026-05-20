@@ -30,7 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            if ($user['role'] !== 'admin' && empty($user['is_approved'])) {
+            $user_role = $user['role'];
+            if ($user_role === 'admin' || $user_role === 'owner') {
+                $error = 'Administrators must log in through the Admin Login portal.';
+            } else if (empty($user['is_approved'])) {
                 $error = 'Your account is pending administrative approval. You will be able to log in once your profile has been verified.';
             } else {
                 $_SESSION['user_id']   = $user['id'];
@@ -40,12 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['email']     = $user['email'];
 
                 log_action($pdo, "User logged in: {$user['username']} ({$user['role']})");
-
-                if (is_owner()) {
-                    redirect('/admin/index.php');
-                } else {
-                    redirect('/portal/index.php');
-                }
+                redirect('/portal/index.php');
             }
         } else {
             $error = 'Invalid credentials — access denied.';

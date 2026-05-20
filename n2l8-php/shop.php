@@ -202,7 +202,13 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                         </div>
                     </li>
                 <?php else: ?>
-                    <li><a href="/login.php">Login</a></li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="dropbtn">Login</a>
+                        <div class="dropdown-content">
+                            <a href="/login.php">User Login</a>
+                            <a href="/admin/login.php">Admin Login</a>
+                        </div>
+                    </li>
                 <?php endif; ?>
             </ul>
         </nav>
@@ -589,13 +595,26 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     }
 
     // Dropdown toggle for mobile
-    const dropbtn = document.querySelector('.dropbtn');
-    if (dropbtn) {
-        dropbtn.addEventListener('click', (e) => {
+    const dropbtns = document.querySelectorAll('.dropbtn');
+    dropbtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
             e.preventDefault();
-            document.querySelector('.dropdown-content').classList.toggle('show');
+            e.stopPropagation();
+            dropbtns.forEach(other => {
+                if (other !== btn) {
+                    const sibling = other.nextElementSibling;
+                    if (sibling && sibling.classList.contains('dropdown-content')) {
+                        sibling.classList.remove('show');
+                    }
+                }
+            });
+            const sibling = btn.nextElementSibling;
+            if (sibling && sibling.classList.contains('dropdown-content')) {
+                sibling.classList.toggle('show');
+            }
         });
-    }
+    });
+
     // Close dropdown when clicking outside
     window.onclick = function(event) {
         if (!event.target.matches('.dropbtn')) {
