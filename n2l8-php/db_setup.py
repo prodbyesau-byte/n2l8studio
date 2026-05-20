@@ -305,74 +305,9 @@ print(f"  ✅ {seeded} content blocks seeded.")
 conn.commit()
 
 # ── Sync products from local SQLite ──────────────────────────────────────────
-print("\nSyncing products from local SQLite DB...")
-SQLITE_PATH = Path(__file__).parent.parent / 'n2l8-app' / 'instance' / 'database.db'
-
-if not SQLITE_PATH.exists():
-    print(f"  ⚠️  SQLite DB not found at {SQLITE_PATH} — skipping product sync.")
-else:
-    import sqlite3
-    sqlite_conn = sqlite3.connect(str(SQLITE_PATH))
-    sqlite_conn.row_factory = sqlite3.Row
-    sc = sqlite_conn.cursor()
-
-    products = sc.execute('SELECT * FROM product').fetchall()
-    print(f"  Found {len(products)} product(s) in SQLite.")
-
-    for p in products:
-        p = dict(p)
-        # Check if product already exists in MySQL by title
-        cur.execute('SELECT id FROM products WHERE title = %s', (p['title'],))
-        existing = cur.fetchone()
-
-        if existing:
-            mysql_pid = existing[0]
-            cur.execute("""
-                UPDATE products SET type=%s, genre=%s, price=%s, original_price=%s,
-                author=%s, description=%s, bpm=%s, `key`=%s,
-                cover_image=%s, zip_file=%s, is_active=%s
-                WHERE id=%s
-            """, (p['type'], p['genre'], p['price'], p['original_price'],
-                  p['author'], p['description'], p['bpm'], p['key'],
-                  p['cover_image'], p['zip_file'], p['is_active'], mysql_pid))
-            print(f"  🔄 Updated product: {p['title']} (id={mysql_pid})")
-        else:
-            cur.execute("""
-                INSERT INTO products (title, type, genre, price, original_price,
-                    author, description, bpm, `key`, cover_image, zip_file, is_active)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            """, (p['title'], p['type'], p['genre'], p['price'], p['original_price'],
-                  p['author'], p['description'], p['bpm'], p['key'],
-                  p['cover_image'], p['zip_file'], p['is_active']))
-            mysql_pid = cur.lastrowid
-            print(f"  ✅ Inserted product: {p['title']} (new id={mysql_pid})")
-
-        # Sync tracks for this product
-        tracks = sc.execute(
-            'SELECT * FROM product_track WHERE product_id = ? ORDER BY position ASC',
-            (p['id'],)
-        ).fetchall()
-
-        # Get existing tracks in MySQL for this product
-        cur.execute('SELECT filename FROM product_tracks WHERE product_id = %s', (mysql_pid,))
-        existing_filenames = {row[0] for row in cur.fetchall()}
-
-        new_tracks = 0
-        for i, t in enumerate(tracks):
-            t = dict(t)
-            if t['filename'] not in existing_filenames:
-                cur.execute("""
-                    INSERT INTO product_tracks (product_id, title, filename, position)
-                    VALUES (%s, %s, %s, %s)
-                """, (mysql_pid, t['title'], t['filename'], i))
-                new_tracks += 1
-
-        if new_tracks:
-            print(f"    + Added {new_tracks} new track(s) for {p['title']}")
-
-    conn.commit()
-    sqlite_conn.close()
-    print(f"  ✅ Product sync complete.")
+# Product sync from local SQLite is disabled so that products deleted via the
+# Admin panel do not get automatically re-seeded/re-created.
+print("\nProduct sync from local SQLite DB is disabled (Products are now dynamically managed via the Admin panel).")
 
 cur.close()
 conn.close()

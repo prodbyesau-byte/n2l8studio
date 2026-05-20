@@ -36,13 +36,6 @@ switch ($action) {
             if (!empty($target_user['email'])) {
                 $to = $target_user['email'];
                 $subject = "Your N2L8 STUDIO Account Has Been Verified!";
-                
-                $headers = "MIME-Version: 1.0\r\n";
-                $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                $headers .= "From: N2L8 STUDIO <admin@n2l8studios.com>\r\n";
-                $headers .= "Reply-To: admin@n2l8studios.com\r\n";
-                $headers .= "X-Mailer: PHP/" . phpversion();
-
                 $body = "
                 <html>
                 <body style=\"background-color:#050508; color:#ffffff; font-family:'Montserrat',sans-serif; padding:40px 20px; margin:0;\">
@@ -69,7 +62,7 @@ switch ($action) {
                 </html>
                 ";
 
-                @mail($to, $subject, $body, $headers);
+                send_platform_email($to, $subject, $body);
             }
         } else {
             flash('Fejl under godkendelse.');

@@ -248,7 +248,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     function openModal(id) {
         const overlay = document.getElementById('modalOverlay');
         const content = document.getElementById('modalContent');
-        content.innerHTML = '<div style="padding:4rem;text-align:center;font-family:\'VT323\';color:var(--accent);">DECRYPTING DATA...</div>';
+        content.innerHTML = '<div style="padding:4rem;text-align:center;font-family:\'Montserrat\',sans-serif;color:var(--accent);font-weight:600;letter-spacing:2px;">DECRYPTING DATA...</div>';
         overlay.classList.add('open');
 
         // Benefits from PHP
@@ -269,7 +269,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
 
                 content.innerHTML = `
                     <div class="modal-license-header" style="text-align:center; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid var(--accent);">
-                        <h2 style="font-family:'Righteous'; color:var(--text-main); margin:0;">SELECT LICENSE</h2>
+                        <h2 style="font-family:'Syncopate',sans-serif; color:var(--text-main); margin:0; font-size:1.3rem; letter-spacing:2px;">SELECT LICENSE</h2>
                         <p style="color:var(--text-muted); font-size:0.9rem;">${data.title} - ${data.author || 'n2l8studio'}</p>
                     </div>
                     
@@ -277,7 +277,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <!-- MP3/WAV -->
                         <div class="license-card" style="border:1px solid var(--text-muted); padding:1.5rem; text-align:center; transition:0.3s; border-radius:4px;">
                             <h3 style="color:var(--accent); margin-top:0;">MP3 & WAV</h3>
-                            <div style="font-size:1.5rem; font-family:'Righteous'; margin:1rem 0;">$${basePrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${basePrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.basic)}
                             </ul>
@@ -288,7 +288,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <div class="license-card" style="border:2px solid var(--accent); padding:1.5rem; text-align:center; position:relative; border-radius:4px; transform: scale(1.05);">
                             <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:#000; font-size:0.7rem; padding:2px 8px; font-weight:bold;">POPULAR</div>
                             <h3 style="color:var(--accent); margin-top:0;">WAV & STEMS</h3>
-                            <div style="font-size:1.5rem; font-family:'Righteous'; margin:1rem 0;">$${premiumPrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${premiumPrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.premium)}
                             </ul>
@@ -298,7 +298,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <!-- EXCLUSIVE -->
                         <div class="license-card" style="border:1px solid var(--text-muted); padding:1.5rem; text-align:center; border-radius:4px;">
                             <h3 style="color:var(--accent); margin-top:0;">EXCLUSIVE</h3>
-                            <div style="font-size:1.5rem; font-family:'Righteous'; margin:1rem 0;">$${exclusivePrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${exclusivePrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.exclusive)}
                             </ul>

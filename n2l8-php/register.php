@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="/static/style.css?v=8">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <style>
         .login-box { 
             max-width: 440px; 
@@ -135,8 +135,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 0.8rem;
             border-radius: 4px;
             margin-bottom: 1.5rem; 
-            font-family: 'VT323', monospace;
-            font-size: 1.15rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
             text-align: left;
         }
         .login-box .cta-btn {

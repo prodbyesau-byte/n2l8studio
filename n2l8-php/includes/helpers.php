@@ -228,3 +228,76 @@ function paypal_request(string $method, string $endpoint, array $body = [], stri
     return json_decode($res, true) ?? ['_error' => 'JSON decode failed'];
 }
 
+/**
+ * Sends a platform email, using SMTP if enabled, falling back to mail().
+ */
+function send_platform_email(string $to, string $subject, string $html_body, string $alt_body = ''): bool {
+    // Check if SMTP is enabled
+    $smtp_enabled = defined('SMTP_ENABLED') && SMTP_ENABLED;
+    
+    if ($smtp_enabled) {
+        try {
+            require_once __DIR__ . '/PHPMailer/Exception.php';
+            require_once __DIR__ . '/PHPMailer/PHPMailer.php';
+            require_once __DIR__ . '/PHPMailer/SMTP.php';
+            
+            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+            
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host       = defined('SMTP_HOST') ? SMTP_HOST : '';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = defined('SMTP_USER') ? SMTP_USER : '';
+            $mail->Password   = defined('SMTP_PASS') ? SMTP_PASS : '';
+            $mail->Port       = defined('SMTP_PORT') ? (int)SMTP_PORT : 587;
+            
+            $secure = defined('SMTP_SECURE') ? SMTP_SECURE : 'tls';
+            if ($secure === 'ssl') {
+                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+            } elseif ($secure === 'tls') {
+                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            } else {
+                $mail->SMTPSecure = '';
+                $mail->SMTPAutoTLS = false;
+            }
+            
+            // Recipients
+            $from_email = defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : 'admin@n2l8studios.com';
+            $from_name  = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'N2L8 STUDIO';
+            $mail->setFrom($from_email, $from_name);
+            $mail->addAddress($to);
+            $mail->addReplyTo($from_email, $from_name);
+            
+            // Content
+            $mail->isHTML(true);
+            $mail->CharSet = 'UTF-8';
+            $mail->Subject = $subject;
+            $mail->Body    = $html_body;
+            if ($alt_body) {
+                $mail->AltBody = $alt_body;
+            } else {
+                $mail->AltBody = strip_tags($html_body);
+            }
+            
+            return $mail->send();
+        } catch (\Throwable $e) {
+            // Log to error log or fall back to php mail
+            error_log("SMTP send error: " . $e->getMessage());
+            // Fall back to mail() if SMTP fails
+        }
+    }
+    
+    // Fallback: standard php mail()
+    $from_email = defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : 'admin@n2l8studios.com';
+    $from_name  = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'N2L8 STUDIO';
+    
+    $headers = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "From: " . $from_name . " <" . $from_email . ">\r\n";
+    $headers .= "Reply-To: " . $from_email . "\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion();
+    
+    return @mail($to, $subject, $html_body, $headers, "-f" . $from_email);
+}
+
+

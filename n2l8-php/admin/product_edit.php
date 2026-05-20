@@ -57,42 +57,94 @@ $flash_msgs = get_flash();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Product - n2l8studio Admin</title>
     <link rel="stylesheet" href="/static/style.css?v=2">
-    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        .edit-box { max-width:900px; margin:3rem auto; background:rgba(26,26,31,0.9); border:1px solid var(--text-muted); padding:2.5rem; }
+        .edit-box {
+            max-width:900px;
+            margin:3rem auto;
+            background: rgba(22, 22, 26, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255,255,255,0.05);
+            padding:2.5rem;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .edit-box:hover {
+            border-color: rgba(192, 21, 42, 0.2);
+            box-shadow: 0 12px 40px rgba(192, 21, 42, 0.08), inset 0 1px 0 0 rgba(255,255,255,0.06);
+        }
         .form-group { display:flex; flex-direction:column; gap:0.4rem; margin-bottom:1rem; }
-        .form-group label { color:var(--text-muted); font-family:'VT323',monospace; font-size:1rem; text-transform:uppercase; letter-spacing:1px; }
-        .form-group input, .form-group select, .form-group textarea { background:var(--bg-dark); border:1px solid var(--text-muted); color:var(--text-main); font-family:'VT323',monospace; font-size:1.1rem; padding:0.5rem 0.8rem; outline:none; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--text-main); }
+        .form-group label { color:var(--text-muted); font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; }
+        .form-group input, .form-group select, .form-group textarea {
+            background: rgba(18, 18, 21, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            padding: 0.6rem 0.8rem;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-radius: 4px;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 12px rgba(192, 21, 42, 0.4);
+            background: rgba(22, 22, 26, 0.95);
+        }
         .form-group textarea { resize:vertical; min-height:80px; }
         .checkbox-row { display:flex; align-items:center; gap:0.8rem; }
-        .checkbox-row input { width:18px; height:18px; accent-color:var(--text-main); }
-        .thumb { width:120px; height:120px; object-fit:cover; border:1px solid var(--text-muted); display:block; margin-bottom:0.5rem; }
+        .checkbox-row input { width:18px; height:18px; accent-color:var(--text-main); cursor:pointer; }
+        .thumb { width:120px; height:120px; object-fit:cover; border:1px solid var(--text-muted); display:block; margin-bottom:0.5rem; border-radius:4px; }
         .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
-        .section-divider { border:none; border-top:1px dashed var(--text-muted); margin:2.5rem 0; }
-        .section-label { font-family:'Righteous',cursive; color:var(--accent); font-size:1.3rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:1.2rem; }
-        .top-actions { position:sticky; top:0; z-index:100; background:var(--bg-dark); padding:1rem 0; border-bottom:1px solid rgba(123,225,168,0.2); margin-bottom:2rem; display:flex; gap:1rem; }
-        .track-row { border:1px solid rgba(123,225,168,0.15); background:rgba(0,0,0,0.3); margin-bottom:1rem; padding:1rem; }
+        .section-divider { border:none; border-top:1px dashed rgba(192,21,42,0.25); margin:2.5rem 0; }
+        .section-label { font-family:'Syncopate',sans-serif; font-weight:700; color:var(--accent); font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:1.2rem; border-bottom:1px dashed var(--text-muted); padding-bottom:0.5rem; }
+        .top-actions { position:sticky; top:0; z-index:100; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); padding:1rem 0; border-bottom:1px solid rgba(192,21,42,0.25); margin-bottom:2rem; display:flex; gap:1rem; }
+        .track-row {
+            background: rgba(22, 22, 26, 0.55);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 1.2rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .track-row:hover {
+            border-color: rgba(192, 21, 42, 0.3);
+            box-shadow: 0 8px 30px rgba(192, 21, 42, 0.06);
+        }
         .track-header { display:flex; align-items:center; gap:1rem; margin-bottom:0.7rem; }
-        .track-num { color:var(--accent); font-family:'Righteous',cursive; font-size:1.4rem; min-width:32px; }
-        .track-title-display { flex:1; color:var(--text-main); font-family:'VT323',monospace; font-size:1.2rem; }
+        .track-num { color:var(--accent); font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.2rem; min-width:32px; }
+        .track-title-display { flex:1; color:var(--text-main); font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.95rem; }
         .track-body { display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; }
-        .preview-range-form { display:grid; grid-template-columns:1fr 1fr auto; gap:0.8rem; align-items:end; margin-top:0.8rem; padding-top:0.8rem; border-top:1px dashed rgba(123,225,168,0.15); }
+        .preview-range-form { display:grid; grid-template-columns:1fr 1fr auto; gap:0.8rem; align-items:end; margin-top:0.8rem; padding-top:0.8rem; border-top:1px dashed rgba(192,21,42,0.15); }
         .preview-range-form .form-group { margin-bottom:0; }
-        .preview-range-hint { grid-column:1/-1; color:var(--text-muted); font-family:'VT323',monospace; font-size:1rem; }
+        .preview-range-hint { grid-column:1/-1; color:var(--text-muted); font-family:'Montserrat',sans-serif; font-size:0.8rem; }
         audio { flex:1; height:36px; min-width:200px; }
-        .btn { padding:0.4rem 1rem; font-family:'VT323',monospace; font-size:1rem; cursor:pointer; border:1px solid; background:transparent; transition:all 0.2s; text-decoration:none; display:inline-block; text-transform:uppercase; }
+        .btn { padding:0.4rem 1rem; font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.8rem; cursor:pointer; border:1px solid; background:transparent; transition:all 0.2s; text-decoration:none; display:inline-block; text-transform:uppercase; letter-spacing:1px; border-radius:4px; }
         .btn-green { color:var(--text-main); border-color:var(--text-main); }
         .btn-green:hover { background:var(--text-main); color:var(--bg-dark); }
         .btn-red { color:#ff5c5c; border-color:#ff5c5c; }
         .btn-red:hover { background:#ff5c5c; color:var(--bg-dark); }
         .btn-small { padding:0.2rem 0.7rem; font-size:0.95rem; }
-        .confirm-bar { display:none; background:rgba(255,92,92,0.15); border:1px solid #ff5c5c; padding:0.7rem 1rem; margin-top:0.6rem; align-items:center; gap:1rem; font-family:'VT323',monospace; font-size:1.1rem; color:#ff5c5c; }
+        .confirm-bar { display:none; background:rgba(255,92,92,0.15); border:1px solid #ff5c5c; padding:0.7rem 1rem; margin-top:0.6rem; align-items:center; gap:1rem; font-family:'Montserrat',sans-serif; font-size:0.9rem; color:#ff5c5c; border-radius:4px; }
         .confirm-bar.show { display:flex; }
-        .upload-box { border:2px dashed var(--text-muted); padding:1.5rem; margin-top:1rem; background:rgba(57,255,20,0.03); }
-        #loadingOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; flex-direction:column; color:var(--text-main); }
+        .upload-box {
+            background: rgba(192, 21, 42, 0.03);
+            border: 2px dashed rgba(192, 21, 42, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+        .upload-box:hover {
+            border-color: rgba(192, 21, 42, 0.5);
+        }
+        #loadingOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:3000; align-items:center; justify-content:center; flex-direction:column; color:var(--text-main); }
         #loadingOverlay.active { display:flex; }
-        .spinner { width:50px; height:50px; border:3px solid var(--text-muted); border-top-color:var(--text-main); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:1rem; }
+        .spinner { width:60px; height:60px; border:4px solid var(--text-muted); border-top-color:var(--text-main); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:1.5rem; }
         @media(max-width:700px){ .preview-range-form { grid-template-columns:1fr; } }
         @keyframes spin { to { transform:rotate(360deg); } }
     </style>
@@ -101,7 +153,7 @@ $flash_msgs = get_flash();
 
 <div id="loadingOverlay">
     <div class="spinner"></div>
-    <div style="font-family:'VT323';font-size:1.5rem;">SYNCING MEDIA ASSETS...</div>
+    <div style="font-family:'Syncopate',sans-serif;font-weight:700;font-size:1.2rem;letter-spacing:1px;">SYNCING MEDIA ASSETS...</div>
 </div>
 
 <div class="container">
@@ -112,10 +164,10 @@ $flash_msgs = get_flash();
         <a href="/shop.php?preview=<?= (int)$product['id'] ?>" target="_blank" class="btn" style="color:var(--accent);border-color:var(--accent);">👁 PREVIEW POPUP</a>
     </div>
 
-    <h2 style="color:var(--accent);margin-bottom:1.5rem;font-family:'Righteous',cursive;text-transform:uppercase;">EDITING: <?= h($product['title']) ?></h2>
+    <h2 style="color:var(--accent);margin-bottom:1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;font-size:1.4rem;text-transform:uppercase;letter-spacing:1px;">EDITING: <?= h($product['title']) ?></h2>
 
     <?php foreach ($flash_msgs as $m): ?>
-    <div style="background:rgba(57,255,20,0.1);border:1px solid var(--text-main);color:var(--text-main);padding:0.8rem;margin-bottom:1rem;font-family:'VT323';font-size:1.2rem;">&gt; <?= h($m) ?></div>
+    <div style="background:rgba(57,255,20,0.1);border:1px solid var(--text-main);color:var(--text-main);padding:0.8rem;margin-bottom:1rem;font-family:'Montserrat',sans-serif;font-weight:600;font-size:0.95rem;">&gt; <?= h($m) ?></div>
     <?php endforeach; ?>
 
     <!-- Product Settings -->
@@ -181,7 +233,7 @@ $flash_msgs = get_flash();
     <div class="section-label">Media Player Preview Tracks</div>
 
     <?php if (empty($tracks)): ?>
-    <div style="padding:2rem;border:2px dashed rgba(123,225,168,0.1);text-align:center;color:var(--text-muted);font-family:'VT323';font-size:1.2rem;margin-bottom:1rem;">NO PREVIEW TRACKS YET. UPLOAD BELOW.</div>
+    <div style="padding:2rem;border:2px dashed rgba(123,225,168,0.1);text-align:center;color:var(--text-muted);font-family:'Montserrat',sans-serif;font-weight:600;font-size:0.95rem;margin-bottom:1rem;">NO PREVIEW TRACKS YET. UPLOAD BELOW.</div>
     <?php else: ?>
     <?php foreach ($tracks as $i => $t): ?>
     <div class="track-row" id="track-<?= (int)$t['id'] ?>">
@@ -237,7 +289,7 @@ $flash_msgs = get_flash();
 
     <!-- Upload Tracks -->
     <div class="upload-box">
-        <h3 style="color:var(--text-main);margin-bottom:1rem;font-family:'VT323';font-size:1.4rem;">UPLOAD PREVIEW TRACKS (WAV / MP3)</h3>
+        <h3 style="color:var(--text-main);margin-bottom:1rem;font-family:'Syncopate',sans-serif;font-weight:700;font-size:1.1rem;letter-spacing:1px;">UPLOAD PREVIEW TRACKS (WAV / MP3)</h3>
         <form action="/admin/track_add.php" method="POST" enctype="multipart/form-data" onsubmit="document.getElementById('loadingOverlay').classList.add('active')">
             <input type="hidden" name="product_id" value="<?= (int)$product['id'] ?>">
             <div class="form-group">

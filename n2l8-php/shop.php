@@ -384,7 +384,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 });
             },
             onApprove: function(data) {
-                wrap.innerHTML = '<div style="color:var(--text-muted);font-family:\'VT323\',monospace;text-align:center;padding:1rem;">Processing payment...</div>';
+                wrap.innerHTML = '<div style="color:var(--text-muted);font-family:\'Montserrat\',sans-serif;text-align:center;padding:1rem;font-weight:500;">Processing payment...</div>';
                 return fetch('/payment/capture-order.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -393,18 +393,18 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     if (result.success && result.download_url) {
                         wrap.innerHTML =
                             '<div style="text-align:center;">'+
-                            '<div style="color:var(--text-main);font-family:\'Righteous\',cursive;font-size:1.1rem;margin-bottom:0.8rem;">✓ PAYMENT CONFIRMED</div>'+
+                            '<div style="color:var(--text-main);font-family:\'Syncopate\',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:0.8rem;letter-spacing:1px;">✓ PAYMENT CONFIRMED</div>'+
                             '<a href="' + result.download_url + '" class="cta-btn" style="display:block;text-align:center;" download>DOWNLOAD NOW</a>'+
                             '<div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Receipt sent to ' + result.email + '</div>'+
                             '</div>';
                     } else {
-                        wrap.innerHTML = '<div style="color:#ff5c5c;text-align:center;font-family:\'VT323\',monospace;">Payment error — please try again.</div>';
+                        wrap.innerHTML = '<div style="color:#ff5c5c;text-align:center;font-family:\'Montserrat\',sans-serif;font-weight:600;">Payment error — please try again.</div>';
                     }
                 });
             },
             onError: function(err) {
                 console.error('PayPal error:', err);
-                wrap.innerHTML = '<div style="color:#ff5c5c;text-align:center;font-family:\'VT323\',monospace;">Payment failed. Please try again.</div>';
+                wrap.innerHTML = '<div style="color:#ff5c5c;text-align:center;font-family:\'Montserrat\',sans-serif;font-weight:600;">Payment failed. Please try again.</div>';
             },
             onCancel: function() { renderPayPalButtons(productId, price); }
         });
@@ -511,10 +511,10 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     renderPayPalButtons(productId, p.price);
                 } else {
                     if (p.allow_download && p.zip_file) {
-                        wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323',monospace;letter-spacing:2px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
+                        wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
                     } else {
                         // Download disabled — greyed out placeholder
-                        wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323',monospace;letter-spacing:2px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
+                        wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
                     }
                 }
 

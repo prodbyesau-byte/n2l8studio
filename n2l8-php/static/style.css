@@ -50,7 +50,11 @@ body::after {
 }
 
 /* ── PAGE BACKDROPS ── */
-.page-home {
+.page-home,
+.page-shop,
+.page-pricing,
+.page-sub,
+.page-beats {
     background-color: #070708;
     background-image:
         radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.025), transparent 24rem),
@@ -58,34 +62,6 @@ body::after {
         repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.042) 0 1px, transparent 1px 3px),
         repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 5px);
     background-size: auto, auto, 3px 3px, 7px 7px;
-    background-attachment: fixed;
-    background-position: center;
-}
-
-.page-shop {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.95)), url('shop_bg.png');
-    background-size: cover;
-    background-attachment: fixed;
-    background-position: center;
-}
-
-.page-pricing {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.95)), url('studio_bg.png');
-    background-size: cover;
-    background-attachment: fixed;
-    background-position: center;
-}
-
-.page-sub {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.95)), url('subscription_bg.png');
-    background-size: cover;
-    background-attachment: fixed;
-    background-position: center;
-}
-
-.page-beats {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.95)), url('studio_bg.png');
-    background-size: cover;
     background-attachment: fixed;
     background-position: center;
 }

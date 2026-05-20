@@ -32,3 +32,15 @@ define('PAYPAL_SECRET',    PAYPAL_SANDBOX ? PAYPAL_SANDBOX_SECRET    : PAYPAL_LI
 define('PAYPAL_BASE_URL',  PAYPAL_SANDBOX
     ? 'https://api-m.sandbox.paypal.com'
     : 'https://api-m.paypal.com');
+
+// ── SMTP / Mail Server settings (Simply.com) ─────────────────────────────────
+define('SMTP_ENABLED',     false);                 // Set to true to enable SMTP sending
+define('SMTP_HOST',        'websmtp.simply.com');  // Simply.com outbound SMTP server
+define('SMTP_PORT',        587);                   // Port 587 (TLS/STARTTLS) or 465 (SSL)
+define('SMTP_USER',        'admin@n2l8studios.com');
+define('SMTP_PASS',        'your-email-account-password');
+define('SMTP_SECURE',      'tls');                 // 'tls' or 'ssl' or 'none'
+
+define('MAIL_FROM_EMAIL',  'admin@n2l8studios.com');
+define('MAIL_FROM_NAME',   'N2L8 STUDIO');
+
