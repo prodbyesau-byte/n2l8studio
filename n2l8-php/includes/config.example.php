@@ -24,3 +24,16 @@ define('SMTP_SECURE',      'tls');                 // 'tls' or 'ssl' or 'none'
 define('MAIL_FROM_EMAIL',  'admin@n2l8studios.com');
 define('MAIL_FROM_NAME',   'N2L8 STUDIO');
 
+// ── Stripe ───────────────────────────────────────────────────────────────────
+define('STRIPE_ENABLED', true);
+define('STRIPE_MODE', 'test'); // Set to 'live' for real transactions
+
+// Sandbox/Test credentials
+define('STRIPE_TEST_SECRET_KEY', 'sk_test_replace_with_your_test_secret_key');
+define('STRIPE_TEST_PUBLISHABLE_KEY', 'pk_test_replace_with_your_test_pub_key');
+
+// Production/Live credentials
+define('STRIPE_LIVE_SECRET_KEY', 'sk_live_replace_with_your_live_secret_key');
+define('STRIPE_LIVE_PUBLISHABLE_KEY', 'pk_live_replace_with_your_live_pub_key');
+
+

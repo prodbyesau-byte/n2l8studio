@@ -370,9 +370,79 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         wrap.innerHTML = '';
         if (price <= 0) return;
 
+        // ── Stripe Credit Card Button ──
+        const stripeBtn = document.createElement('button');
+        stripeBtn.className = 'cta-btn modal-buy-btn';
+        stripeBtn.style.background = '#C0152A';
+        stripeBtn.style.color = '#ffffff';
+        stripeBtn.style.border = 'none';
+        stripeBtn.style.padding = '0.85rem';
+        stripeBtn.style.fontSize = '0.9rem';
+        stripeBtn.style.fontFamily = "'Syncopate', sans-serif";
+        stripeBtn.style.fontWeight = '700';
+        stripeBtn.style.letterSpacing = '1px';
+        stripeBtn.style.borderRadius = '4px';
+        stripeBtn.style.cursor = 'pointer';
+        stripeBtn.style.marginBottom = '1rem';
+        stripeBtn.style.width = '100%';
+        stripeBtn.style.display = 'block';
+        stripeBtn.style.transition = 'all 0.3s';
+        stripeBtn.innerHTML = '💳 PAY WITH CARD';
+        
+        stripeBtn.addEventListener('click', () => {
+            stripeBtn.textContent = 'SECURE REDIRECT...';
+            stripeBtn.disabled = true;
+            stripeBtn.style.opacity = '0.7';
+            
+            const form = new FormData();
+            form.append('product_id', productId);
+            
+            fetch('/payment/create-stripe-session.php', {
+                method: 'POST',
+                body: form
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert(data.error || 'Failed to create checkout session.');
+                    stripeBtn.textContent = '💳 PAY WITH CARD';
+                    stripeBtn.disabled = false;
+                    stripeBtn.style.opacity = '1';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                stripeBtn.textContent = '💳 PAY WITH CARD';
+                stripeBtn.disabled = false;
+                stripeBtn.style.opacity = '1';
+            });
+        });
+        
+        wrap.appendChild(stripeBtn);
+
+        // Separator
+        const sep = document.createElement('div');
+        sep.style.textAlign = 'center';
+        sep.style.color = 'var(--text-muted)';
+        sep.style.fontFamily = "'Montserrat', sans-serif";
+        sep.style.fontSize = '0.72rem';
+        sep.style.fontWeight = '600';
+        sep.style.letterSpacing = '1px';
+        sep.style.marginBottom = '1rem';
+        sep.textContent = '— OR —';
+        wrap.appendChild(sep);
+
+        // PayPal container
+        const ppContainer = document.createElement('div');
+        ppContainer.id = 'paypal-button-container-inner';
+        wrap.appendChild(ppContainer);
+
         // PayPal SDK not configured yet — show contact fallback
         if (typeof paypal === 'undefined') {
-            wrap.innerHTML = '<a href="mailto:contact@n2l8studio.com" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;">Contact to Purchase</a>';
+            ppContainer.innerHTML = '<a href="mailto:contact@n2l8studio.com" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;">Contact to Purchase</a>';
+            sep.style.display = 'none';
             return;
         }
 
@@ -414,7 +484,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             },
             onCancel: function() { renderPayPalButtons(productId, price); }
         });
-        _ppButtons.render('#paypal-btn-wrap');
+        _ppButtons.render('#paypal-button-container-inner');
     }
 
     function fmt(secs) {

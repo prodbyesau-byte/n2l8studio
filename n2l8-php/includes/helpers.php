@@ -282,13 +282,13 @@ function send_platform_email(string $to, string $subject, string $html_body, str
             
             return $mail->send();
         } catch (\Throwable $e) {
-            // Log to error log or fall back to php mail
+            // Log SMTP error and return false (do NOT fall back to raw mail() when SMTP is explicitly enabled)
             error_log("SMTP send error: " . $e->getMessage());
-            // Fall back to mail() if SMTP fails
+            return false;
         }
     }
     
-    // Fallback: standard php mail()
+    // Fallback: standard php mail() (only executed if SMTP_ENABLED is false)
     $from_email = defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : 'admin@n2l8studios.com';
     $from_name  = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'N2L8 STUDIO';
     
@@ -300,5 +300,39 @@ function send_platform_email(string $to, string $subject, string $html_body, str
     
     return @mail($to, $subject, $html_body, $headers, "-f" . $from_email);
 }
+
+/**
+ * Make an authenticated Stripe REST API call using cURL.
+ */
+function stripe_request(string $method, string $endpoint, array $data = []): array {
+    $secret_key = defined('STRIPE_MODE') && STRIPE_MODE === 'live' ? STRIPE_LIVE_SECRET_KEY : STRIPE_TEST_SECRET_KEY;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://api.stripe.com/v1' . $endpoint);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_USERPWD, $secret_key . ':');
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    
+    if (strtoupper($method) === 'POST') {
+        curl_setopt($ch, CURLOPT_POST, true);
+        // Stripe expects standard URL-encoded fields in POST requests
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+    } else if (strtoupper($method) === 'GET' && !empty($data)) {
+        curl_setopt($ch, CURLOPT_URL, 'https://api.stripe.com/v1' . $endpoint . '?' . http_build_query($data));
+    } else {
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method));
+    }
+    
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+    
+    if ($err) {
+        error_log("Stripe cURL Error: " . $err);
+        return ['error' => ['message' => $err]];
+    }
+    
+    return json_decode($response, true) ?: [];
+}
+
 
 

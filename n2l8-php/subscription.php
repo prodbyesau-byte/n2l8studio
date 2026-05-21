@@ -75,7 +75,11 @@ $site = get_site_content($pdo);
                     <li><?= h($site['sub_pro_f3'] ?? '') ?></li>
                     <li><?= h($site['sub_pro_f4'] ?? '') ?></li>
                 </ul>
-                <a href="/index.php#contact" class="cta-btn">Get Started</a>
+                <?php if (is_logged_in()): ?>
+                    <button class="cta-btn" id="subscribeBtn" style="border:none; cursor:pointer; width:100%;">Subscribe via Stripe</button>
+                <?php else: ?>
+                    <a href="/login.php?redirect=subscription.php" class="cta-btn">Login to Subscribe</a>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -125,6 +129,48 @@ $site = get_site_content($pdo);
     }
     if (nl) {
         nl.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { ham.classList.remove('open'); nl.classList.remove('open'); }));
+    }
+
+    const subBtn = document.getElementById('subscribeBtn');
+    if (subBtn) {
+        subBtn.addEventListener('click', () => {
+            subBtn.textContent = 'SECURE STRIPE CHECKOUT...';
+            subBtn.disabled = true;
+            subBtn.style.opacity = '0.7';
+            
+            const form = new FormData();
+            form.append('subscription', 'pro');
+            
+            fetch('/payment/create-stripe-session.php', {
+                method: 'POST',
+                body: form
+            })
+            .then(r => {
+                if (r.status === 401) {
+                    window.location.href = '/login.php?redirect=subscription.php';
+                    throw new Error('Auth required');
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert(data.error || 'Failed to create checkout session.');
+                    subBtn.textContent = 'Subscribe via Stripe';
+                    subBtn.disabled = false;
+                    subBtn.style.opacity = '1';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (err.message !== 'Auth required') {
+                    subBtn.textContent = 'Subscribe via Stripe';
+                    subBtn.disabled = false;
+                    subBtn.style.opacity = '1';
+                }
+            });
+        });
     }
     </script>
 </body>
