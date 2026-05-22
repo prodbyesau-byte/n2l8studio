@@ -1087,8 +1087,13 @@ try {
                 <ul class="email-folder-list" id="emailFolderList">
                     <li class="email-folder-item active" data-folder="INBOX" onclick="switchFolder('INBOX')">
                         <span class="folder-icon">📥</span>
-                        <span class="folder-label">Primary</span>
+                        <span class="folder-label">Inbox</span>
                         <span class="folder-badge" id="badge-INBOX" style="display:none;"></span>
+                    </li>
+                    <li class="email-folder-item" data-folder="PRIMARY" onclick="switchFolder('PRIMARY')">
+                        <span class="folder-icon">✉️</span>
+                        <span class="folder-label">Primary</span>
+                        <span class="folder-badge" id="badge-PRIMARY" style="display:none;"></span>
                     </li>
                     <li class="email-folder-item" data-folder="IMPORTANT" onclick="switchFolder('IMPORTANT')">
                         <span class="folder-icon">⭐</span>
@@ -1104,7 +1109,7 @@ try {
                     </li>
                     <li class="email-folder-item" data-folder="TRASH" onclick="switchFolder('TRASH')">
                         <span class="folder-icon">🗑️</span>
-                        <span class="folder-label">Trash</span>
+                        <span class="folder-label">Deleted</span>
                     </li>
                     <li class="email-folder-item" data-folder="ARCHIVE" onclick="switchFolder('ARCHIVE')">
                         <span class="folder-icon">📁</span>
@@ -1253,12 +1258,16 @@ function refreshEmails() {
             }
             currentEmails = data.emails || [];
             // Update unread badge
-            if (currentFolder === 'INBOX' && data.unread > 0) {
-                const badge = document.getElementById('badge-INBOX');
-                if (badge) { badge.textContent = data.unread; badge.style.display = 'inline-block'; }
-            } else if (currentFolder === 'INBOX') {
-                const badge = document.getElementById('badge-INBOX');
-                if (badge) badge.style.display = 'none';
+            if ((currentFolder === 'INBOX' || currentFolder === 'PRIMARY') && data.unread > 0) {
+                const badgeInbox = document.getElementById('badge-INBOX');
+                const badgePrimary = document.getElementById('badge-PRIMARY');
+                if (badgeInbox) { badgeInbox.textContent = data.unread; badgeInbox.style.display = 'inline-block'; }
+                if (badgePrimary) { badgePrimary.textContent = data.unread; badgePrimary.style.display = 'inline-block'; }
+            } else if (currentFolder === 'INBOX' || currentFolder === 'PRIMARY') {
+                const badgeInbox = document.getElementById('badge-INBOX');
+                const badgePrimary = document.getElementById('badge-PRIMARY');
+                if (badgeInbox) badgeInbox.style.display = 'none';
+                if (badgePrimary) badgePrimary.style.display = 'none';
             }
             renderEmailList(currentEmails);
         })
