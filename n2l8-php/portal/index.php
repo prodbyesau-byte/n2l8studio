@@ -1164,6 +1164,126 @@ $tab = $_GET['tab'] ?? 'library';
             border-color: var(--accent);
             box-shadow: var(--accent-glow);
         }
+
+        /* ── MOBILE OPTIMIZATION OVERLAYS ── */
+        .dm-mobile-folders-btn {
+            display: none;
+        }
+        .dm-sidebar-mobile-header {
+            display: none;
+        }
+        .dm-mobile-back-btn {
+            display: none;
+        }
+
+        /* ── RESPONSIVE / MOBILE OPTIMIZATION ── */
+        @media (max-width: 768px) {
+            .portal-container {
+                padding: 1rem 1rem 4rem 1rem;
+            }
+            .portal-header {
+                flex-direction: column;
+                gap: 1.2rem;
+                align-items: stretch;
+                text-align: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+            }
+            .portal-header .cta-btn {
+                align-self: center;
+                width: 100%;
+                max-width: 320px;
+                text-align: center;
+            }
+            .portal-welcome h2 {
+                font-size: 1.2rem;
+            }
+            .portal-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+                margin-bottom: 1.5rem;
+            }
+            .portal-tab-btn {
+                font-size: 0.72rem;
+                padding: 0.6rem 0.4rem;
+                letter-spacing: 0.05em;
+            }
+            .portal-card {
+                padding: 1.8rem 1.2rem;
+            }
+            
+            /* Library grid columns on mobile */
+            .library-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem;
+            }
+
+            /* Dual-pane direct messaging layout on mobile */
+            .dm-client-grid {
+                grid-template-columns: 1fr !important;
+                min-height: 480px;
+                max-height: calc(100vh - 180px);
+                border-radius: 4px;
+            }
+            .dm-sidebar {
+                display: none;
+                padding: 1rem 0.8rem;
+                gap: 1rem;
+            }
+            .dm-conversations-col {
+                display: flex;
+            }
+            .dm-thread-pane {
+                display: none;
+            }
+            
+            /* Grid active states */
+            .dm-client-grid.show-sidebar .dm-sidebar {
+                display: flex !important;
+                border-right: none;
+            }
+            .dm-client-grid.show-sidebar .dm-conversations-col,
+            .dm-client-grid.show-sidebar .dm-thread-pane {
+                display: none !important;
+            }
+            
+            .dm-client-grid.show-thread .dm-thread-pane {
+                display: flex !important;
+            }
+            .dm-client-grid.show-thread .dm-sidebar,
+            .dm-client-grid.show-thread .dm-conversations-col {
+                display: none !important;
+            }
+            
+            /* Back button on mobile thread header */
+            .dm-mobile-back-btn {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid var(--border-color);
+                color: #ffffff;
+                font-size: 0.9rem;
+                width: 32px;
+                height: 32px;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-right: 0.6rem;
+                transition: all 0.25s ease;
+            }
+            .dm-mobile-back-btn:hover {
+                background: rgba(192, 21, 42, 0.2);
+                border-color: var(--accent);
+            }
+            
+            .dm-mobile-folders-btn {
+                display: inline-block !important;
+            }
+            .dm-sidebar-mobile-header {
+                display: flex !important;
+            }
+        }
     </style>
 </head>
 <body class="page-home">
@@ -1286,6 +1406,10 @@ $tab = $_GET['tab'] ?? 'library';
             <div class="dm-client-grid">
                 <!-- DM Sidebar -->
                 <div class="dm-sidebar">
+                    <div class="dm-sidebar-mobile-header" style="display: none; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.8rem; margin-bottom: 0.5rem;">
+                        <span style="font-family: 'Syncopate', sans-serif; font-size: 0.75rem; font-weight: 700; color: #ffffff;">FOLDERS & VENNER</span>
+                        <button onclick="toggleMobileSidebar(false)" style="background: transparent; border: none; color: var(--accent); font-weight: 700; font-size: 1.1rem; cursor: pointer;">✕</button>
+                    </div>
                     <button class="dm-compose-btn" onclick="openComposeModal()"><span style="margin-right:8px;">+</span> COMPOSE</button>
                     
                     <div class="dm-folder-list">
@@ -1325,8 +1449,9 @@ $tab = $_GET['tab'] ?? 'library';
 
                 <!-- DM Conversations List Column -->
                 <div class="dm-conversations-col">
-                    <div class="dm-search-bar">
-                        <input type="text" id="dm-search-input" placeholder="Search conversations..." onkeyup="filterConversations()">
+                    <div class="dm-search-bar" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="dm-mobile-folders-btn" onclick="toggleMobileSidebar(true)" style="display: none; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #ffffff; padding: 0.55rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s ease;">📂 Folders</button>
+                        <input type="text" id="dm-search-input" placeholder="Search conversations..." onkeyup="filterConversations()" style="flex-grow: 1;">
                     </div>
                     <div class="dm-conversations-list" id="dm-conversations-list">
                         <!-- Populated dynamically -->
@@ -1510,6 +1635,13 @@ $tab = $_GET['tab'] ?? 'library';
                 </div>
             `;
             currentActivePartner = null;
+
+            // Clear mobile classes to show chats view
+            const clientGrid = document.querySelector('.dm-client-grid');
+            if (clientGrid) {
+                clientGrid.classList.remove('show-sidebar');
+                clientGrid.classList.remove('show-thread');
+            }
         }
 
         function loadConversations() {
@@ -1660,6 +1792,13 @@ $tab = $_GET['tab'] ?? 'library';
             // Highlight active convo
             const conversationsList = document.getElementById('dm-conversations-list');
             loadThread(partnerId, partnerName, partnerAvatar);
+
+            // Add mobile pane state
+            const clientGrid = document.querySelector('.dm-client-grid');
+            if (clientGrid) {
+                clientGrid.classList.add('show-thread');
+                clientGrid.classList.remove('show-sidebar');
+            }
         }
 
         function loadThread(partnerId, partnerName, partnerAvatar) {
@@ -1675,6 +1814,7 @@ $tab = $_GET['tab'] ?? 'library';
 
                         threadPane.innerHTML = `
                             <div class="dm-thread-header">
+                                <button class="dm-mobile-back-btn" onclick="closeMobileThread()">←</button>
                                 <div class="dm-thread-partner" onclick="openUserProfile(${partnerId})">
                                     ${partnerAvatarHtml}
                                     <span class="dm-thread-partner-name">${escapeHtml(partnerName)}</span>
@@ -2166,6 +2306,27 @@ $tab = $_GET['tab'] ?? 'library';
             if (dmPollingInterval) {
                 clearInterval(dmPollingInterval);
                 dmPollingInterval = null;
+            }
+        }
+
+        function closeMobileThread() {
+            const clientGrid = document.querySelector('.dm-client-grid');
+            if (clientGrid) {
+                clientGrid.classList.remove('show-thread');
+            }
+            currentActivePartner = null;
+            document.querySelectorAll('.dm-convo-item').forEach(el => el.classList.remove('active'));
+        }
+
+        function toggleMobileSidebar(show) {
+            const clientGrid = document.querySelector('.dm-client-grid');
+            if (clientGrid) {
+                if (show) {
+                    clientGrid.classList.add('show-sidebar');
+                    clientGrid.classList.remove('show-thread');
+                } else {
+                    clientGrid.classList.remove('show-sidebar');
+                }
             }
         }
 
