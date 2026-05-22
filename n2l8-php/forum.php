@@ -223,7 +223,7 @@ if ($view === 'dashboard') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Community Forum - N2L8 STUDIO</title>
     <meta name="description" content="N2L8 Studio premium discussion boards and producer circle.">
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <link rel="stylesheet" href="/static/style.css?v=12">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
