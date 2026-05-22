@@ -220,6 +220,31 @@ try {
         exit;
     }
     
+    elseif ($action === 'search_users') {
+        $query = trim($_GET['query'] ?? '');
+        if (strlen($query) < 2) {
+            echo json_encode(['success' => true, 'users' => []]);
+            exit;
+        }
+        
+        $sql = '
+            SELECT id, username, profile_picture, role
+            FROM users
+            WHERE username LIKE :query AND id != :my_id
+            ORDER BY username ASC
+            LIMIT 10
+        ';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            'query' => '%' . $query . '%',
+            'my_id' => $user_id
+        ]);
+        $users = $stmt->fetchAll();
+        
+        echo json_encode(['success' => true, 'users' => $users]);
+        exit;
+    }
+    
     else {
         echo json_encode(['success' => false, 'error' => 'Unknown action']);
         exit;

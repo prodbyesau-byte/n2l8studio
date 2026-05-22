@@ -484,6 +484,82 @@ $tab = $_GET['tab'] ?? 'library';
             flex-grow: 1;
             min-height: 0;
         }
+        .dm-member-search-container {
+            position: relative;
+            margin-bottom: 1.2rem;
+            padding: 0 0.5rem;
+        }
+        .dm-member-search-container input {
+            width: 100%;
+            background: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.55rem 0.75rem;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.78rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+        .dm-member-search-container input:focus {
+            border-color: var(--accent);
+            box-shadow: var(--accent-glow);
+        }
+        .dm-member-search-results {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0.5rem;
+            right: 0.5rem;
+            background: #0a0a0a;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+            margin-top: 4px;
+        }
+        .dm-search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 0.8rem;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.2s ease;
+        }
+        .dm-search-result-item:hover {
+            background: rgba(192, 21, 42, 0.12);
+        }
+        .dm-search-result-item:last-child {
+            border-bottom: none;
+        }
+        .dm-search-result-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .dm-search-result-avatar-placeholder {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #ffffff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+        }
+        .dm-search-result-name {
+            font-size: 0.78rem;
+            color: #ffffff;
+            font-weight: 500;
+        }
         .dm-section-title {
             font-family: 'Syncopate', sans-serif;
             font-size: 0.65rem;
@@ -1234,6 +1310,12 @@ $tab = $_GET['tab'] ?? 'library';
                     </div>
                     
                     <div class="dm-friends-section">
+                        <h4 class="dm-section-title">SEARCH MEMBERS</h4>
+                        <div class="dm-member-search-container">
+                            <input type="text" id="dm-member-search-input" placeholder="Search by username..." oninput="searchMembers()">
+                            <div id="dm-member-search-results" class="dm-member-search-results"></div>
+                        </div>
+                        
                         <h4 class="dm-section-title">FRIENDS</h4>
                         <div id="dm-friends-list" class="dm-friends-list">
                             <!-- Populated dynamically -->
@@ -1732,6 +1814,63 @@ $tab = $_GET['tab'] ?? 'library';
                 });
         }
 
+        let searchTimeout = null;
+
+        function searchMembers() {
+            const input = document.getElementById('dm-member-search-input');
+            const resultsDiv = document.getElementById('dm-member-search-results');
+            const query = input.value.trim();
+
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+
+            if (query.length < 2) {
+                resultsDiv.innerHTML = '';
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/portal/friends_api.php?action=search_users&query=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            if (res.users.length === 0) {
+                                resultsDiv.innerHTML = `<div style="padding:0.75rem; font-size:0.75rem; color:var(--text-muted); text-align:center;">No members found.</div>`;
+                                resultsDiv.style.display = 'block';
+                                return;
+                            }
+
+                            resultsDiv.innerHTML = '';
+                            res.users.forEach(u => {
+                                const avatarHtml = u.profile_picture
+                                    ? `<img src="/static/uploads/${encodeURIComponent(u.profile_picture)}" class="dm-search-result-avatar" alt="">`
+                                    : `<div class="dm-search-result-avatar-placeholder">${u.username.substr(0,1).toUpperCase()}</div>`;
+                                
+                                const uHtml = `
+                                    <div class="dm-search-result-item" onclick="openUserProfile(${u.id})">
+                                        ${avatarHtml}
+                                        <span class="dm-search-result-name">${escapeHtml(u.username)}</span>
+                                    </div>
+                                `;
+                                resultsDiv.insertAdjacentHTML('beforeend', uHtml);
+                            });
+                            resultsDiv.style.display = 'block';
+                        }
+                    });
+            }, 300);
+        }
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            const container = document.querySelector('.dm-member-search-container');
+            const resultsDiv = document.getElementById('dm-member-search-results');
+            if (container && !container.contains(e.target) && resultsDiv) {
+                resultsDiv.style.display = 'none';
+            }
+        });
+
         function loadFriendsList() {
             const container = document.getElementById('dm-friends-list');
             fetch('/portal/friends_api.php?action=list_friends')
@@ -1817,6 +1956,10 @@ $tab = $_GET['tab'] ?? 'library';
         // ── USER PROFILE MODAL (GLOBAL POPUP) ──
 
         function openUserProfile(userId) {
+            const searchResultsDiv = document.getElementById('dm-member-search-results');
+            if (searchResultsDiv) {
+                searchResultsDiv.style.display = 'none';
+            }
             fetch(`/portal/friends_api.php?action=get_profile&user_id=${userId}`)
                 .then(r => r.json())
                 .then(res => {
