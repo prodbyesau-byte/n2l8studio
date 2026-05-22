@@ -1189,6 +1189,12 @@ $tab = $_GET['tab'] ?? 'library';
                 margin-bottom: 1.5rem;
                 padding-bottom: 1rem;
             }
+            .portal-header > div:first-child {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center;
+                gap: 0.8rem !important;
+            }
             .portal-header .cta-btn {
                 align-self: center;
                 width: 100%;
@@ -1230,6 +1236,9 @@ $tab = $_GET['tab'] ?? 'library';
                 display: none;
                 padding: 1rem 0.8rem;
                 gap: 1rem;
+                overflow-y: auto !important;
+                max-height: calc(100vh - 120px) !important;
+                min-height: 0;
             }
             .dm-conversations-col {
                 display: flex;
@@ -1283,6 +1292,30 @@ $tab = $_GET['tab'] ?? 'library';
             .dm-sidebar-mobile-header {
                 display: flex !important;
             }
+            
+            /* iOS safari zoom prevention on mobile fields */
+            .portal-card input,
+            .dm-input-area textarea,
+            .dm-member-search-container input,
+            .dm-search-bar input,
+            .compose-select-friend,
+            .profile-modal-dm-field textarea,
+            .form-group textarea {
+                font-size: 16px !important;
+            }
+            
+            /* Modal / dialog optimizations */
+            .profile-modal-card, .compose-modal-card {
+                padding: 1.5rem 1.2rem !important;
+                width: 92% !important;
+                max-width: 380px !important;
+            }
+            .dm-messages-container {
+                padding: 0.8rem !important;
+            }
+            .dm-msg-bubble {
+                max-width: 85% !important;
+            }
         }
     </style>
 </head>
@@ -1290,7 +1323,10 @@ $tab = $_GET['tab'] ?? 'library';
     <header class="hero" style="min-height: auto; padding-bottom: 0;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
-            <ul class="nav-links">
+            <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
                 <li><a href="/index.php">Home</a></li>
                 <li><a href="/shop.php">Shop</a></li>
                 <li><a href="/pricing.php">Services</a></li>
@@ -2337,6 +2373,16 @@ $tab = $_GET['tab'] ?? 'library';
                 loadConversations();
                 loadFriendsList();
                 startDMPolling();
+            }
+
+            // Site-wide header mobile toggle
+            const ham = document.getElementById('navHamburger');
+            const nl = document.getElementById('navLinks');
+            if (ham && nl) {
+                ham.addEventListener('click', () => {
+                    ham.classList.toggle('open');
+                    nl.classList.toggle('open');
+                });
             }
         });
     </script>
