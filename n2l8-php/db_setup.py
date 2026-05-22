@@ -184,6 +184,52 @@ SCHEMA = [
       FOREIGN KEY (`recipient_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
+    ("friendships", """
+    CREATE TABLE IF NOT EXISTS `friendships` (
+      `id`             INT AUTO_INCREMENT PRIMARY KEY,
+      `user_id1`       INT NOT NULL,
+      `user_id2`       INT NOT NULL,
+      `status`         VARCHAR(20) NOT NULL DEFAULT 'pending',
+      `action_user_id` INT NOT NULL,
+      `created_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      `updated_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY `uniq_users` (`user_id1`, `user_id2`),
+      FOREIGN KEY (`user_id1`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`user_id2`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
+    ("forum_categories", """
+    CREATE TABLE IF NOT EXISTS `forum_categories` (
+      `id`          INT AUTO_INCREMENT PRIMARY KEY,
+      `name`        VARCHAR(100) NOT NULL,
+      `description` VARCHAR(255) NOT NULL,
+      `position`    INT NOT NULL DEFAULT 0
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
+    ("forum_threads", """
+    CREATE TABLE IF NOT EXISTS `forum_threads` (
+      `id`          INT AUTO_INCREMENT PRIMARY KEY,
+      `category_id` INT NOT NULL,
+      `user_id`     INT NOT NULL,
+      `title`       VARCHAR(255) NOT NULL,
+      `content`     TEXT NOT NULL,
+      `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      `updated_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (`category_id`) REFERENCES `forum_categories`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
+    ("forum_replies", """
+    CREATE TABLE IF NOT EXISTS `forum_replies` (
+      `id`          INT AUTO_INCREMENT PRIMARY KEY,
+      `thread_id`   INT NOT NULL,
+      `user_id`     INT NOT NULL,
+      `content`     TEXT NOT NULL,
+      `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (`thread_id`) REFERENCES `forum_threads`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
 ]
 
 # ── Create tables ─────────────────────────────────────────────────────────────
@@ -203,6 +249,10 @@ UPGRADES = [
     ("product_tracks.preview_end", "ALTER TABLE product_tracks ADD COLUMN preview_end DECIMAL(8,2) NULL AFTER preview_start"),
     ("users.profile_picture", "ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255) NULL AFTER email"),
     ("users.is_approved", "ALTER TABLE users ADD COLUMN is_approved TINYINT(1) NOT NULL DEFAULT 1"),
+    ("messages.deleted_by_sender", "ALTER TABLE messages ADD COLUMN deleted_by_sender TINYINT(1) NOT NULL DEFAULT 0"),
+    ("messages.deleted_by_recipient", "ALTER TABLE messages ADD COLUMN deleted_by_recipient TINYINT(1) NOT NULL DEFAULT 0"),
+    ("messages.is_flagged_by_sender", "ALTER TABLE messages ADD COLUMN is_flagged_by_sender TINYINT(1) NOT NULL DEFAULT 0"),
+    ("messages.is_flagged_by_recipient", "ALTER TABLE messages ADD COLUMN is_flagged_by_recipient TINYINT(1) NOT NULL DEFAULT 0"),
 ]
 for label, sql in UPGRADES:
     try:
@@ -302,7 +352,29 @@ for key, page, label, text in CONTENT:
 conn.commit()
 print(f"  ✅ {seeded} content blocks seeded.")
 
+# ── Seed Forum Categories ────────────────────────────────────────────────────
+print("\nSeeding forum categories...")
+FORUM_CATEGORIES = [
+    ('General Discussion', 'Talk about anything related to music, community or life.', 1),
+    ('Music Production', 'Share tips, tricks, plugins, tutorials, and discuss DAWs.', 2),
+    ('Collabs & Feedback', 'Find other producers/artists to collaborate with or get feedback on your tracks.', 3),
+    ('Showcase', 'Show off your finished beats, songs, artwork, or graphics.', 4)
+]
+seeded_cats = 0
+for name, desc, pos in FORUM_CATEGORIES:
+    try:
+        cur.execute("SELECT COUNT(*) FROM forum_categories WHERE name = %s", (name,))
+        if cur.fetchone()[0] == 0:
+            cur.execute(
+                "INSERT INTO forum_categories (name, description, position) VALUES (%s, %s, %s)",
+                (name, desc, pos)
+            )
+            seeded_cats += 1
+    except Exception as e:
+        print(f"  ❌ Forum Category '{name}': {e}")
 conn.commit()
+print(f"  ✅ {seeded_cats} forum categories seeded.")
+
 
 # ── Sync products from local SQLite ──────────────────────────────────────────
 # Product sync from local SQLite is disabled so that products deleted via the

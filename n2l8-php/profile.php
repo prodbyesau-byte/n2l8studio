@@ -95,6 +95,7 @@ log_visitor($pdo, 'page_view', '/profile.php');
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
+                <li><a href="/forum.php">Forum</a></li>
                 <li><a href="/profile.php">Profile</a></li>
             </ul>
         </nav>

@@ -387,6 +387,707 @@ $tab = $_GET['tab'] ?? 'library';
         .portal-tab.active {
             display: block;
         }
+
+        /* ── DUAL-PANE DIRECT MESSAGING CLIENT ── */
+        .dm-client-grid {
+            display: grid;
+            grid-template-columns: 240px 320px 1fr;
+            background: rgba(5, 5, 8, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), var(--accent-glow);
+            min-height: 620px;
+            max-height: 720px;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dm-sidebar {
+            background: rgba(0, 0, 0, 0.4);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: left;
+        }
+        .dm-compose-btn {
+            background: var(--accent);
+            border: none;
+            color: #ffffff;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: var(--accent-glow);
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .dm-compose-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(192, 21, 42, 0.6);
+        }
+        .dm-folder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .dm-folder-item {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            width: 100%;
+            text-align: left;
+        }
+        .dm-folder-item:hover, .dm-folder-item.active {
+            background: rgba(192, 21, 42, 0.08);
+            color: #ffffff;
+        }
+        .dm-folder-item.active {
+            border-left: 3px solid var(--accent);
+            padding-left: calc(1rem - 3px);
+        }
+        .dm-folder-item .icon {
+            margin-right: 0.6rem;
+            font-size: 0.95rem;
+        }
+        .dm-folder-item .badge {
+            background: var(--accent);
+            color: #ffffff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 10px;
+            box-shadow: var(--accent-glow);
+            display: none;
+        }
+        .dm-folder-item .badge.visible {
+            display: inline-block;
+        }
+        .dm-friends-section {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            min-height: 0;
+        }
+        .dm-section-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            margin-bottom: 0.8rem;
+            padding-left: 0.5rem;
+        }
+        .dm-friends-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            overflow-y: auto;
+            max-height: 240px;
+            padding-right: 0.2rem;
+        }
+        .dm-friend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.4rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .dm-friend-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .dm-friend-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .dm-friend-avatar-placeholder {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .dm-friend-name {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+        .dm-friend-item:hover .dm-friend-name {
+            color: #ffffff;
+        }
+
+        .dm-conversations-col {
+            background: rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .dm-search-bar {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .dm-search-bar input {
+            width: 100%;
+            background: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.65rem 0.8rem;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.82rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+        .dm-search-bar input:focus {
+            border-color: var(--accent);
+            box-shadow: var(--accent-glow);
+        }
+        .dm-conversations-list {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .dm-convo-item {
+            display: grid;
+            grid-template-columns: 40px 1fr;
+            gap: 0.8rem;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        .dm-convo-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .dm-convo-item.active {
+            background: rgba(192, 21, 42, 0.05);
+            border-left: 3px solid var(--accent);
+            padding-left: calc(1rem - 3px);
+        }
+        .dm-convo-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .dm-convo-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .dm-convo-info {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .dm-convo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.15rem;
+        }
+        .dm-convo-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dm-convo-time {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .dm-convo-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .dm-convo-lastmsg {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+        }
+        .dm-convo-badge {
+            background: var(--accent);
+            color: #ffffff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 10px;
+            box-shadow: var(--accent-glow);
+        }
+        .dm-convo-item.unread .dm-convo-name {
+            color: var(--accent);
+        }
+        .dm-convo-item.unread .dm-convo-lastmsg {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .dm-thread-pane {
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+        .dm-thread-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            padding: 3rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .dm-thread-empty h3 {
+            font-family: 'Syncopate', sans-serif;
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 0.4rem;
+            letter-spacing: 1px;
+        }
+        .dm-thread-empty p {
+            font-size: 0.8rem;
+            max-width: 320px;
+            margin: 0;
+        }
+        .dm-thread-header {
+            background: rgba(0, 0, 0, 0.35);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dm-thread-partner {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+        }
+        .dm-thread-partner:hover .dm-thread-partner-name {
+            color: var(--accent);
+            text-shadow: var(--accent-glow);
+        }
+        .dm-thread-partner-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--accent);
+            box-shadow: var(--accent-glow);
+        }
+        .dm-thread-partner-avatar-placeholder {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fff;
+            border: 1px solid var(--accent);
+            box-shadow: var(--accent-glow);
+        }
+        .dm-thread-partner-name {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.85rem;
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            transition: color 0.2s ease;
+            text-transform: uppercase;
+        }
+        .dm-thread-actions {
+            display: flex;
+            gap: 0.6rem;
+        }
+        .dm-thread-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .dm-thread-btn:hover {
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+        .dm-thread-btn.starred {
+            border-color: #ffb300;
+            color: #ffb300;
+            background: rgba(255, 179, 0, 0.05);
+        }
+        .dm-messages-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .dm-msg-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            position: relative;
+            text-align: left;
+            word-wrap: break-word;
+        }
+        .dm-msg-bubble.received {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0e0e0;
+            align-self: flex-start;
+            border-left: 3px solid rgba(255, 255, 255, 0.2);
+        }
+        .dm-msg-bubble.sent {
+            background: rgba(192, 21, 42, 0.12);
+            color: #ffffff;
+            align-self: flex-end;
+            border-right: 3px solid var(--accent);
+            box-shadow: 0 4px 15px rgba(192, 21, 42, 0.05);
+        }
+        .dm-msg-info {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+            text-align: right;
+        }
+        .dm-msg-bubble.sent .dm-msg-info {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .dm-input-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+        .dm-input-area textarea {
+            flex-grow: 1;
+            background: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            padding: 0.7rem 0.9rem;
+            resize: none;
+            height: 40px;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+        .dm-input-area textarea:focus {
+            border-color: var(--accent);
+            box-shadow: var(--accent-glow);
+        }
+        .dm-input-area button {
+            background: var(--accent);
+            border: none;
+            color: #ffffff;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            padding: 0.7rem 1.3rem;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: var(--accent-glow);
+            transition: all 0.3s ease;
+        }
+        .dm-input-area button:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 12px rgba(192, 21, 42, 0.6);
+        }
+
+        /* ── GLOBAL SOCIAL MODALS ── */
+        .profile-modal, .compose-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .profile-modal.open, .compose-modal.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .profile-modal-card, .compose-modal-card {
+            background: #050508;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2.5rem;
+            max-width: 460px;
+            width: 90%;
+            box-shadow: 0 0 35px rgba(192, 21, 42, 0.2), var(--accent-glow);
+            text-align: center;
+            position: relative;
+            transform: scale(0.92);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .profile-modal.open .profile-modal-card, .compose-modal.open .compose-modal-card {
+            transform: scale(1);
+        }
+        .profile-modal-close, .compose-modal-close {
+            position: absolute;
+            top: 0.8rem;
+            right: 1.1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.6rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .profile-modal-close:hover, .compose-modal-close:hover {
+            color: #ffffff;
+        }
+        .profile-modal-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+            box-shadow: var(--accent-glow);
+            margin: 0 auto 1.2rem auto;
+        }
+        .profile-modal-avatar-placeholder {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 auto 1.2rem auto;
+        }
+        .profile-modal-username {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.2rem;
+            color: #ffffff;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.05em;
+        }
+        .profile-modal-role {
+            display: inline-block;
+            font-size: 0.62rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent);
+            background: rgba(192, 21, 42, 0.08);
+            border: 1px solid var(--border-color);
+            padding: 3px 8px;
+            border-radius: 2px;
+            margin-bottom: 1.5rem;
+        }
+        .profile-modal-stats {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 0;
+            margin-bottom: 1.5rem;
+        }
+        .profile-modal-stat-val {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.1rem;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .profile-modal-stat-lbl {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 0.2rem;
+            letter-spacing: 0.05em;
+        }
+        .profile-modal-btn {
+            width: 100%;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            padding: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        .profile-modal-btn.primary {
+            background: var(--accent);
+            border: none;
+            color: #ffffff;
+            box-shadow: var(--accent-glow);
+        }
+        .profile-modal-btn.primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 12px var(--accent);
+        }
+        .profile-modal-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+        .profile-modal-btn.secondary:hover {
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+        .profile-modal-btn.disabled {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: rgba(255, 255, 255, 0.25) !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+        }
+        .profile-modal-dm-field {
+            text-align: left;
+            margin-top: 1.5rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.05);
+            padding-top: 1.2rem;
+            display: none;
+        }
+        .profile-modal-dm-field.visible {
+            display: block;
+        }
+        .profile-modal-dm-field label {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+        .profile-modal-dm-field textarea {
+            width: 100%;
+            background: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.7rem 0.8rem;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            resize: none;
+            height: 60px;
+            outline: none;
+            transition: border-color 0.25s;
+            margin-bottom: 0.8rem;
+        }
+        .profile-modal-dm-field textarea:focus {
+            border-color: var(--accent);
+        }
+        
+        /* Compose DM Modal styling */
+        .compose-modal-card {
+            text-align: left;
+        }
+        .compose-modal-card h3 {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        .compose-select-friend {
+            width: 100%;
+            background: #000000;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.88rem;
+            padding: 0.75rem 0.9rem;
+            outline: none;
+            margin-bottom: 1.2rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        .compose-select-friend:focus {
+            border-color: var(--accent);
+            box-shadow: var(--accent-glow);
+        }
     </style>
 </head>
 <body class="page-home">
@@ -397,6 +1098,7 @@ $tab = $_GET['tab'] ?? 'library';
                 <li><a href="/index.php">Home</a></li>
                 <li><a href="/shop.php">Shop</a></li>
                 <li><a href="/pricing.php">Services</a></li>
+                <li><a href="/forum.php">Forum</a></li>
                 <li><a href="/logout.php" style="color: var(--accent);">Disconnect</a></li>
             </ul>
         </nav>
@@ -505,48 +1207,58 @@ $tab = $_GET['tab'] ?? 'library';
 
         <!-- ── TAB: INBOX ── -->
         <div id="tab-inbox" class="portal-tab <?= $tab === 'inbox' ? 'active' : '' ?>">
-            <div class="portal-card" style="padding: 0; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <div style="padding: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff;">INBOX</h3>
-                    <p style="color:var(--text-muted); font-size:0.82rem; margin:0; font-family:'Montserrat',sans-serif; font-weight:500;">View private messages and community notifications sent by N2L8 Studio.</p>
+            <div class="dm-client-grid">
+                <!-- DM Sidebar -->
+                <div class="dm-sidebar">
+                    <button class="dm-compose-btn" onclick="openComposeModal()"><span style="margin-right:8px;">+</span> COMPOSE</button>
+                    
+                    <div class="dm-folder-list">
+                        <button class="dm-folder-item active" onclick="switchDMFolder('primary')" id="dm-folder-primary">
+                            <span><span class="icon">👥</span> Primary</span>
+                            <span class="badge" id="dm-badge-primary">0</span>
+                        </button>
+                        <button class="dm-folder-item" onclick="switchDMFolder('general')" id="dm-folder-general">
+                            <span><span class="icon">📬</span> Inbox</span>
+                            <span class="badge" id="dm-badge-general">0</span>
+                        </button>
+                        <button class="dm-folder-item" onclick="switchDMFolder('important')" id="dm-folder-important">
+                            <span><span class="icon">⭐</span> Important</span>
+                            <span class="badge" id="dm-badge-important">0</span>
+                        </button>
+                        <button class="dm-folder-item" onclick="switchDMFolder('sent')" id="dm-folder-sent">
+                            <span><span class="icon">📤</span> Sent</span>
+                        </button>
+                        <button class="dm-folder-item" onclick="switchDMFolder('deleted')" id="dm-folder-deleted">
+                            <span><span class="icon">🗑️</span> Deleted</span>
+                        </button>
+                    </div>
+                    
+                    <div class="dm-friends-section">
+                        <h4 class="dm-section-title">FRIENDS</h4>
+                        <div id="dm-friends-list" class="dm-friends-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
                 </div>
-                
-                <?php if (empty($messages)): ?>
-                    <div style="text-align:center; padding:5rem 2rem; color:var(--text-muted);">
-                        <div style="font-size:3rem; margin-bottom:1rem; opacity:0.4;">📬</div>
-                        <h4 style="font-family:'Syncopate',sans-serif; color:#fff; font-size:0.95rem; margin-bottom:0.5rem; letter-spacing:1px;">Your inbox is empty</h4>
-                        <p style="font-size:0.8rem; margin:0; font-family:'Montserrat',sans-serif;">We will notify you here when you have new messages or updates.</p>
+
+                <!-- DM Conversations List Column -->
+                <div class="dm-conversations-col">
+                    <div class="dm-search-bar">
+                        <input type="text" id="dm-search-input" placeholder="Search conversations..." onkeyup="filterConversations()">
                     </div>
-                <?php else: ?>
-                    <div style="list-style:none; padding:0; margin:0;">
-                        <?php foreach ($messages as $msg): ?>
-                            <div class="message-row <?= $msg['is_read'] ? 'read' : 'unread' ?>" onclick="toggleMessage(<?= (int)$msg['id'] ?>)" id="msg-row-<?= (int)$msg['id'] ?>" style="border-bottom:1px solid rgba(255,255,255,0.05); padding:1.2rem 2rem; cursor:pointer; transition:background 0.2s ease; display:grid; grid-template-columns: 24px 1fr auto; align-items:center; gap:1.2rem; text-align:left;">
-                                <div>
-                                    <?php if (!$msg['is_read']): ?>
-                                        <span class="unread-dot" id="dot-<?= (int)$msg['id'] ?>" style="display:inline-block; width:8px; height:8px; background:var(--accent); border-radius:50%; box-shadow:0 0 6px var(--accent);"></span>
-                                    <?php else: ?>
-                                        <span style="display:inline-block; width:8px; height:8px; background:rgba(255,255,255,0.1); border-radius:50%;"></span>
-                                    <?php endif; ?>
-                                </div>
-                                <div>
-                                    <div class="msg-subject" style="font-family:'Montserrat',sans-serif; font-size:0.92rem; font-weight:<?= $msg['is_read'] ? '600' : '700' ?>; color:#fff; letter-spacing:0.02em; margin-bottom:0.25rem;">
-                                        <?= h($msg['subject']) ?>
-                                    </div>
-                                    <div class="msg-snippet" id="snippet-<?= (int)$msg['id'] ?>" style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:650px; font-family:'Montserrat',sans-serif;">
-                                        <?= h(substr(strip_tags($msg['message']), 0, 100)) ?>...
-                                    </div>
-                                </div>
-                                <div style="font-size:0.75rem; color:var(--text-muted); font-family:'Montserrat',sans-serif; font-weight:500;">
-                                    <?= date('M j, Y H:i', strtotime($msg['created_at'])) ?>
-                                </div>
-                                
-                                <div class="msg-body" id="body-<?= (int)$msg['id'] ?>" style="display:none; grid-column:1/-1; padding:1rem 0 0.5rem 0; border-top:1px dashed rgba(255,255,255,0.05); margin-top:0.8rem; font-family:'Montserrat',sans-serif; font-size:0.88rem; color:#e0e0e0; line-height:1.6; white-space:pre-wrap; text-transform:none; letter-spacing:0.02em;">
-                                    <?= h($msg['message']) ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                    <div class="dm-conversations-list" id="dm-conversations-list">
+                        <!-- Populated dynamically -->
                     </div>
-                <?php endif; ?>
+                </div>
+
+                <!-- DM Reading/Thread Pane -->
+                <div class="dm-thread-pane" id="dm-thread-pane">
+                    <div class="dm-thread-empty">
+                        <div style="font-size:3rem; margin-bottom:1rem; opacity:0.3;">💬</div>
+                        <h3>SELECT A CHAT</h3>
+                        <p>Choose a chat partner or folder from the sidebar to view messages.</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -613,7 +1325,64 @@ $tab = $_GET['tab'] ?? 'library';
 
     </div>
 
+    <!-- ── GLOBAL USER PROFILE POPUP MODAL ── -->
+    <div id="profileModal" class="profile-modal" onclick="if(event.target===this) closeUserProfile()">
+        <div class="profile-modal-card">
+            <button class="profile-modal-close" onclick="closeUserProfile()">&times;</button>
+            <div id="pm-avatar-container"></div>
+            <h3 id="pm-username" class="profile-modal-username"></h3>
+            <span id="pm-role" class="profile-modal-role"></span>
+            
+            <div class="profile-modal-stats">
+                <div class="profile-modal-stat">
+                    <div id="pm-stat-threads" class="profile-modal-stat-val">0</div>
+                    <div class="profile-modal-stat-lbl">Threads</div>
+                </div>
+                <div class="profile-modal-stat">
+                    <div id="pm-stat-replies" class="profile-modal-stat-val">0</div>
+                    <div class="profile-modal-stat-lbl">Replies</div>
+                </div>
+            </div>
+            
+            <div class="profile-modal-actions" id="pm-actions-container">
+                <!-- Action buttons loaded dynamically -->
+            </div>
+            
+            <div class="profile-modal-dm-field" id="pm-dm-field">
+                <label for="pm-dm-text">Send Quick Message</label>
+                <textarea id="pm-dm-text" placeholder="Type a private message..."></textarea>
+                <button class="profile-modal-btn primary" id="pm-dm-send-btn" onclick="sendProfileModalQuickDM()">Send private message</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── COMPOSE DM MODAL ── -->
+    <div id="composeModal" class="compose-modal" onclick="if(event.target===this) closeComposeModal()">
+        <div class="compose-modal-card">
+            <button class="compose-modal-close" onclick="closeComposeModal()">&times;</button>
+            <h3>COMPOSE NEW MESSAGE</h3>
+            
+            <div class="form-group">
+                <label>Select Friend</label>
+                <select id="compose-recipient" class="compose-select-friend">
+                    <option value="">-- Choose a friend --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Message Content</label>
+                <textarea id="compose-text" style="width:100%; background:#000; border:1px solid var(--border-color); border-radius:4px; padding:0.8rem; color:#fff; font-family:'Montserrat',sans-serif; font-size:0.88rem; min-height:100px; resize:none; outline:none; transition:border-color 0.25s;" placeholder="Write your message here..."></textarea>
+            </div>
+            
+            <button class="profile-modal-btn primary" onclick="submitCompose()" style="margin-top:1rem;">SEND MESSAGE</button>
+        </div>
+    </div>
+
     <script>
+        let currentDMFolder = 'primary';
+        let currentActivePartner = null;
+        let dmPollingInterval = null;
+
         function switchTab(tabId) {
             document.querySelectorAll('.portal-tab').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.portal-tab-btn').forEach(el => el.classList.remove('active'));
@@ -623,65 +1392,649 @@ $tab = $_GET['tab'] ?? 'library';
                 targetTab.classList.add('active');
             }
             
-            // Find the active button and activate it
             const activeBtn = Array.from(document.querySelectorAll('.portal-tab-btn')).find(btn => btn.innerText.toLowerCase().includes(tabId));
             if (activeBtn) {
                 activeBtn.classList.add('active');
             }
 
-            // Update URL
             history.replaceState(null, '', '/portal/index.php?tab=' + tabId);
+
+            if (tabId === 'inbox') {
+                loadConversations();
+                loadFriendsList();
+                startDMPolling();
+            } else {
+                stopDMPolling();
+            }
         }
 
-        function toggleMessage(id) {
-            const body = document.getElementById('body-' + id);
-            const snippet = document.getElementById('snippet-' + id);
-            const row = document.getElementById('msg-row-' + id);
-            const dot = document.getElementById('dot-' + id);
+        // ── DIRECT MESSAGING JS LOGIC ──
+
+        function switchDMFolder(folder) {
+            currentDMFolder = folder;
+            document.querySelectorAll('.dm-folder-item').forEach(el => el.classList.remove('active'));
+            const activeFolderBtn = document.getElementById('dm-folder-' + folder);
+            if (activeFolderBtn) activeFolderBtn.classList.add('active');
             
-            if (!body) return;
+            loadConversations();
             
-            const isExpanding = body.style.display === 'none';
-            body.style.display = isExpanding ? 'block' : 'none';
-            if (snippet) snippet.style.display = isExpanding ? 'none' : 'block';
-            if (row) {
-                if (isExpanding) {
-                    row.style.background = 'rgba(255,255,255,0.02)';
-                } else {
-                    row.style.background = '';
-                }
+            // Clear reading pane
+            const threadPane = document.getElementById('dm-thread-pane');
+            threadPane.innerHTML = `
+                <div class="dm-thread-empty">
+                    <div style="font-size:3rem; margin-bottom:1rem; opacity:0.3;">💬</div>
+                    <h3>${folder.toUpperCase()} FOLDER</h3>
+                    <p>Select a message thread to read.</p>
+                </div>
+            `;
+            currentActivePartner = null;
+        }
+
+        function loadConversations() {
+            const listContainer = document.getElementById('dm-conversations-list');
+            
+            if (currentDMFolder === 'important') {
+                fetch('/portal/portal_messages_api.php?action=fetch_important')
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) renderIndividualMessages(res.messages, listContainer);
+                    });
+                return;
             }
             
-            // Mark as read asynchronously if it's currently unread
-            if (isExpanding && row && row.classList.contains('unread')) {
-                fetch('/portal/read_message.php?id=' + id)
+            if (currentDMFolder === 'deleted') {
+                fetch('/portal/portal_messages_api.php?action=fetch_deleted')
                     .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            row.classList.remove('unread');
-                            row.classList.add('read');
-                            if (dot) {
-                                dot.style.background = 'rgba(255,255,255,0.1)';
-                                dot.style.boxShadow = 'none';
-                            }
-                            
-                            // Dynamically update unread count in header tab
-                            const inboxBtn = Array.from(document.querySelectorAll('.portal-tab-btn')).find(btn => btn.innerText.toLowerCase().includes('inbox'));
-                            if (inboxBtn) {
-                                const match = inboxBtn.innerText.match(/\((\d+)\)/);
-                                if (match) {
-                                    let currentCount = parseInt(match[1]);
-                                    if (currentCount > 0) {
-                                        currentCount--;
-                                        inboxBtn.innerText = 'Inbox (' + currentCount + ')';
-                                    }
-                                }
-                            }
+                    .then(res => {
+                        if (res.success) renderIndividualMessages(res.messages, listContainer);
+                    });
+                return;
+            }
+
+            fetch('/portal/portal_messages_api.php?action=fetch_conversations')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const conversations = currentDMFolder === 'primary' ? res.primary : res.general;
+                        
+                        // Update badges
+                        const pBadge = document.getElementById('dm-badge-primary');
+                        const gBadge = document.getElementById('dm-badge-general');
+                        
+                        const pUnread = res.primary.reduce((acc, c) => acc + parseInt(c.unread_count), 0);
+                        const gUnread = res.general.reduce((acc, c) => acc + parseInt(c.unread_count), 0);
+                        
+                        if (pUnread > 0) {
+                            pBadge.innerText = pUnread;
+                            pBadge.classList.add('visible');
+                        } else {
+                            pBadge.classList.remove('visible');
                         }
-                    })
-                    .catch(err => console.error("Error marking read:", err));
+                        
+                        if (gUnread > 0) {
+                            gBadge.innerText = gUnread;
+                            gBadge.classList.add('visible');
+                        } else {
+                            gBadge.classList.remove('visible');
+                        }
+
+                        // Also update header tab unread count
+                        const totalUnread = pUnread + gUnread;
+                        const tabBtn = Array.from(document.querySelectorAll('.portal-tab-btn')).find(btn => btn.innerText.toLowerCase().includes('inbox'));
+                        if (tabBtn) {
+                            tabBtn.innerText = `Inbox (${totalUnread})`;
+                        }
+
+                        if (conversations.length === 0) {
+                            listContainer.innerHTML = `
+                                <div style="text-align:center; padding:3rem 1rem; color:var(--text-muted); font-size:0.8rem;">
+                                    No conversations found in ${currentDMFolder}.
+                                </div>
+                            `;
+                            return;
+                        }
+
+                        listContainer.innerHTML = '';
+                        conversations.forEach(c => {
+                            const isSelected = currentActivePartner === parseInt(c.partner_id) ? 'active' : '';
+                            const isUnread = parseInt(c.unread_count) > 0 ? 'unread' : '';
+                            
+                            const avatarHtml = c.partner_avatar 
+                                ? `<img src="/static/uploads/${encodeURIComponent(c.partner_avatar)}" class="dm-convo-avatar" alt="">`
+                                : `<div class="dm-convo-avatar-placeholder">${c.partner_username.substr(0,1).toUpperCase()}</div>`;
+                                
+                            const badgeHtml = parseInt(c.unread_count) > 0 
+                                ? `<span class="dm-convo-badge">${c.unread_count}</span>` 
+                                : '';
+
+                            const timeStr = formatConvoTime(c.last_msg_time);
+
+                            const itemHtml = `
+                                <div class="dm-convo-item ${isSelected} ${isUnread}" onclick="openConversation(${c.partner_id}, '${escapeHtml(c.partner_username)}', '${c.partner_avatar}')">
+                                    <div>${avatarHtml}</div>
+                                    <div class="dm-convo-info">
+                                        <div class="dm-convo-header">
+                                            <span class="dm-convo-name">${escapeHtml(c.partner_username)}</span>
+                                            <span class="dm-convo-time">${timeStr}</span>
+                                        </div>
+                                        <div class="dm-convo-body">
+                                            <span class="dm-convo-lastmsg">${escapeHtml(c.last_msg_text)}</span>
+                                            ${badgeHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            listContainer.insertAdjacentHTML('beforeend', itemHtml);
+                        });
+                    }
+                });
+        }
+
+        function renderIndividualMessages(messages, container) {
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:3rem 1rem; color:var(--text-muted); font-size:0.8rem;">
+                        No messages found in this folder.
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = '';
+            messages.forEach(m => {
+                const isSent = parseInt(m.sender_id) === <?= (int)$user_id ?>;
+                const partnerName = isSent ? m.recipient_username : m.sender_username;
+                const partnerAvatar = isSent ? m.recipient_avatar : m.sender_avatar;
+                
+                const avatarHtml = partnerAvatar 
+                    ? `<img src="/static/uploads/${encodeURIComponent(partnerAvatar)}" class="dm-convo-avatar" alt="">`
+                    : `<div class="dm-convo-avatar-placeholder">${partnerName.substr(0,1).toUpperCase()}</div>`;
+
+                const timeStr = formatConvoTime(m.created_at);
+
+                const itemHtml = `
+                    <div class="dm-convo-item" onclick="openConversation(${isSent ? m.recipient_id : m.sender_id}, '${escapeHtml(partnerName)}', '${partnerAvatar}')">
+                        <div>${avatarHtml}</div>
+                        <div class="dm-convo-info">
+                            <div class="dm-convo-header">
+                                <span class="dm-convo-name">${escapeHtml(partnerName)}</span>
+                                <span class="dm-convo-time">${timeStr}</span>
+                            </div>
+                            <div class="dm-convo-body">
+                                <span class="dm-convo-lastmsg">${isSent ? 'You: ' : ''}${escapeHtml(m.message)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', itemHtml);
+            });
+        }
+
+        function openConversation(partnerId, partnerName, partnerAvatar) {
+            currentActivePartner = parseInt(partnerId);
+            
+            // Mark active convo row
+            document.querySelectorAll('.dm-convo-item').forEach(el => el.classList.remove('active'));
+            
+            // Highlight active convo
+            const conversationsList = document.getElementById('dm-conversations-list');
+            loadThread(partnerId, partnerName, partnerAvatar);
+        }
+
+        function loadThread(partnerId, partnerName, partnerAvatar) {
+            fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${partnerId}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const threadPane = document.getElementById('dm-thread-pane');
+                        
+                        const partnerAvatarHtml = partnerAvatar && partnerAvatar !== 'null' && partnerAvatar !== ''
+                            ? `<img src="/static/uploads/${encodeURIComponent(partnerAvatar)}" class="dm-thread-partner-avatar" alt="">`
+                            : `<div class="dm-thread-partner-avatar-placeholder">${partnerName.substr(0,1).toUpperCase()}</div>`;
+
+                        threadPane.innerHTML = `
+                            <div class="dm-thread-header">
+                                <div class="dm-thread-partner" onclick="openUserProfile(${partnerId})">
+                                    ${partnerAvatarHtml}
+                                    <span class="dm-thread-partner-name">${escapeHtml(partnerName)}</span>
+                                </div>
+                                <div class="dm-thread-actions">
+                                    <button class="dm-thread-btn" onclick="deleteDMConversation(${partnerId})">Delete conversation</button>
+                                </div>
+                            </div>
+                            
+                            <div class="dm-messages-container" id="dm-messages-container">
+                                <!-- Messages inserted here -->
+                            </div>
+                            
+                            <div class="dm-input-area">
+                                <textarea id="dm-message-input" placeholder="Type a message to ${escapeHtml(partnerName)}..." onkeydown="handleDMInputKey(event)"></textarea>
+                                <button onclick="sendDMMessage()">SEND</button>
+                            </div>
+                        `;
+
+                        const msgContainer = document.getElementById('dm-messages-container');
+                        res.messages.forEach(m => {
+                            const isSent = parseInt(m.sender_id) === <?= (int)$user_id ?>;
+                            const isStarred = isSent ? parseInt(m.is_flagged_by_sender) : parseInt(m.is_flagged_by_recipient);
+                            const starClass = isStarred ? 'starred' : '';
+                            
+                            const bubbleHtml = `
+                                <div class="dm-msg-bubble ${isSent ? 'sent' : 'received'}">
+                                    <div style="display:flex; justify-content:space-between; gap:2rem; align-items:flex-start;">
+                                        <div style="white-space:pre-wrap;">${escapeHtml(m.message)}</div>
+                                        <span style="cursor:pointer; font-size:0.8rem; margin-top:-2px;" onclick="toggleDMStar(${m.id}, this)" class="${starClass}">
+                                            ${isStarred ? '★' : '☆'}
+                                        </span>
+                                    </div>
+                                    <div class="dm-msg-info">
+                                        ${formatBubbleTime(m.created_at)}
+                                    </div>
+                                </div>
+                            `;
+                            msgContainer.insertAdjacentHTML('beforeend', bubbleHtml);
+                        });
+
+                        // Scroll to bottom
+                        msgContainer.scrollTop = msgContainer.scrollHeight;
+                        
+                        // Reload convo list badges
+                        loadConversations();
+                    }
+                });
+        }
+
+        function handleDMInputKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendDMMessage();
             }
         }
+
+        function sendDMMessage() {
+            const input = document.getElementById('dm-message-input');
+            const message = input.value.trim();
+            if (!message || !currentActivePartner) return;
+
+            const fd = new FormData();
+            fd.append('action', 'send_message');
+            fd.append('recipient_id', currentActivePartner);
+            fd.append('message', message);
+
+            fetch('/portal/portal_messages_api.php', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        input.value = '';
+                        // Reload thread
+                        const convo = res.message;
+                        const msgContainer = document.getElementById('dm-messages-container');
+                        
+                        const bubbleHtml = `
+                            <div class="dm-msg-bubble sent">
+                                <div style="display:flex; justify-content:space-between; gap:2rem; align-items:flex-start;">
+                                    <div style="white-space:pre-wrap;">${escapeHtml(convo.message)}</div>
+                                    <span style="cursor:pointer; font-size:0.8rem; margin-top:-2px;" onclick="toggleDMStar(${convo.id}, this)">
+                                        ☆
+                                    </span>
+                                </div>
+                                <div class="dm-msg-info">
+                                    Just Now
+                                </div>
+                            </div>
+                        `;
+                        msgContainer.insertAdjacentHTML('beforeend', bubbleHtml);
+                        msgContainer.scrollTop = msgContainer.scrollHeight;
+                        
+                        // Refresh side list
+                        loadConversations();
+                    }
+                });
+        }
+
+        function toggleDMStar(messageId, starEl) {
+            const fd = new FormData();
+            fd.append('action', 'toggle_star');
+            fd.append('message_id', messageId);
+
+            fetch('/portal/portal_messages_api.php', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        if (res.is_starred) {
+                            starEl.innerText = '★';
+                            starEl.classList.add('starred');
+                        } else {
+                            starEl.innerText = '☆';
+                            starEl.classList.remove('starred');
+                        }
+                    }
+                });
+        }
+
+        function deleteDMConversation(partnerId) {
+            if (!confirm("Are you sure you want to delete this conversation? This will clear all messages in this thread for you.")) return;
+            
+            fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${partnerId}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const promises = res.messages.map(m => {
+                            const fd = new FormData();
+                            fd.append('action', 'delete_message');
+                            fd.append('message_id', m.id);
+                            return fetch('/portal/portal_messages_api.php', { method: 'POST', body: fd });
+                        });
+                        
+                        Promise.all(promises).then(() => {
+                            switchDMFolder(currentDMFolder);
+                        });
+                    }
+                });
+        }
+
+        function loadFriendsList() {
+            const container = document.getElementById('dm-friends-list');
+            fetch('/portal/friends_api.php?action=list_friends')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        if (res.friends.length === 0) {
+                            container.innerHTML = `<div style="padding:0 0.5rem; font-size:0.72rem; color:var(--text-muted);">No friends yet. Add friends via the Community Forum!</div>`;
+                            return;
+                        }
+                        container.innerHTML = '';
+                        
+                        // Populate select options for compose dropdown
+                        const selectEl = document.getElementById('compose-recipient');
+                        selectEl.innerHTML = '<option value="">-- Choose a friend --</option>';
+
+                        res.friends.forEach(f => {
+                            const avatarHtml = f.profile_picture
+                                ? `<img src="/static/uploads/${encodeURIComponent(f.profile_picture)}" class="dm-friend-avatar" alt="">`
+                                : `<div class="dm-friend-avatar-placeholder">${f.username.substr(0,1).toUpperCase()}</div>`;
+                                
+                            const friendHtml = `
+                                <div class="dm-friend-item" onclick="openUserProfile(${f.id})">
+                                    ${avatarHtml}
+                                    <span class="dm-friend-name">${escapeHtml(f.username)}</span>
+                                </div>
+                            `;
+                            container.insertAdjacentHTML('beforeend', friendHtml);
+                            
+                            // Option for compose dropdown
+                            selectEl.insertAdjacentHTML('beforeend', `<option value="${f.id}">${escapeHtml(f.username)}</option>`);
+                        });
+                    }
+                });
+        }
+
+        // ── COMPOSE MODAL ──
+
+        function openComposeModal() {
+            document.getElementById('composeModal').classList.add('open');
+            loadFriendsList(); // Ensure fresh friends list
+        }
+
+        function closeComposeModal() {
+            document.getElementById('composeModal').classList.remove('open');
+            document.getElementById('compose-text').value = '';
+            document.getElementById('compose-recipient').value = '';
+        }
+
+        function submitCompose() {
+            const recSel = document.getElementById('compose-recipient');
+            const recId = recSel.value;
+            const recName = recSel.options[recSel.selectedIndex].text;
+            const text = document.getElementById('compose-text').value.trim();
+            
+            if (!recId) {
+                alert("Please select a friend to send a message to.");
+                return;
+            }
+            if (!text) {
+                alert("Message cannot be empty.");
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append('action', 'send_message');
+            fd.append('recipient_id', recId);
+            fd.append('message', text);
+
+            fetch('/portal/portal_messages_api.php', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        closeComposeModal();
+                        switchDMFolder('primary');
+                        openConversation(recId, recName, '');
+                    } else {
+                        alert("Error: " + res.error);
+                    }
+                });
+        }
+
+        // ── USER PROFILE MODAL (GLOBAL POPUP) ──
+
+        function openUserProfile(userId) {
+            fetch(`/portal/friends_api.php?action=get_profile&user_id=${userId}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const u = res.user;
+                        document.getElementById('pm-username').innerText = u.username;
+                        document.getElementById('pm-role').innerText = u.role;
+                        document.getElementById('pm-stat-threads').innerText = u.threads_count;
+                        document.getElementById('pm-stat-replies').innerText = u.replies_count;
+                        
+                        const avatarContainer = document.getElementById('pm-avatar-container');
+                        if (u.avatar) {
+                            avatarContainer.innerHTML = `<img src="/static/uploads/${encodeURIComponent(u.avatar)}" class="profile-modal-avatar" alt="Avatar">`;
+                        } else {
+                            avatarContainer.innerHTML = `<div class="profile-modal-avatar-placeholder">${u.username.substr(0,1).toUpperCase()}</div>`;
+                        }
+
+                        const actionsContainer = document.getElementById('pm-actions-container');
+                        const dmField = document.getElementById('pm-dm-field');
+                        
+                        if (res.is_self) {
+                            actionsContainer.innerHTML = `<button class="profile-modal-btn disabled" disabled>This is you</button>`;
+                            dmField.classList.remove('visible');
+                        } else {
+                            dmField.classList.add('visible');
+                            document.getElementById('pm-dm-text').value = '';
+                            
+                            // Friendship status actions
+                            const fStatus = res.friendship_status;
+                            if (fStatus === 'none') {
+                                actionsContainer.innerHTML = `
+                                    <button class="profile-modal-btn primary" onclick="handleFriendshipAction(${u.id}, 'send_request')">Add Friend</button>
+                                `;
+                            } else if (fStatus === 'sent_pending') {
+                                actionsContainer.innerHTML = `
+                                    <button class="profile-modal-btn secondary" onclick="handleFriendshipAction(${u.id}, 'cancel_request')">Cancel Request</button>
+                                `;
+                            } else if (fStatus === 'received_pending') {
+                                actionsContainer.innerHTML = `
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem;">
+                                        <button class="profile-modal-btn primary" onclick="handleFriendshipAction(${u.id}, 'accept_request')">Accept</button>
+                                        <button class="profile-modal-btn secondary" onclick="handleFriendshipAction(${u.id}, 'decline_request')">Decline</button>
+                                    </div>
+                                `;
+                            } else if (fStatus === 'accepted') {
+                                actionsContainer.innerHTML = `
+                                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                        <div style="font-size:0.85rem; color:#7be1a8; font-weight:700; font-family:'Syncopate',sans-serif; margin-bottom:0.4rem;">✓ Friends</div>
+                                        <button class="profile-modal-btn secondary" onclick="handleFriendshipAction(${u.id}, 'unfriend')">Remove Friend</button>
+                                    </div>
+                                `;
+                            }
+                        }
+                        
+                        // Direct DM Send button target
+                        document.getElementById('pm-dm-send-btn').setAttribute('data-recipient-id', u.id);
+                        document.getElementById('pm-dm-send-btn').setAttribute('data-recipient-name', u.username);
+
+                        document.getElementById('profileModal').classList.add('open');
+                    } else {
+                        alert("Error loading profile: " + res.error);
+                    }
+                });
+        }
+
+        function closeUserProfile() {
+            document.getElementById('profileModal').classList.remove('open');
+        }
+
+        function handleFriendshipAction(userId, action) {
+            const fd = new FormData();
+            fd.append('action', action);
+            fd.append('user_id', userId);
+
+            fetch('/portal/friends_api.php', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        // Refresh profile modal
+                        openUserProfile(userId);
+                        // Refresh friends lists if portal DM is open
+                        loadFriendsList();
+                        loadConversations();
+                    } else {
+                        alert("Action failed: " + res.error);
+                    }
+                });
+        }
+
+        function sendProfileModalQuickDM() {
+            const btn = document.getElementById('pm-dm-send-btn');
+            const recId = btn.getAttribute('data-recipient-id');
+            const recName = btn.getAttribute('data-recipient-name');
+            const text = document.getElementById('pm-dm-text').value.trim();
+
+            if (!text) {
+                alert("Message cannot be empty.");
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append('action', 'send_message');
+            fd.append('recipient_id', recId);
+            fd.append('message', text);
+
+            fetch('/portal/portal_messages_api.php', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        alert("Message sent successfully!");
+                        closeUserProfile();
+                        // If we are currently on the inbox tab, reload it and open conversation
+                        const inboxTab = document.getElementById('tab-inbox');
+                        if (inboxTab && inboxTab.classList.contains('active')) {
+                            switchDMFolder('primary');
+                            openConversation(recId, recName, '');
+                        }
+                    } else {
+                        alert("Failed to send message: " + res.error);
+                    }
+                });
+        }
+
+        // ── HELPERS ──
+
+        function formatConvoTime(dateStr) {
+            const d = new Date(dateStr);
+            const now = new Date();
+            if (d.toDateString() === now.toDateString()) {
+                return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+
+        function formatBubbleTime(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function filterConversations() {
+            const query = document.getElementById('dm-search-input').value.toLowerCase();
+            document.querySelectorAll('.dm-convo-item').forEach(item => {
+                const name = item.querySelector('.dm-convo-name').innerText.toLowerCase();
+                const last = item.querySelector('.dm-convo-lastmsg').innerText.toLowerCase();
+                if (name.includes(query) || last.includes(query)) {
+                    item.style.display = 'grid';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function startDMPolling() {
+            stopDMPolling();
+            dmPollingInterval = setInterval(() => {
+                loadConversations();
+                if (currentActivePartner) {
+                    // Update current thread (silently without resetting inputs)
+                    fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${currentActivePartner}`)
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                const msgContainer = document.getElementById('dm-messages-container');
+                                if (!msgContainer) return;
+                                
+                                const countBefore = msgContainer.childElementCount;
+                                if (res.messages.length > countBefore) {
+                                    // Append only new messages
+                                    msgContainer.innerHTML = '';
+                                    res.messages.forEach(m => {
+                                        const isSent = parseInt(m.sender_id) === <?= (int)$user_id ?>;
+                                        const isStarred = isSent ? parseInt(m.is_flagged_by_sender) : parseInt(m.is_flagged_by_recipient);
+                                        const starClass = isStarred ? 'starred' : '';
+                                        const bubbleHtml = `
+                                            <div class="dm-msg-bubble ${isSent ? 'sent' : 'received'}">
+                                                <div style="display:flex; justify-content:space-between; gap:2rem; align-items:flex-start;">
+                                                    <div style="white-space:pre-wrap;">${escapeHtml(m.message)}</div>
+                                                    <span style="cursor:pointer; font-size:0.8rem; margin-top:-2px;" onclick="toggleDMStar(${m.id}, this)" class="${starClass}">
+                                                        ${isStarred ? '★' : '☆'}
+                                                    </span>
+                                                </div>
+                                                <div class="dm-msg-info">
+                                                    ${formatBubbleTime(m.created_at)}
+                                                </div>
+                                            </div>
+                                        `;
+                                        msgContainer.insertAdjacentHTML('beforeend', bubbleHtml);
+                                    });
+                                    msgContainer.scrollTop = msgContainer.scrollHeight;
+                                }
+                            }
+                        });
+                }
+            }, 3000);
+        }
+
+        function stopDMPolling() {
+            if (dmPollingInterval) {
+                clearInterval(dmPollingInterval);
+                dmPollingInterval = null;
+            }
+        }
+
+        // Initialize polling if Inbox tab starts active
+        document.addEventListener('DOMContentLoaded', () => {
+            const activeTabBtn = document.querySelector('.portal-tab-btn.active');
+            if (activeTabBtn && activeTabBtn.innerText.toLowerCase().includes('inbox')) {
+                loadConversations();
+                loadFriendsList();
+                startDMPolling();
+            }
+        });
     </script>
 </body>
 </html>

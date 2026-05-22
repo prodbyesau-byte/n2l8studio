@@ -36,6 +36,7 @@ log_visitor($pdo, 'page_view', '/');
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
+                <li><a href="/forum.php">Forum</a></li>
                 <?php if (is_logged_in()): ?>
                     <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent); display: inline-flex; align-items: center; gap: 4px; padding-top: 4px; padding-bottom: 4px;">

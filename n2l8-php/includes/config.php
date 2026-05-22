@@ -48,7 +48,7 @@ define('MAIL_FROM_NAME',   'N2L8 STUDIO');
 define('IMAP_HOST',        'imap.simply.com');
 define('IMAP_PORT',        993);
 define('IMAP_USER',        'admin@n2l8studio.dk');
-define('IMAP_PASS',        'your-imap-account-password');
+define('IMAP_PASS',        'N2L8-Studio-Vault-2026!');
 define('IMAP_ENCRYPTION',  'ssl');
 
 
