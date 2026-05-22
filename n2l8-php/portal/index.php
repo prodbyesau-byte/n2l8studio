@@ -1176,6 +1176,88 @@ $tab = $_GET['tab'] ?? 'library';
             display: none;
         }
 
+        /* Friends Tab Styling */
+        .friends-tab-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 2.5rem;
+        }
+        .friends-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.2rem;
+        }
+        .friends-search-item:hover {
+            background: rgba(192, 21, 42, 0.08) !important;
+        }
+        .friend-tab-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+            box-shadow: var(--accent-glow);
+            transition: transform 0.3s ease;
+        }
+        .friend-tab-avatar-placeholder {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+        .friend-list-card:hover .friend-tab-avatar,
+        .friend-list-card:hover .friend-tab-avatar-placeholder {
+            transform: scale(1.08);
+        }
+        .friend-list-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: rgba(5,5,8,0.6);
+            border: 1px solid var(--border-color);
+            padding: 1.2rem;
+            border-radius: 6px;
+            position: relative;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(6px);
+        }
+        .friend-list-card:hover {
+            border-color: rgba(192, 21, 42, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(192, 21, 42, 0.08), var(--accent-glow);
+        }
+        .friend-card-unfriend-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0.2rem;
+            transition: color 0.2s;
+            opacity: 0;
+        }
+        .friend-list-card:hover .friend-card-unfriend-btn {
+            opacity: 1;
+        }
+        .friend-card-unfriend-btn:hover {
+            color: var(--accent);
+        }
+
         /* ── RESPONSIVE / MOBILE OPTIMIZATION ── */
         @media (max-width: 768px) {
             .portal-container {
@@ -1316,6 +1398,13 @@ $tab = $_GET['tab'] ?? 'library';
             .dm-msg-bubble {
                 max-width: 85% !important;
             }
+            .friends-tab-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .friends-search-container {
+                max-width: 100% !important;
+            }
         }
     </style>
 </head>
@@ -1360,6 +1449,7 @@ $tab = $_GET['tab'] ?? 'library';
         <div class="portal-tabs">
             <button class="portal-tab-btn <?= $tab === 'library' ? 'active' : '' ?>" onclick="switchTab('library')">My Library (<?= count($purchased_products) ?>)</button>
             <button class="portal-tab-btn <?= $tab === 'free' ? 'active' : '' ?>" onclick="switchTab('free')">Claim Free Kits (<?= count($free_products) ?>)</button>
+            <button class="portal-tab-btn <?= $tab === 'friends' ? 'active' : '' ?>" onclick="switchTab('friends')">Friends</button>
             <button class="portal-tab-btn <?= $tab === 'inbox' ? 'active' : '' ?>" onclick="switchTab('inbox')">Inbox (<?= $unread_count ?>)</button>
             <button class="portal-tab-btn <?= $tab === 'settings' ? 'active' : '' ?>" onclick="switchTab('settings')">Account Settings</button>
         </div>
@@ -1566,6 +1656,51 @@ $tab = $_GET['tab'] ?? 'library';
             </div>
         </div>
 
+        <!-- ── TAB: FRIENDS ── -->
+        <div id="tab-friends" class="portal-tab <?= $tab === 'friends' ? 'active' : '' ?>">
+            <div class="portal-card" style="margin-bottom: 2rem; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                
+                <!-- Tab Header Area -->
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem; margin-bottom:2rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:1.5rem;">
+                    <div>
+                        <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff;">COMMUNITY FRIENDS</h3>
+                        <p style="color:var(--text-muted); font-size:0.82rem; margin:0; font-family:'Montserrat',sans-serif; font-weight:500;">Search for members, view your friends, and manage pending requests.</p>
+                    </div>
+                    
+                    <!-- Search Input -->
+                    <div class="friends-search-container" style="position:relative; width:100%; max-width:320px;">
+                        <input type="text" id="friends-tab-search-input" placeholder="Search members..." oninput="searchTabMembers()" style="width:100%; background:#000000; border:1px solid var(--border-color); border-radius:4px; padding:0.65rem 1rem 0.65rem 2.3rem; color:#ffffff; font-family:'Montserrat',sans-serif; font-size:0.82rem; outline:none; transition:all 0.25s ease;">
+                        <svg style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); width:12px; height:12px; fill:var(--text-muted); pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
+                        
+                        <div id="friends-tab-search-results" style="display:none; position:absolute; top:110%; left:0; right:0; background:#0c0c0f; border:1px solid var(--border-color); border-radius:4px; z-index:100; max-height:280px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.95); padding:0.5rem 0;"></div>
+                    </div>
+                </div>
+
+                <!-- Grid Columns -->
+                <div class="friends-tab-grid">
+                    
+                    <!-- Pending Requests Column -->
+                    <div class="friends-requests-column">
+                        <h4 style="font-family:'Syncopate',sans-serif; font-size:0.85rem; letter-spacing:1px; color:#fff; margin:0 0 1.2rem 0; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.6rem; display:flex; align-items:center; gap:0.6rem;">
+                            <span>REQUESTS</span>
+                            <span id="friends-req-badge" style="background:var(--accent); color:#fff; font-size:0.62rem; padding:0.15rem 0.4rem; border-radius:10px; font-family:'Montserrat',sans-serif; font-weight:700; display:none;">0</span>
+                        </h4>
+                        <div id="friends-requests-list" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
+                    </div>
+                    
+                    <!-- Accepted Friends Grid -->
+                    <div class="friends-list-column">
+                        <h4 style="font-family:'Syncopate',sans-serif; font-size:0.85rem; letter-spacing:1px; color:#fff; margin:0 0 1.2rem 0; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.6rem; display:flex; align-items:center; gap:0.6rem;">
+                            <span>FRIENDS</span>
+                            <span id="friends-count-badge" style="background:rgba(255,255,255,0.1); color:var(--text-muted); font-size:0.62rem; padding:0.15rem 0.4rem; border-radius:10px; font-family:'Montserrat',sans-serif; font-weight:700; display:none;">0</span>
+                        </h4>
+                        <div id="friends-grid-list" class="friends-grid-layout"></div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ── GLOBAL USER PROFILE POPUP MODAL ── -->
@@ -1635,7 +1770,10 @@ $tab = $_GET['tab'] ?? 'library';
                 targetTab.classList.add('active');
             }
             
-            const activeBtn = Array.from(document.querySelectorAll('.portal-tab-btn')).find(btn => btn.innerText.toLowerCase().includes(tabId));
+            const activeBtn = Array.from(document.querySelectorAll('.portal-tab-btn')).find(btn => {
+                const text = btn.innerText.toLowerCase();
+                return text.includes(tabId);
+            });
             if (activeBtn) {
                 activeBtn.classList.add('active');
             }
@@ -1646,6 +1784,9 @@ $tab = $_GET['tab'] ?? 'library';
                 loadConversations();
                 loadFriendsList();
                 startDMPolling();
+            } else if (tabId === 'friends') {
+                initFriendsTab();
+                stopDMPolling();
             } else {
                 stopDMPolling();
             }
@@ -2214,16 +2355,189 @@ $tab = $_GET['tab'] ?? 'library';
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
-                        // Refresh profile modal
-                        openUserProfile(userId);
+                        // Refresh profile modal if open
+                        if (document.getElementById('profileModal').classList.contains('open')) {
+                            openUserProfile(userId);
+                        }
                         // Refresh friends lists if portal DM is open
                         loadFriendsList();
                         loadConversations();
+                        
+                        // Refresh friends tab lists
+                        loadTabFriends();
+                        loadTabPending();
                     } else {
                         alert("Action failed: " + res.error);
                     }
                 });
         }
+
+        // ── FRIENDS TAB FRONTEND CONTROLLER ──
+        
+        function initFriendsTab() {
+            const searchInput = document.getElementById('friends-tab-search-input');
+            const searchResults = document.getElementById('friends-tab-search-results');
+            if (searchInput) searchInput.value = '';
+            if (searchResults) {
+                searchResults.innerHTML = '';
+                searchResults.style.display = 'none';
+            }
+            loadTabFriends();
+            loadTabPending();
+        }
+
+        function loadTabFriends() {
+            const gridList = document.getElementById('friends-grid-list');
+            const badge = document.getElementById('friends-count-badge');
+            if (!gridList) return;
+
+            fetch('/portal/friends_api.php?action=list_friends')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const count = res.friends.length;
+                        if (badge) {
+                            badge.innerText = count;
+                            badge.style.display = count > 0 ? 'inline-block' : 'none';
+                        }
+                        
+                        if (count === 0) {
+                            gridList.innerHTML = `<div style="grid-column: 1 / -1; padding:2.5rem; text-align:center; color:var(--text-muted); border:1px dashed var(--border-color); border-radius:6px; background:rgba(255,255,255,0.01);">
+                                <div style="font-size:2rem; margin-bottom:0.8rem; opacity:0.3;">👥</div>
+                                <span style="font-family:'Montserrat',sans-serif; font-size:0.82rem;">No friends added yet. Search for members or connect via the Community Forum!</span>
+                            </div>`;
+                            return;
+                        }
+                        
+                        gridList.innerHTML = '';
+                        res.friends.forEach(f => {
+                            const avatarHtml = f.profile_picture
+                                ? `<img src="/static/uploads/${encodeURIComponent(f.profile_picture)}" class="friend-tab-avatar" alt="">`
+                                : `<div class="friend-tab-avatar-placeholder">${f.username.substr(0,1).toUpperCase()}</div>`;
+                            
+                            const itemHtml = `
+                                <div class="friend-list-card">
+                                    <button onclick="handleFriendshipAction(${f.id}, 'unfriend')" class="friend-card-unfriend-btn" title="Remove Friend">&times;</button>
+                                    <div onclick="openUserProfile(${f.id})" style="cursor:pointer; margin-bottom:0.8rem; position:relative;">
+                                        ${avatarHtml}
+                                    </div>
+                                    <span onclick="openUserProfile(${f.id})" style="font-weight:700; font-size:0.82rem; color:#fff; font-family:'Syncopate',sans-serif; letter-spacing:0.5px; cursor:pointer; word-break:break-all; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;" title="${escapeHtml(f.username)}">${escapeHtml(f.username)}</span>
+                                    <button onclick="openUserProfile(${f.id})" class="cta-btn secondary" style="margin-top:1rem; width:100%; font-size:0.68rem; padding:0.45rem;">VIEW PROFILE</button>
+                                </div>
+                            `;
+                            gridList.insertAdjacentHTML('beforeend', itemHtml);
+                        });
+                    }
+                });
+        }
+
+        function loadTabPending() {
+            const listEl = document.getElementById('friends-requests-list');
+            const badge = document.getElementById('friends-req-badge');
+            if (!listEl) return;
+
+            fetch('/portal/friends_api.php?action=list_pending_requests')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const count = res.pending.length;
+                        if (badge) {
+                            badge.innerText = count;
+                            badge.style.display = count > 0 ? 'inline-block' : 'none';
+                        }
+                        
+                        if (count === 0) {
+                            listEl.innerHTML = `<div style="padding:1.5rem; text-align:center; color:var(--text-muted); border:1px dashed var(--border-color); border-radius:6px; background:rgba(255,255,255,0.01); font-family:'Montserrat',sans-serif; font-size:0.8rem;">
+                                No pending friend requests.
+                            </div>`;
+                            return;
+                        }
+                        
+                        listEl.innerHTML = '';
+                        res.pending.forEach(r => {
+                            const avatarHtml = r.profile_picture
+                                ? `<img src="/static/uploads/${encodeURIComponent(r.profile_picture)}" class="dm-friend-avatar" style="width:36px; height:36px;" alt="">`
+                                : `<div class="dm-friend-avatar-placeholder" style="width:36px; height:36px; font-size:0.9rem;">${r.username.substr(0,1).toUpperCase()}</div>`;
+                            
+                            const itemHtml = `
+                                <div class="friend-request-card" style="display:flex; align-items:center; gap:0.8rem; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:0.8rem 1rem; border-radius:6px; transition:all 0.25s ease;">
+                                    ${avatarHtml}
+                                    <div style="display:flex; flex-direction:column; flex-grow:1; min-width:0;">
+                                        <span style="font-weight:600; font-size:0.85rem; color:#fff; font-family:'Montserrat',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="openUserProfile(${r.id})">${escapeHtml(r.username)}</span>
+                                        <span style="font-size:0.7rem; color:var(--text-muted); font-family:'Montserrat',sans-serif;">Incoming request</span>
+                                    </div>
+                                    <div style="display:flex; gap:0.4rem; flex-shrink:0;">
+                                        <button onclick="handleFriendshipAction(${r.id}, 'accept_request')" class="cta-btn" style="padding:0.4rem 0.6rem; font-size:0.65rem; margin:0; background:#7be1a8; color:#000;">Accept</button>
+                                        <button onclick="handleFriendshipAction(${r.id}, 'decline_request')" class="cta-btn secondary" style="padding:0.4rem 0.6rem; font-size:0.65rem; margin:0;">Decline</button>
+                                    </div>
+                                </div>
+                            `;
+                            listEl.insertAdjacentHTML('beforeend', itemHtml);
+                        });
+                    }
+                });
+        }
+
+        let friendsTabSearchTimeout = null;
+
+        function searchTabMembers() {
+            const input = document.getElementById('friends-tab-search-input');
+            const resultsDiv = document.getElementById('friends-tab-search-results');
+            const query = input.value.trim();
+
+            if (friendsTabSearchTimeout) {
+                clearTimeout(friendsTabSearchTimeout);
+            }
+
+            if (query.length < 2) {
+                resultsDiv.innerHTML = '';
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            friendsTabSearchTimeout = setTimeout(() => {
+                fetch(`/portal/friends_api.php?action=search_users&query=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            if (res.users.length === 0) {
+                                resultsDiv.innerHTML = `<div style="padding:1rem; font-size:0.8rem; color:var(--text-muted); text-align:center; font-family:'Montserrat',sans-serif;">No members found.</div>`;
+                                resultsDiv.style.display = 'block';
+                                return;
+                            }
+
+                            resultsDiv.innerHTML = '';
+                            res.users.forEach(u => {
+                                const avatarHtml = u.profile_picture
+                                    ? `<img src="/static/uploads/${encodeURIComponent(u.profile_picture)}" class="dm-friend-avatar" style="width:36px; height:36px;" alt="">`
+                                    : `<div class="dm-friend-avatar-placeholder" style="width:36px; height:36px; font-size:0.9rem;">${u.username.substr(0,1).toUpperCase()}</div>`;
+                                
+                                const uHtml = `
+                                    <div class="friends-search-item" onclick="openUserProfile(${u.id})" style="display:flex; align-items:center; gap:0.8rem; padding:0.7rem 1.2rem; cursor:pointer; transition:background 0.2s ease;">
+                                        ${avatarHtml}
+                                        <div style="display:flex; flex-direction:column; flex-grow:1; min-width:0;">
+                                            <span style="font-weight:600; font-size:0.85rem; color:#fff; font-family:'Montserrat',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(u.username)}</span>
+                                            <span style="font-size:0.7rem; color:var(--text-muted); font-family:'Montserrat',sans-serif; text-transform:uppercase; font-weight:600; letter-spacing:0.5px;">${escapeHtml(u.role)}</span>
+                                        </div>
+                                        <button class="cta-btn secondary" style="padding:0.4rem 0.8rem; font-size:0.68rem; margin:0; flex-shrink:0;">View Profile</button>
+                                    </div>
+                                `;
+                                resultsDiv.insertAdjacentHTML('beforeend', uHtml);
+                            });
+                            resultsDiv.style.display = 'block';
+                        }
+                    });
+            }, 300);
+        }
+
+        // Close friends search results when clicking outside
+        document.addEventListener('click', function(e) {
+            const container = document.querySelector('.friends-search-container');
+            const resultsDiv = document.getElementById('friends-tab-search-results');
+            if (container && !container.contains(e.target) && resultsDiv) {
+                resultsDiv.style.display = 'none';
+            }
+        });
 
         function sendProfileModalQuickDM() {
             const btn = document.getElementById('pm-dm-send-btn');
@@ -2366,13 +2680,18 @@ $tab = $_GET['tab'] ?? 'library';
             }
         }
 
-        // Initialize polling if Inbox tab starts active
+        // Initialize polling or lists if Inbox or Friends tab starts active
         document.addEventListener('DOMContentLoaded', () => {
             const activeTabBtn = document.querySelector('.portal-tab-btn.active');
-            if (activeTabBtn && activeTabBtn.innerText.toLowerCase().includes('inbox')) {
-                loadConversations();
-                loadFriendsList();
-                startDMPolling();
+            if (activeTabBtn) {
+                const tabText = activeTabBtn.innerText.toLowerCase();
+                if (tabText.includes('inbox')) {
+                    loadConversations();
+                    loadFriendsList();
+                    startDMPolling();
+                } else if (tabText.includes('friends')) {
+                    initFriendsTab();
+                }
             }
 
             // Site-wide header mobile toggle
