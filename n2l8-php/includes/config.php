@@ -44,3 +44,11 @@ define('SMTP_SECURE',      'tls');                 // 'tls' or 'ssl' or 'none'
 define('MAIL_FROM_EMAIL',  'admin@n2l8studios.com');
 define('MAIL_FROM_NAME',   'N2L8 STUDIO');
 
+// ── IMAP / Incoming Mail settings (Simply.com) ───────────────────────────────
+define('IMAP_HOST',        'imap.simply.com');
+define('IMAP_PORT',        993);
+define('IMAP_USER',        'admin@n2l8studio.dk');
+define('IMAP_PASS',        'your-imap-account-password');
+define('IMAP_ENCRYPTION',  'ssl');
+
+
