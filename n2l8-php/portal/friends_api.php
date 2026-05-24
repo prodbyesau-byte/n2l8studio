@@ -230,7 +230,7 @@ try {
         $sql = '
             SELECT id, username, profile_picture, role
             FROM users
-            WHERE username LIKE :query AND id != :my_id
+            WHERE username LIKE :query AND id != :my_id AND is_private = 0
             ORDER BY username ASC
             LIMIT 10
         ';
@@ -239,6 +239,47 @@ try {
             'query' => '%' . $query . '%',
             'my_id' => $user_id
         ]);
+        $users = $stmt->fetchAll();
+        
+        echo json_encode(['success' => true, 'users' => $users]);
+        exit;
+    }
+    
+    elseif ($action === 'list_discover_members') {
+        $query = trim($_GET['query'] ?? '');
+        
+        $sql = '
+            SELECT 
+                u.id, 
+                u.username, 
+                u.profile_picture, 
+                u.role,
+                f.status AS friendship_status,
+                f.action_user_id
+            FROM users u
+            LEFT JOIN friendships f ON (
+                (f.user_id1 = u.id AND f.user_id2 = :my_id) OR
+                (f.user_id1 = :my_id AND f.user_id2 = u.id)
+            )
+            WHERE u.is_approved = 1 
+              AND u.role != "admin" 
+              AND u.id != :my_id 
+              AND u.is_private = 0
+        ';
+        
+        if (!empty($query)) {
+            $sql .= ' AND u.username LIKE :query';
+        }
+        
+        $sql .= ' ORDER BY u.username ASC';
+        
+        $stmt = $pdo->prepare($sql);
+        $params = ['my_id' => $user_id];
+        if (!empty($query)) {
+            $params['query'] = '%' . $query . '%';
+        }
+        
+        $stmt->execute($params);
         $users = $stmt->fetchAll();
         
         echo json_encode(['success' => true, 'users' => $users]);

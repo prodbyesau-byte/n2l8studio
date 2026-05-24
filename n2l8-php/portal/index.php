@@ -13,10 +13,12 @@ $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 $user_email = $_SESSION['email'] ?? '';
 
-// 1. Fetch user profile info (avatar picture)
-$user_stmt = $pdo->prepare('SELECT profile_picture FROM users WHERE id = ?');
+// 1. Fetch user profile info (avatar picture and privacy preference)
+$user_stmt = $pdo->prepare('SELECT profile_picture, is_private FROM users WHERE id = ?');
 $user_stmt->execute([$user_id]);
-$profile_pic = $user_stmt->fetchColumn() ?: '';
+$user_info = $user_stmt->fetch();
+$profile_pic = $user_info['profile_picture'] ?? '';
+$is_private = (int)($user_info['is_private'] ?? 0);
 
 // 2. Fetch inbox messages and unread count
 $msg_stmt = $pdo->prepare('SELECT * FROM messages WHERE recipient_id = ? ORDER BY id DESC');
@@ -103,6 +105,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $error_msg = 'Incorrect current password.';
             }
+        }
+    }
+    
+    // 5c. Update Profile Visibility/Privacy settings
+    if (isset($_POST['update_privacy'])) {
+        $privacy_val = $_POST['profile_privacy'] ?? 'public';
+        $new_is_private = ($privacy_val === 'private') ? 1 : 0;
+        
+        $upd_stmt = $pdo->prepare('UPDATE users SET is_private = ? WHERE id = ?');
+        if ($upd_stmt->execute([$new_is_private, $user_id])) {
+            $is_private = $new_is_private; // update display state
+            $success_msg = 'Profile visibility preference saved successfully.';
+            log_action($pdo, "User {$username} set their profile to " . ($new_is_private ? 'private' : 'public') . ".");
+        } else {
+            $error_msg = 'Failed to save visibility preference.';
         }
     }
 }
@@ -1654,11 +1671,33 @@ $tab = $_GET['tab'] ?? 'library';
                     <button type="submit" class="cta-btn">UPDATE PASSWORD</button>
                 </form>
             </div>
+
+            <div class="portal-card" style="margin-top: 2rem; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff; text-align:center;">PROFILE VISIBILITY</h3>
+                <p style="color:var(--text-muted); font-size:0.82rem; margin:0 0 1.5rem 0; font-family:'Montserrat',sans-serif; font-weight:500; text-align:center;">Configure whether your profile is visible in the Community Directory and Member Search.</p>
+
+                <form method="POST">
+                    <input type="hidden" name="update_privacy" value="1">
+                    
+                    <div style="display:flex; flex-direction:column; gap:1.2rem; margin-bottom:2rem; text-align:left;">
+                        <label style="display:flex; align-items:center; gap:0.8rem; cursor:pointer; font-family:'Montserrat',sans-serif; font-size:0.88rem; color:#fff;">
+                            <input type="radio" name="profile_privacy" value="public" <?= !$is_private ? 'checked' : '' ?> style="width:1.1rem; height:1.1rem; accent-color:var(--accent);">
+                            <span><strong>Public Profile</strong> (Visible to all members in Community Directory)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.8rem; cursor:pointer; font-family:'Montserrat',sans-serif; font-size:0.88rem; color:#fff;">
+                            <input type="radio" name="profile_privacy" value="private" <?= $is_private ? 'checked' : '' ?> style="width:1.1rem; height:1.1rem; accent-color:var(--accent);">
+                            <span><strong>Private Profile</strong> (Hidden from Community Directory & Search)</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="cta-btn" style="width:100%;">SAVE PREFERENCE</button>
+                </form>
+            </div>
         </div>
 
         <!-- ── TAB: FRIENDS ── -->
         <div id="tab-friends" class="portal-tab <?= $tab === 'friends' ? 'active' : '' ?>">
-            <div class="portal-card" style="margin-bottom: 2rem; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div class="portal-card" style="margin-bottom: 2rem; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 1200px; width: 100%;">
                 
                 <!-- Tab Header Area -->
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem; margin-bottom:2rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:1.5rem;">
@@ -1697,6 +1736,26 @@ $tab = $_GET['tab'] ?? 'library';
                         <div id="friends-grid-list" class="friends-grid-layout"></div>
                     </div>
                     
+                </div>
+
+                <!-- Explore Community / Discover Section -->
+                <div style="margin-top: 3.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem; margin-bottom:2rem;">
+                        <div>
+                            <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff;">EXPLORE COMMUNITY</h3>
+                            <p style="color:var(--text-muted); font-size:0.82rem; margin:0; font-family:'Montserrat',sans-serif; font-weight:500;">Discover other approved producers, artists, and beatmakers. Connect to build your network.</p>
+                        </div>
+                        
+                        <!-- Search Box for Discover -->
+                        <div style="position:relative; width:100%; max-width:320px;">
+                            <input type="text" id="discover-search-input" placeholder="Search community members..." oninput="filterDiscoverMembers()" style="width:100%; background:#000000; border:1px solid var(--border-color); border-radius:4px; padding:0.65rem 1rem 0.65rem 2.3rem; color:#ffffff; font-family:'Montserrat',sans-serif; font-size:0.82rem; outline:none; transition:all 0.25s ease;">
+                            <svg style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); width:12px; height:12px; fill:var(--text-muted); pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
+                        </div>
+                    </div>
+                    
+                    <div id="discover-grid-list" class="community-grid" style="margin-top: 1.5rem;">
+                        <!-- Will be populated by JS -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -2377,13 +2436,110 @@ $tab = $_GET['tab'] ?? 'library';
         function initFriendsTab() {
             const searchInput = document.getElementById('friends-tab-search-input');
             const searchResults = document.getElementById('friends-tab-search-results');
+            const discoverInput = document.getElementById('discover-search-input');
             if (searchInput) searchInput.value = '';
+            if (discoverInput) discoverInput.value = '';
             if (searchResults) {
                 searchResults.innerHTML = '';
                 searchResults.style.display = 'none';
             }
             loadTabFriends();
             loadTabPending();
+            loadDiscoverMembers();
+        }
+
+        let discoverSearchTimeout = null;
+
+        function filterDiscoverMembers() {
+            const input = document.getElementById('discover-search-input');
+            const query = input.value.trim();
+            
+            if (discoverSearchTimeout) {
+                clearTimeout(discoverSearchTimeout);
+            }
+            
+            discoverSearchTimeout = setTimeout(() => {
+                loadDiscoverMembers(query);
+            }, 300);
+        }
+
+        function loadDiscoverMembers(query = '') {
+            const gridList = document.getElementById('discover-grid-list');
+            if (!gridList) return;
+
+            let url = '/portal/friends_api.php?action=list_discover_members';
+            if (query) {
+                url += '&query=' + encodeURIComponent(query);
+            }
+
+            fetch(url)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        if (res.users.length === 0) {
+                            gridList.innerHTML = `<div style="grid-column: 1 / -1; padding:2.5rem; text-align:center; color:var(--text-muted); border:1px dashed var(--border-color); border-radius:6px; background:rgba(255,255,255,0.01);">
+                                <div style="font-size:2rem; margin-bottom:0.8rem; opacity:0.3;">👥</div>
+                                <span style="font-family:'Montserrat',sans-serif; font-size:0.82rem;">No other members found. Check back later!</span>
+                            </div>`;
+                            return;
+                        }
+
+                        gridList.innerHTML = '';
+                        res.users.forEach(u => {
+                            const avatarHtml = u.profile_picture
+                                ? `<img src="/static/uploads/${encodeURIComponent(u.profile_picture)}" class="community-avatar-large" alt="">`
+                                : `<div class="community-initial-large">${u.username.substr(0,1).toUpperCase()}</div>`;
+                            
+                            let actionButton = '';
+                            if (u.friendship_status === 'accepted') {
+                                actionButton = `<button class="cta-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.8; cursor:default;" disabled>✓ FRIENDS</button>`;
+                            } else if (u.friendship_status === 'pending') {
+                                if (parseInt(u.action_user_id) === parseInt(<?= (int)$user_id ?>)) {
+                                    actionButton = `<button class="cta-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.7;" onclick="handleDiscoverFriendAction(${u.id}, 'cancel_request')">REQUEST SENT</button>`;
+                                } else {
+                                    actionButton = `<button class="cta-btn" style="width:100%; font-size:0.7rem; padding:0.6rem; background:#7be1a8; color:#000;" onclick="handleDiscoverFriendAction(${u.id}, 'accept_request')">ACCEPT REQUEST</button>`;
+                                }
+                            } else {
+                                actionButton = `<button class="cta-btn" style="width:100%; font-size:0.7rem; padding:0.6rem;" onclick="handleDiscoverFriendAction(${u.id}, 'send_request')">ADD FRIEND</button>`;
+                            }
+
+                            const itemHtml = `
+                                <div class="community-card">
+                                    <div onclick="openUserProfile(${u.id})" style="cursor:pointer; margin-bottom:1.2rem; position:relative;">
+                                        ${avatarHtml}
+                                    </div>
+                                    <div class="community-username" onclick="openUserProfile(${u.id})" style="cursor:pointer; font-size:0.92rem; font-weight:700; color:#fff;" title="${escapeHtml(u.username)}">${escapeHtml(u.username)}</div>
+                                    <div class="community-role">${escapeHtml(u.role)}</div>
+                                    <div style="width:100%; display:flex; flex-direction:column; gap:0.5rem; margin-top:auto;">
+                                        ${actionButton}
+                                    </div>
+                                </div>
+                            `;
+                            gridList.insertAdjacentHTML('beforeend', itemHtml);
+                        });
+                    }
+                });
+        }
+
+        function handleDiscoverFriendAction(userId, action) {
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('user_id', userId);
+
+            fetch('/portal/friends_api.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    loadTabFriends();
+                    loadTabPending();
+                    loadDiscoverMembers(document.getElementById('discover-search-input').value.trim());
+                } else {
+                    alert(res.error || "Action failed");
+                }
+            });
         }
 
         function loadTabFriends() {

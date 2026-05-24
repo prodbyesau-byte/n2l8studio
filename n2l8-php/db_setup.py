@@ -72,7 +72,8 @@ SCHEMA = [
       `password` VARCHAR(255) NOT NULL,
       `role`     VARCHAR(20)  NOT NULL DEFAULT 'admin',
       `profile_picture` VARCHAR(255) NULL,
-      `is_approved` TINYINT(1) NOT NULL DEFAULT 0
+      `is_approved` TINYINT(1) NOT NULL DEFAULT 0,
+      `is_private` TINYINT(1) NOT NULL DEFAULT 0
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
     ("products", """
@@ -253,6 +254,7 @@ UPGRADES = [
     ("messages.deleted_by_recipient", "ALTER TABLE messages ADD COLUMN deleted_by_recipient TINYINT(1) NOT NULL DEFAULT 0"),
     ("messages.is_flagged_by_sender", "ALTER TABLE messages ADD COLUMN is_flagged_by_sender TINYINT(1) NOT NULL DEFAULT 0"),
     ("messages.is_flagged_by_recipient", "ALTER TABLE messages ADD COLUMN is_flagged_by_recipient TINYINT(1) NOT NULL DEFAULT 0"),
+    ("users.is_private", "ALTER TABLE users ADD COLUMN is_private TINYINT(1) NOT NULL DEFAULT 0"),
 ]
 for label, sql in UPGRADES:
     try:
