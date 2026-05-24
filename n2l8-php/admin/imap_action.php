@@ -43,6 +43,7 @@ $imap_enc  = defined('IMAP_ENCRYPTION') ? IMAP_ENCRYPTION : 'ssl';
 
 $folder_map = [
     'INBOX'  => 'INBOX',
+    'PRIMARY'=> 'INBOX',
     'SENT'   => 'Sent',
     'SPAM'   => 'Spam',
     'TRASH'  => 'Trash',

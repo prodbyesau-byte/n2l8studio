@@ -14,7 +14,7 @@ log_visitor($pdo, 'page_view', '/pricing.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mixing &amp; Mastering - N2L8 STUDIO</title>
     <meta name="description" content="Professional audio engineering from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <link rel="stylesheet" href="/static/style.css?v=12">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -36,6 +36,7 @@ log_visitor($pdo, 'page_view', '/pricing.php');
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
+                <li><a href="/forum.php">Forum</a></li>
                 <?php if (is_logged_in()): ?>
                     <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent); display: inline-flex; align-items: center; gap: 4px; padding-top: 4px; padding-bottom: 4px;">

@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div style=\"margin-top:40px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px; text-align:center; color:#666666; font-size:12px;\">
                         &copy; " . date('Y') . " N2L8studios. All rights reserved.<br>
-                        You are receiving this premium transmission because you are registered at <a href=\"https://www.n2l8studios.com\" style=\"color:#c0152a; text-decoration:none;\">n2l8studios.com</a>.
+                        You are receiving this email because you are registered at <a href=\"https://www.n2l8studios.com\" style=\"color:#c0152a; text-decoration:none;\">n2l8studios.com</a>.
                     </div>
                 </div>
             </body>

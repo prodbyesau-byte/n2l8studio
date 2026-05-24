@@ -18,10 +18,11 @@ $limit    = min(50, max(5, (int)($_GET['limit'] ?? 25)));
 $search   = trim($_GET['search'] ?? '');
 
 // Validate folder names
-$allowed_folders = ['INBOX', 'SENT', 'SPAM', 'JUNK', 'TRASH', 'DRAFTS', 'IMPORTANT'];
+$allowed_folders = ['INBOX', 'SENT', 'SPAM', 'JUNK', 'TRASH', 'DRAFTS', 'IMPORTANT', 'PRIMARY'];
 // Map friendly names to IMAP folder names
 $folder_map = [
     'INBOX'     => 'INBOX',
+    'PRIMARY'   => 'INBOX',
     'SENT'      => 'Sent',
     'SPAM'      => 'Spam',
     'JUNK'      => 'Junk',

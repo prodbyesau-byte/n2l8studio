@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - N2L8 STUDIO</title>
-    <link rel="stylesheet" href="/static/style.css?v=8">
+    <link rel="stylesheet" href="/static/style.css?v=12">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -176,6 +176,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .box-footer-link:hover {
             color: #ffffff;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+        }
+        @media (max-width: 480px) {
+            .login-box {
+                margin: 40px auto;
+                padding: 2.2rem 1.5rem;
+                width: 92%;
+            }
         }
     </style>
 </head>
