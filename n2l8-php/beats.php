@@ -108,15 +108,15 @@ log_visitor($pdo, 'page_view', '/beats.php');
                 </div>
                 <div class="beat-price-btn" style="display:flex; align-items:center; gap:0.5rem; justify-content:flex-end;">
                     <?php if (!is_owner()): ?>
-                    <button class="kit-save-btn <?= !empty($beat['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="toggleUpvote(this, <?= (int)$beat['id'] ?>)" title="Upvote" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
+                    <button class="kit-save-btn <?= !empty($beat['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); toggleUpvote(this, <?= (int)$beat['id'] ?>)" title="Upvote" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
                         <?= !empty($beat['user_upvoted']) ? '★' : '☆' ?>
                     </button>
-                    <button class="kit-save-btn <?= in_array((int)$beat['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="togglePlaylist(this, <?= (int)$beat['id'] ?>)" title="Add to Playlist" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
-                        <?= in_array((int)$beat['id'], $saved_ids, true) ? '✅' : '➕' ?>
+                    <button class="kit-save-btn <?= in_array((int)$beat['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); togglePlaylist(this, <?= (int)$beat['id'] ?>)" title="Add to Playlist" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
+                        ➕
                     </button>
                     <div style="text-align:right; font-size:0.8rem; color:var(--text-muted); margin-right:0.5rem; min-width:50px;"><span id="upvotes-<?= $beat['id'] ?>"><?= (int)$beat['upvotes'] ?></span> votes</div>
                     <?php endif; ?>
-                    <button class="cta-btn beat-buy-btn btn-buy" data-id="<?= $beat['id'] ?>">
+                    <button class="cta-btn beat-buy-btn btn-buy" data-id="<?= $beat['id'] ?>" onclick="event.stopPropagation(); event.preventDefault(); openModal(<?= $beat['id'] ?>);">
                         <?= (float)$beat['price'] > 0 ? '$' . number_format($beat['price'], 2) : 'FREE' ?>
                     </button>
                 </div>
@@ -197,19 +197,108 @@ log_visitor($pdo, 'page_view', '/beats.php');
     }
 
     function togglePlaylist(btn, productId) {
+        if (!IS_LOGGED_IN) {
+            window.location.href = '/login.php';
+            return;
+        }
+        
+        // Open playlist selection modal
+        const wrap = document.createElement('div');
+        wrap.className = 'modal-overlay open';
+        wrap.id = 'playlistSelectModal';
+        wrap.style.zIndex = '9999';
+        
+        wrap.innerHTML = `
+            <div class="modal-box" style="max-width:400px; padding:2rem; text-align:center;">
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                <h3 style="margin-top:0; font-family:'Syncopate', sans-serif; color:var(--accent);">ADD TO PLAYLIST</h3>
+                <div id="playlistList" style="margin:1.5rem 0; display:flex; flex-direction:column; gap:0.5rem; max-height:250px; overflow-y:auto; text-align:left;">
+                    <div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">Loading...</div>
+                </div>
+                <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                    <input type="text" id="newPlaylistName" placeholder="New Playlist Name" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'VT323', monospace; font-size:1rem;">
+                    <button class="cta-btn" onclick="createNewPlaylist(${productId})" style="padding:0.5rem 1rem;">CREATE</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(wrap);
+        
+        fetchPlaylistsForProduct(productId);
+    }
+
+    function fetchPlaylistsForProduct(productId) {
         fetch('/api/product_actions.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'action=toggle_save&product_id=' + encodeURIComponent(productId)
+            body: 'action=fetch_playlists&product_id=' + productId
         })
         .then(r => r.json())
         .then(data => {
-            if (!data.success) {
-                window.location.href = '/login.php';
+            const list = document.getElementById('playlistList');
+            if (!list) return;
+            list.innerHTML = '';
+            if (!data.playlists || data.playlists.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">No playlists found. Create one below!</div>';
                 return;
             }
-            btn.classList.toggle('saved', data.is_active);
-            btn.textContent = data.is_active ? '✅' : '➕';
+            
+            data.playlists.forEach(pl => {
+                const btn = document.createElement('button');
+                btn.className = 'cta-btn';
+                btn.style.width = '100%';
+                btn.style.textAlign = 'left';
+                btn.style.background = 'rgba(255,255,255,0.05)';
+                if (pl.is_in_playlist == 1) {
+                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.color = 'var(--accent)';
+                    btn.textContent = pl.name + ' (Added)';
+                } else {
+                    btn.style.borderColor = 'var(--border-color)';
+                    btn.style.color = 'var(--text-muted)';
+                    btn.textContent = pl.name;
+                }
+                
+                btn.onclick = () => {
+                    fetch('/api/product_actions.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: `action=toggle_playlist_item&playlist_id=${pl.id}&product_id=${productId}`
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            if (res.is_active) {
+                                btn.style.borderColor = 'var(--accent)';
+                                btn.style.color = 'var(--accent)';
+                                btn.textContent = pl.name + ' (Added)';
+                            } else {
+                                btn.style.borderColor = 'var(--border-color)';
+                                btn.style.color = 'var(--text-muted)';
+                                btn.textContent = pl.name;
+                            }
+                        }
+                    });
+                };
+                list.appendChild(btn);
+            });
+        });
+    }
+
+    function createNewPlaylist(productId) {
+        const nameInput = document.getElementById('newPlaylistName');
+        if (!nameInput || !nameInput.value.trim()) return;
+        
+        fetch('/api/product_actions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=create_playlist&name=' + encodeURIComponent(nameInput.value.trim())
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                nameInput.value = '';
+                fetchPlaylistsForProduct(productId);
+            }
         });
     }
 

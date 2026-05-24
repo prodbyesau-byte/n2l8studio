@@ -266,11 +266,11 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; gap:0.5rem;">
                             <button class="cta-btn kit-btn" style="flex:1; margin-top:0;" onclick="openModal(<?= (int)$p['id'] ?>)">Preview &amp; Buy</button>
                             <?php if (!is_owner()): ?>
-                            <button class="kit-save-btn <?= !empty($p['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="toggleUpvote(this, <?= (int)$p['id'] ?>)" title="Upvote" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">
+                            <button class="kit-save-btn <?= !empty($p['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); toggleUpvote(this, <?= (int)$p['id'] ?>)" title="Upvote" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">
                                 <?= !empty($p['user_upvoted']) ? '★' : '☆' ?>
                             </button>
-                            <button class="kit-save-btn <?= in_array((int)$p['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="togglePlaylist(this, <?= (int)$p['id'] ?>)" title="Add to Playlist" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
-                                <?= in_array((int)$p['id'], $saved_ids, true) ? '✅' : '➕' ?>
+                            <button class="kit-save-btn <?= in_array((int)$p['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); togglePlaylist(this, <?= (int)$p['id'] ?>)" title="Add to Playlist" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+                                ➕
                             </button>
                             <?php endif; ?>
                         </div>
@@ -352,19 +352,108 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     }
 
     function togglePlaylist(btn, productId) {
+        if (!IS_LOGGED_IN) {
+            window.location.href = '/login.php';
+            return;
+        }
+        
+        // Open playlist selection modal
+        const wrap = document.createElement('div');
+        wrap.className = 'modal-overlay open';
+        wrap.id = 'playlistSelectModal';
+        wrap.style.zIndex = '9999';
+        
+        wrap.innerHTML = `
+            <div class="modal-box" style="max-width:400px; padding:2rem; text-align:center;">
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                <h3 style="margin-top:0; font-family:'Syncopate', sans-serif; color:var(--accent);">ADD TO PLAYLIST</h3>
+                <div id="playlistList" style="margin:1.5rem 0; display:flex; flex-direction:column; gap:0.5rem; max-height:250px; overflow-y:auto; text-align:left;">
+                    <div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">Loading...</div>
+                </div>
+                <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                    <input type="text" id="newPlaylistName" placeholder="New Playlist Name" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'VT323', monospace; font-size:1rem;">
+                    <button class="cta-btn" onclick="createNewPlaylist(${productId})" style="padding:0.5rem 1rem;">CREATE</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(wrap);
+        
+        fetchPlaylistsForProduct(productId);
+    }
+
+    function fetchPlaylistsForProduct(productId) {
         fetch('/api/product_actions.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'action=toggle_save&product_id=' + encodeURIComponent(productId)
+            body: 'action=fetch_playlists&product_id=' + productId
         })
         .then(r => r.json())
         .then(data => {
-            if (!data.success) {
-                window.location.href = '/login.php';
+            const list = document.getElementById('playlistList');
+            if (!list) return;
+            list.innerHTML = '';
+            if (!data.playlists || data.playlists.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">No playlists found. Create one below!</div>';
                 return;
             }
-            btn.classList.toggle('saved', data.is_active);
-            btn.textContent = data.is_active ? '✅' : '➕';
+            
+            data.playlists.forEach(pl => {
+                const btn = document.createElement('button');
+                btn.className = 'cta-btn';
+                btn.style.width = '100%';
+                btn.style.textAlign = 'left';
+                btn.style.background = 'rgba(255,255,255,0.05)';
+                if (pl.is_in_playlist == 1) {
+                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.color = 'var(--accent)';
+                    btn.textContent = pl.name + ' (Added)';
+                } else {
+                    btn.style.borderColor = 'var(--border-color)';
+                    btn.style.color = 'var(--text-muted)';
+                    btn.textContent = pl.name;
+                }
+                
+                btn.onclick = () => {
+                    fetch('/api/product_actions.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: `action=toggle_playlist_item&playlist_id=${pl.id}&product_id=${productId}`
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            if (res.is_active) {
+                                btn.style.borderColor = 'var(--accent)';
+                                btn.style.color = 'var(--accent)';
+                                btn.textContent = pl.name + ' (Added)';
+                            } else {
+                                btn.style.borderColor = 'var(--border-color)';
+                                btn.style.color = 'var(--text-muted)';
+                                btn.textContent = pl.name;
+                            }
+                        }
+                    });
+                };
+                list.appendChild(btn);
+            });
+        });
+    }
+
+    function createNewPlaylist(productId) {
+        const nameInput = document.getElementById('newPlaylistName');
+        if (!nameInput || !nameInput.value.trim()) return;
+        
+        fetch('/api/product_actions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=create_playlist&name=' + encodeURIComponent(nameInput.value.trim())
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                nameInput.value = '';
+                fetchPlaylistsForProduct(productId);
+            }
         });
     }
 

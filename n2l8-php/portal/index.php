@@ -53,6 +53,47 @@ $stmt = $pdo->prepare('
 $stmt->execute([$user_email]);
 $purchased_products = $stmt->fetchAll();
 
+// 4a. Fetch user's custom playlists and their products
+$playlists_stmt = $pdo->prepare('SELECT * FROM playlists WHERE user_id = ? ORDER BY created_at DESC');
+$playlists_stmt->execute([$user_id]);
+$user_playlists = $playlists_stmt->fetchAll();
+
+$playlist_items_stmt = $pdo->prepare('
+    SELECT pi.playlist_id, p.* 
+    FROM playlist_items pi
+    JOIN products p ON pi.product_id = p.id
+    JOIN playlists pl ON pi.playlist_id = pl.id
+    WHERE pl.user_id = ?
+    ORDER BY pi.created_at DESC
+');
+$playlist_items_stmt->execute([$user_id]);
+$all_playlist_items = $playlist_items_stmt->fetchAll();
+
+$playlists_with_items = [];
+foreach ($user_playlists as $pl) {
+    $playlists_with_items[$pl['id']] = [
+        'id' => $pl['id'],
+        'name' => $pl['name'],
+        'created_at' => $pl['created_at'],
+        'items' => []
+    ];
+}
+foreach ($all_playlist_items as $item) {
+    if (isset($playlists_with_items[$item['playlist_id']])) {
+        $playlists_with_items[$item['playlist_id']]['items'][] = $item;
+    }
+}
+
+// 4b. Fetch user's upvoted (liked) products
+$upvotes_stmt = $pdo->prepare('
+    SELECT p.* 
+    FROM product_upvotes pu
+    JOIN products p ON pu.product_id = p.id
+    WHERE pu.user_id = ?
+    ORDER BY pu.id DESC
+');
+$upvotes_stmt->execute([$user_id]);
+$liked_products = $upvotes_stmt->fetchAll();
 
 
 // 5. Form handling
@@ -323,6 +364,50 @@ $tab = $_GET['tab'] ?? 'library';
             margin: 0 auto 2rem auto;
             line-height: 1.5;
         }
+
+        /* ── MODAL OVERLAY ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5,5,8,0.92);
+            z-index: 1000;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem 0;
+            backdrop-filter: blur(10px);
+        }
+        .modal-overlay.open { display: block; }
+        .modal-box {
+            background: rgba(5, 5, 8, 0.95);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--purple-glow);
+            width: 92%;
+            max-width: 450px;
+            margin: 5rem auto;
+            position: relative;
+            padding: 2.5rem 2rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .modal-close {
+            position: absolute;
+            top: 0.8rem; right: 0.8rem;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.2s;
+            font-family: 'VT323', monospace;
+            font-weight: 300;
+            width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10;
+            border-radius: 50%;
+        }
+        .modal-close:hover { color:#ff5c5c; border-color: #ff5c5c; }
 
         /* Forms */
         .portal-card {
@@ -1711,7 +1796,7 @@ $tab = $_GET['tab'] ?? 'library';
 
         <div class="portal-tabs">
             <button class="portal-tab-btn <?= $tab === 'library' ? 'active' : '' ?>" onclick="switchTab('library')">My Library (<?= count($purchased_products) ?>)</button>
-
+            <button class="portal-tab-btn <?= $tab === 'liked' ? 'active' : '' ?>" onclick="switchTab('liked')">Liked &amp; Saved</button>
             <button class="portal-tab-btn <?= $tab === 'friends' ? 'active' : '' ?>" onclick="switchTab('friends')">
                 Friends
                 <span id="friends-tab-badge" style="background:var(--accent); color:#fff; font-size:0.62rem; padding:0.15rem 0.4rem; border-radius:10px; font-family:'Montserrat',sans-serif; font-weight:700; margin-left:4px; <?= $pending_friends_count > 0 ? '' : 'display:none;' ?>"><?= $pending_friends_count ?></span>
@@ -1762,7 +1847,117 @@ $tab = $_GET['tab'] ?? 'library';
             <?php endif; ?>
         </div>
 
+        <!-- ── TAB: LIKED & SAVED ── -->
+        <div id="tab-liked" class="portal-tab <?= $tab === 'liked' ? 'active' : '' ?>">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <h3 style="margin:0; font-family:'Syncopate', sans-serif; color:var(--accent); font-size:1.2rem;">PLAYLISTS &amp; LIKED KITS</h3>
+                    <p style="margin:0.2rem 0 0 0; color:var(--text-muted); font-size:0.85rem;">Manage your custom collections and see your upvoted products.</p>
+                </div>
+                <button class="cta-btn" onclick="openCreatePlaylistModal()" style="font-size:0.75rem; padding:0.6rem 1.2rem;">CREATE NEW PLAYLIST</button>
+            </div>
 
+            <!-- Custom Playlists Grid -->
+            <h4 style="font-family:'Syncopate', sans-serif; font-size:0.85rem; letter-spacing:0.05em; margin-bottom:1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">MY CUSTOM PLAYLISTS</h4>
+            
+            <?php if (empty($playlists_with_items)): ?>
+                <div class="empty-library" id="empty-playlists-notice" style="padding: 2rem; margin-bottom: 2rem;">
+                    <h3>No Playlists Yet</h3>
+                    <p>Create a playlist using the button above or by clicking ➕ on products in the Shop.</p>
+                </div>
+            <?php else: ?>
+                <div class="library-grid" id="playlists-grid" style="margin-bottom:3rem;">
+                    <?php foreach ($playlists_with_items as $pl_id => $pl): ?>
+                        <div class="library-card" id="playlist-card-<?= $pl_id ?>">
+                            <div class="library-cover" style="cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); position:relative;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">
+                                <!-- Display a folder / library stack look for playlist cover -->
+                                <div style="font-size:3rem; color:var(--accent); filter:drop-shadow(0 0 10px rgba(192,21,42,0.3));">📁</div>
+                                <span style="position:absolute; bottom:10px; right:10px; background:var(--accent); color:#fff; font-size:0.7rem; font-weight:700; padding:2px 6px; border-radius:3px;">
+                                    <?= count($pl['items']) ?> items
+                                </span>
+                            </div>
+                            <div class="library-info" style="cursor:pointer;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">
+                                <h3><?= h($pl['name']) ?></h3>
+                                <div class="author">Created: <?= date('Y-m-d', strtotime($pl['created_at'])) ?></div>
+                            </div>
+                            <div style="display:flex; gap:0.5rem; width:100%;">
+                                <button class="cta-btn secondary" style="flex:1; font-size:0.65rem; padding:0.5rem;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">VIEW ITEMS</button>
+                                <button class="cta-btn secondary" style="border-color:rgba(192,21,42,0.4); color:rgba(255,255,255,0.6); font-size:0.65rem; padding:0.5rem; min-width:40px;" onclick="deletePlaylist(<?= $pl_id ?>)" title="Delete Playlist">🗑️</button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Playlist Items Detailed View -->
+                <?php foreach ($playlists_with_items as $pl_id => $pl): ?>
+                    <div id="playlist-details-<?= $pl_id ?>" class="playlist-details-section" style="display:none; background:rgba(5,5,8,0.9); border:1px solid var(--border-color); border-radius:6px; padding:1.5rem; margin-bottom:2rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">
+                            <h4 style="margin:0; font-family:'Syncopate', sans-serif; color:var(--accent); font-size:0.9rem;"><?= strtoupper(h($pl['name'])) ?> ITEMS</h4>
+                            <button class="cta-btn secondary" style="font-size:0.65rem; padding:0.3rem 0.8rem;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">CLOSE</button>
+                        </div>
+                        <?php if (empty($pl['items'])): ?>
+                            <p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">This playlist has no items. Visit the Shop to add products!</p>
+                        <?php else: ?>
+                            <div class="library-grid">
+                                <?php foreach ($pl['items'] as $p): ?>
+                                    <div class="library-card" id="playlist-item-card-<?= $pl_id ?>-<?= $p['id'] ?>">
+                                        <div class="library-cover">
+                                            <?php if ($p['cover_image']): ?>
+                                                <img src="/static/uploads/<?= h($p['cover_image']) ?>" alt="">
+                                            <?php else: ?>
+                                                <div style="width:100%;height:100%;background:rgba(255,255,255,0.02);"></div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="library-info">
+                                            <h3><?= h($p['title']) ?></h3>
+                                            <div class="author">By <?= h($p['author'] ?: 'N2L8 STUDIO') ?></div>
+                                            <span class="tag"><?= h($p['type']) ?></span>
+                                        </div>
+                                        <div style="display:flex; gap:0.5rem;">
+                                            <a href="/shop.php" class="cta-btn" style="flex:1; font-size:0.65rem; padding:0.5rem; text-align:center;">GO TO SHOP</a>
+                                            <button class="cta-btn secondary" style="border-color:rgba(192,21,42,0.4); font-size:0.65rem; padding:0.5rem;" onclick="removeFromPlaylist(<?= $pl_id ?>, <?= (int)$p['id'] ?>, this)">REMOVE</button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <!-- Liked/Upvoted Products Section -->
+            <h4 style="font-family:'Syncopate', sans-serif; font-size:0.85rem; letter-spacing:0.05em; margin-bottom:1rem; margin-top:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">LIKED &amp; UPVOTED</h4>
+            
+            <?php if (empty($liked_products)): ?>
+                <div class="empty-library" id="empty-liked-notice" style="padding: 2rem;">
+                    <h3>No Liked Products</h3>
+                    <p>Upvote products in the Shop by clicking the star (☆) button!</p>
+                </div>
+            <?php else: ?>
+                <div class="library-grid" id="liked-products-grid">
+                    <?php foreach ($liked_products as $p): ?>
+                        <div class="library-card" id="liked-card-<?= $p['id'] ?>">
+                            <div class="library-cover">
+                                <?php if ($p['cover_image']): ?>
+                                    <img src="/static/uploads/<?= h($p['cover_image']) ?>" alt="">
+                                <?php else: ?>
+                                    <div style="width:100%;height:100%;background:rgba(255,255,255,0.02);"></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="library-info">
+                                <h3><?= h($p['title']) ?></h3>
+                                <div class="author">By <?= h($p['author'] ?: 'N2L8 STUDIO') ?></div>
+                                <span class="tag"><?= h($p['type']) ?></span>
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <a href="/shop.php" class="cta-btn" style="flex:1; font-size:0.65rem; padding:0.5rem; text-align:center;">GO TO SHOP</a>
+                                <button class="cta-btn secondary" style="border-color:rgba(192,21,42,0.4); font-size:0.65rem; padding:0.5rem;" onclick="unlikeProduct(<?= (int)$p['id'] ?>, this)">UNLIKE</button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
 
         <!-- ── TAB: INBOX ── -->
         <div id="tab-inbox" class="portal-tab <?= $tab === 'inbox' ? 'active' : '' ?>">
@@ -2099,6 +2294,147 @@ $tab = $_GET['tab'] ?? 'library';
             } else {
                 stopDMPolling();
             }
+        }
+
+        // ── PLAYLISTS & LIKED PRODUCTS JS LOGIC ──
+        function openCreatePlaylistModal() {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay open';
+            overlay.id = 'createPlaylistPortalModal';
+            overlay.style.zIndex = '9999';
+            overlay.innerHTML = `
+                <div class="modal-box" style="max-width:400px; padding:2rem; text-align:center;">
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                    <h3 style="margin-top:0; font-family:'Syncopate', sans-serif; color:var(--accent);">CREATE PLAYLIST</h3>
+                    <div style="margin:1.5rem 0;">
+                        <input type="text" id="newPortalPlaylistName" placeholder="Playlist Name" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'VT323', monospace; font-size:1.2rem; box-sizing:border-box;">
+                    </div>
+                    <button class="cta-btn" onclick="submitCreatePlaylist()" style="width:100%; padding:0.6rem;">CREATE</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function submitCreatePlaylist() {
+            const input = document.getElementById('newPortalPlaylistName');
+            if (!input || !input.value.trim()) return;
+            const name = input.value.trim();
+
+            fetch('/api/product_actions.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=create_playlist&name=' + encodeURIComponent(name)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = document.getElementById('createPlaylistPortalModal');
+                    if (modal) modal.remove();
+                    window.location.reload();
+                }
+            });
+        }
+
+        function deletePlaylist(playlistId) {
+            if (!confirm('Are you sure you want to delete this playlist?')) return;
+            
+            fetch('/api/product_actions.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=delete_playlist&playlist_id=${playlistId}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const card = document.getElementById('playlist-card-' + playlistId);
+                    if (card) card.remove();
+                    const details = document.getElementById('playlist-details-' + playlistId);
+                    if (details) details.remove();
+                    
+                    const grid = document.getElementById('playlists-grid');
+                    if (grid && grid.children.length === 0) {
+                        window.location.reload();
+                    }
+                }
+            });
+        }
+
+        function togglePlaylistDetails(playlistId) {
+            document.querySelectorAll('.playlist-details-section').forEach(el => {
+                if (el.id !== 'playlist-details-' + playlistId) {
+                    el.style.display = 'none';
+                }
+            });
+            
+            const target = document.getElementById('playlist-details-' + playlistId);
+            if (target) {
+                if (target.style.display === 'none') {
+                    target.style.display = 'block';
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    target.style.display = 'none';
+                }
+            }
+        }
+
+        function removeFromPlaylist(playlistId, productId, btn) {
+            fetch('/api/product_actions.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=toggle_playlist_item&playlist_id=${playlistId}&product_id=${productId}`
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && !res.is_active) {
+                    const card = document.getElementById(`playlist-item-card-${playlistId}-${productId}`);
+                    if (card) {
+                        card.remove();
+                    }
+                    const detailsSection = document.getElementById('playlist-details-' + playlistId);
+                    if (detailsSection) {
+                        const itemsGrid = detailsSection.querySelector('.library-grid');
+                        if (itemsGrid && itemsGrid.children.length === 0) {
+                            detailsSection.innerHTML = `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">
+                                    <h4 style="margin:0; font-family:'Syncopate', sans-serif; color:var(--accent); font-size:0.9rem;">ITEMS</h4>
+                                    <button class="cta-btn secondary" style="font-size:0.65rem; padding:0.3rem 0.8rem;" onclick="togglePlaylistDetails(${playlistId})">CLOSE</button>
+                                </div>
+                                <p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">This playlist has no items. Visit the Shop to add products!</p>
+                            `;
+                        }
+                    }
+                }
+            });
+        }
+
+        function unlikeProduct(productId, btn) {
+            fetch('/api/product_actions.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=toggle_upvote&product_id=${productId}`
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && !res.is_active) {
+                    const card = document.getElementById('liked-card-' + productId);
+                    if (card) card.remove();
+                    
+                    const grid = document.getElementById('liked-products-grid');
+                    if (grid && grid.children.length === 0) {
+                        const container = grid.parentElement;
+                        grid.remove();
+                        const notice = document.createElement('div');
+                        notice.className = 'empty-library';
+                        notice.style.padding = '2rem';
+                        notice.id = 'empty-liked-notice';
+                        notice.innerHTML = `
+                            <h3>No Liked Products</h3>
+                            <p>Upvote products in the Shop by clicking the star (☆) button!</p>
+                        `;
+                        container.appendChild(notice);
+                    }
+                }
+            });
         }
 
         // ── DIRECT MESSAGING JS LOGIC ──
