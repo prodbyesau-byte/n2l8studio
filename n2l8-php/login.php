@@ -32,7 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user && password_verify($password, $user['password'])) {
             $user_role = $user['role'];
             if ($user_role === 'admin' || $user_role === 'owner') {
-                $error = 'Administrators must log in through the Admin Login portal.';
+                $_SESSION['user_id']   = $user['id'];
+                $_SESSION['username']  = $user['username'];
+                $_SESSION['role']      = $user['role'];
+                $_SESSION['user_role'] = $user['role'];
+                $_SESSION['email']     = $user['email'];
+
+                log_action($pdo, "Administrator logged in: {$user['username']}");
+                redirect('/admin/index.php');
             } else if (empty($user['is_approved'])) {
                 $error = 'Your account is pending administrative approval. You will be able to log in once your profile has been verified.';
             } else {
@@ -178,8 +185,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container">
         <div class="login-box">
-            <h2>USER LOGIN</h2>
-            <p>Login to access your profile.</p>
+            <h2>LOGIN</h2>
+            <p>Login to access your account.</p>
             
             <?php 
             $flashes = get_flash();

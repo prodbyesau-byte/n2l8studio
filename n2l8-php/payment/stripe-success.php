@@ -164,7 +164,7 @@ if (isset($session['error']) || empty($session['payment_status'])) {
             100% { transform: scale(1); text-shadow: 0 0 15px rgba(192, 21, 42, 0.6); }
         }
         .success-box h2 {
-            font-family: 'Syncopate', sans-serif;
+            font-family: 'VT323', monospace;
             color: #ffffff;
             font-size: 1.5rem;
             font-weight: 700;
@@ -172,7 +172,7 @@ if (isset($session['error']) || empty($session['payment_status'])) {
             letter-spacing: 0.15em;
         }
         .success-box p {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'VT323', monospace;
             font-size: 0.9rem;
             color: var(--text-muted);
             margin-bottom: 2.2rem;
@@ -186,7 +186,7 @@ if (isset($session['error']) || empty($session['payment_status'])) {
             border-radius: 4px;
             margin-bottom: 2rem;
             text-align: left;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'VT323', monospace;
             font-size: 0.82rem;
         }
         .success-row {
@@ -215,7 +215,7 @@ if (isset($session['error']) || empty($session['payment_status'])) {
         }
         .cta-btn {
             display: inline-block;
-            font-family: 'Syncopate', sans-serif;
+            font-family: 'VT323', monospace;
             font-weight: 700;
             letter-spacing: 0.12em;
             padding: 1rem 2rem;
@@ -233,7 +233,7 @@ if (isset($session['error']) || empty($session['payment_status'])) {
             padding: 1rem;
             border-radius: 4px;
             margin-bottom: 2rem;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'VT323', monospace;
             font-size: 0.9rem;
             text-align: left;
         }

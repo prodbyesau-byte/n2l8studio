@@ -36,16 +36,15 @@ log_visitor($pdo, 'page_view', '/');
                     </div>
                 </li>
                 <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/forum.php">Forum</a></li>
                 <?php if (is_logged_in()): ?>
+                    <li><a href="/forum.php">Forum</a></li>
                     <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent); display: inline-flex; align-items: center; gap: 4px; padding-top: 4px; padding-bottom: 4px;">
                             <?= get_user_avatar_nav($pdo) ?>
-                            <span>Portal</span>
+                            <span>Profile</span>
                         </a>
                         <div class="dropdown-content">
-                            <a href="/portal/index.php?tab=settings">Account Settings</a>
-                            <a href="/portal/index.php">Client Portal</a>
+                            <a href="/portal/index.php">Profile</a>
                             <?php if (is_owner()): ?>
                                 <a href="/admin/index.php">Admin Portal</a>
                             <?php endif; ?>
@@ -53,13 +52,7 @@ log_visitor($pdo, 'page_view', '/');
                         </div>
                     </li>
                 <?php else: ?>
-                    <li class="dropdown">
-                        <a href="javascript:void(0)" class="dropbtn">Login</a>
-                        <div class="dropdown-content">
-                            <a href="/login.php">User Login</a>
-                            <a href="/admin/login.php">Admin Login</a>
-                        </div>
-                    </li>
+                    <li><a href="/login.php">Login</a></li>
                 <?php endif; ?>
             </ul>
         </nav>
@@ -105,7 +98,7 @@ log_visitor($pdo, 'page_view', '/');
 
     // Close dropdown when clicking outside
     window.onclick = function(event) {
-        if (!event.target.matches('.dropbtn')) {
+        if (!event.target.closest('.dropdown')) {
             const dropdowns = document.getElementsByClassName("dropdown-content");
             for (let i = 0; i < dropdowns.length; i++) {
                 const openDropdown = dropdowns[i];
@@ -115,7 +108,12 @@ log_visitor($pdo, 'page_view', '/');
             }
         }
     }
-    nl.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { ham.classList.remove('open'); nl.classList.remove('open'); }));
+    nl.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+        if (!a.classList.contains('dropbtn')) {
+            ham.classList.remove('open');
+            nl.classList.remove('open');
+        }
+    }));
     </script>
 </body>
 </html>

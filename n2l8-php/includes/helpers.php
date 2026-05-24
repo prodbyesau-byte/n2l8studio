@@ -30,16 +30,41 @@ function get_user_avatar_nav(PDO $pdo): string {
     if (session_status() === PHP_SESSION_NONE) session_start();
     if (!isset($_SESSION['user_id'])) return '';
     try {
+        $user_id = $_SESSION['user_id'];
         $stmt = $pdo->prepare('SELECT username, profile_picture FROM users WHERE id = ?');
-        $stmt->execute([$_SESSION['user_id']]);
+        $stmt->execute([$user_id]);
         $u = $stmt->fetch();
         if ($u) {
             $username = $u['username'];
             $profile_pic = $u['profile_picture'];
+            
+            // Count unread messages
+            $msg_stmt = $pdo->prepare('SELECT COUNT(*) FROM messages WHERE recipient_id = ? AND is_read = 0');
+            $msg_stmt->execute([$user_id]);
+            $unread_messages = (int)$msg_stmt->fetchColumn();
+            
+            // Count pending friend requests received by this user
+            $friends_stmt = $pdo->prepare('
+                SELECT COUNT(*) 
+                FROM friendships 
+                WHERE status = "pending" 
+                  AND (user_id1 = ? OR user_id2 = ?) 
+                  AND action_user_id != ?
+            ');
+            $friends_stmt->execute([$user_id, $user_id, $user_id]);
+            $pending_friends = (int)$friends_stmt->fetchColumn();
+            
+            $total_notifs = $unread_messages + $pending_friends;
+            
+            $badge = '';
+            if ($total_notifs > 0) {
+                $badge = '<span class="portal-nav-badge" style="background:#ff3860; color:#fff; font-size:0.6rem; padding:1px 5px; border-radius:10px; margin-left:5px; font-family:\'Montserrat\',sans-serif; font-weight:700; box-shadow:0 0 5px rgba(255, 56, 96, 0.6); display:inline-block; vertical-align:middle;">' . $total_notifs . '</span>';
+            }
+            
             if ($profile_pic) {
-                return '<img src="/static/uploads/' . htmlspecialchars($profile_pic, ENT_QUOTES, 'UTF-8') . '" style="width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid var(--accent); vertical-align:middle; margin-right:4px; box-shadow:0 0 4px var(--accent);">';
+                return '<img src="/static/uploads/' . htmlspecialchars($profile_pic, ENT_QUOTES, 'UTF-8') . '" style="width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid var(--accent); vertical-align:middle; margin-right:4px; box-shadow:0 0 4px var(--accent);">' . $badge;
             } else {
-                return '<span style="display:inline-block; width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); text-align:center; line-height:18px; font-family:\'Syncopate\',sans-serif; font-size:0.65rem; font-weight:700; color:#fff; vertical-align:middle; margin-right:4px;">' . strtoupper(substr($username, 0, 1)) . '</span>';
+                return '<span style="display:inline-block; width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); text-align:center; line-height:18px; font-family:\'Syncopate\',sans-serif; font-size:0.65rem; font-weight:700; color:#fff; vertical-align:middle; margin-right:4px;">' . strtoupper(substr($username, 0, 1)) . '</span>' . $badge;
             }
         }
     } catch (Throwable $e) {}
@@ -72,7 +97,11 @@ function save_upload(string $file_key, array $allowed_exts): ?string {
     $ext = strtolower(pathinfo($original, PATHINFO_EXTENSION));
     if (!in_array($ext, $allowed_exts, true)) return null;
 
-    $safe = preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($original));
+    $filename = pathinfo($original, PATHINFO_FILENAME);
+    $safe_name = preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
+    // Generate an unguessable 16-character random hex string
+    $hash = bin2hex(random_bytes(8));
+    $safe = $safe_name . '_' . $hash . '.' . $ext;
     $dest = rtrim(UPLOAD_DIR, '/') . '/' . $safe;
 
     if (!is_dir(UPLOAD_DIR)) mkdir(UPLOAD_DIR, 0755, true);
@@ -99,7 +128,11 @@ function save_upload_multiple(string $file_key, array $allowed_exts): array {
         $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
         if (!in_array($ext, $allowed_exts, true)) continue;
 
-        $safe = preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($name));
+        $filename = pathinfo($name, PATHINFO_FILENAME);
+        $safe_name = preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
+        // Generate an unguessable 16-character random hex string
+        $hash = bin2hex(random_bytes(8));
+        $safe = $safe_name . '_' . $hash . '.' . $ext;
         $dest = rtrim(UPLOAD_DIR, '/') . '/' . $safe;
 
         if (!is_dir(UPLOAD_DIR)) mkdir(UPLOAD_DIR, 0755, true);

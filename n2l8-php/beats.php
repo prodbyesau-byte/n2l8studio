@@ -111,14 +111,14 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <div id="playerBar" style="position:fixed; bottom:0; left:0; width:100%; background:rgba(5,5,8,0.96); border-top:1.5px solid var(--accent); padding:1.2rem; display:none; z-index:1000; box-shadow: 0 -5px 25px rgba(0,0,0,0.5);">
         <div class="container" style="display:flex; align-items:center; gap:2rem; justify-content:space-between;">
             <div id="playerInfo" style="flex:1;">
-                <div id="playerTitle" style="font-family:'Montserrat',sans-serif; font-weight:700; color:var(--text-main); font-size: 0.95rem;"></div>
-                <div id="playerArtist" style="font-size:0.75rem; color:var(--text-muted); font-family:'Montserrat',sans-serif; margin-top: 0.2rem;"></div>
+                <div id="playerTitle" style="font-family:'VT323', monospace; font-weight:700; color:var(--text-main); font-size: 0.95rem;"></div>
+                <div id="playerArtist" style="font-size:0.75rem; color:var(--text-muted); font-family:'VT323', monospace; margin-top: 0.2rem;"></div>
             </div>
             <div class="player-controls" style="display:flex; align-items:center; gap:1.2rem; flex:2;">
                 <button id="globalPlayBtn" class="beat-play-btn">▶</button>
-                <div style="font-family:'Montserrat',sans-serif; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="currentTime">0:00</div>
+                <div style="font-family:'VT323', monospace; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="currentTime">0:00</div>
                 <input type="range" id="seekSlider" style="flex:1; accent-color:var(--accent); cursor:pointer; height:4px; border-radius:2px;" value="0" step="0.1">
-                <div style="font-family:'Montserrat',sans-serif; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="durationTime">0:00</div>
+                <div style="font-family:'VT323', monospace; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="durationTime">0:00</div>
             </div>
         </div>
     </div>
@@ -276,7 +276,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
 
                 content.innerHTML = `
                     <div class="modal-license-header" style="text-align:center; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid var(--accent);">
-                        <h2 style="font-family:'Syncopate',sans-serif; color:var(--text-main); margin:0; font-size:1.3rem; letter-spacing:2px;">SELECT LICENSE</h2>
+                        <h2 style="font-family:'VT323', monospace; color:var(--text-main); margin:0; font-size:1.3rem; letter-spacing:2px;">SELECT LICENSE</h2>
                         <p style="color:var(--text-muted); font-size:0.9rem;">${data.title} - ${data.author || 'n2l8studio'}</p>
                     </div>
                     
@@ -284,7 +284,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <!-- MP3/WAV -->
                         <div class="license-card" style="border:1px solid var(--text-muted); padding:1.5rem; text-align:center; transition:0.3s; border-radius:4px;">
                             <h3 style="color:var(--accent); margin-top:0;">MP3 & WAV</h3>
-                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${basePrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'VT323', monospace; margin:1rem 0; font-weight:700;">$${basePrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.basic)}
                             </ul>
@@ -295,7 +295,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <div class="license-card" style="border:2px solid var(--accent); padding:1.5rem; text-align:center; position:relative; border-radius:4px; transform: scale(1.05);">
                             <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:#000; font-size:0.7rem; padding:2px 8px; font-weight:bold;">POPULAR</div>
                             <h3 style="color:var(--accent); margin-top:0;">WAV & STEMS</h3>
-                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${premiumPrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'VT323', monospace; margin:1rem 0; font-weight:700;">$${premiumPrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.premium)}
                             </ul>
@@ -305,7 +305,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <!-- EXCLUSIVE -->
                         <div class="license-card" style="border:1px solid var(--text-muted); padding:1.5rem; text-align:center; border-radius:4px;">
                             <h3 style="color:var(--accent); margin-top:0;">EXCLUSIVE</h3>
-                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${exclusivePrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'VT323', monospace; margin:1rem 0; font-weight:700;">$${exclusivePrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.exclusive)}
                             </ul>
@@ -359,7 +359,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
         stripeBtn.style.border = 'none';
         stripeBtn.style.padding = '0.85rem';
         stripeBtn.style.fontSize = '0.9rem';
-        stripeBtn.style.fontFamily = "'Syncopate', sans-serif";
+        stripeBtn.style.fontFamily = "'VT323', monospace";
         stripeBtn.style.fontWeight = '700';
         stripeBtn.style.letterSpacing = '1px';
         stripeBtn.style.borderRadius = '4px';
@@ -408,7 +408,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
         const sep = document.createElement('div');
         sep.style.textAlign = 'center';
         sep.style.color = 'var(--text-muted)';
-        sep.style.fontFamily = "'Montserrat', sans-serif";
+        sep.style.fontFamily = "'VT323', monospace";
         sep.style.fontSize = '0.72rem';
         sep.style.fontWeight = '600';
         sep.style.letterSpacing = '1px';

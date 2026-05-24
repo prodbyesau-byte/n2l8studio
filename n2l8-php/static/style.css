@@ -965,7 +965,7 @@ footer {
         display: none;
     }
     .dropdown-content.show {
-        display: block;
+        display: block !important;
     }
     .dropdown:hover .dropdown-content {
         display: none; /* Only show on click or dropbtn on mobile */

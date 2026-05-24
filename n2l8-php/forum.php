@@ -101,6 +101,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
     }
+    
+    elseif ($_POST['action'] === 'delete_thread') {
+        $del_thread_id = (int)($_POST['thread_id'] ?? 0);
+        if ($del_thread_id > 0 && is_owner()) {
+            // Fetch category ID to redirect correctly
+            $cat_fetch = $pdo->prepare('SELECT category_id FROM forum_threads WHERE id = ?');
+            $cat_fetch->execute([$del_thread_id]);
+            $cat_id = (int)$cat_fetch->fetchColumn();
+            
+            // Delete thread (automatic cascade delete handles replies in DB)
+            $del = $pdo->prepare('DELETE FROM forum_threads WHERE id = ?');
+            $del->execute([$del_thread_id]);
+            
+            log_action($pdo, "Admin {$_SESSION['username']} deleted forum thread ID {$del_thread_id}");
+            
+            if ($cat_id > 0) {
+                header("Location: /forum.php?category_id={$cat_id}");
+            } else {
+                header("Location: /forum.php");
+            }
+            exit;
+        } else {
+            $error = 'Unauthorized deletion or invalid thread ID.';
+        }
+    }
+    
+    elseif ($_POST['action'] === 'delete_reply') {
+        $del_reply_id = (int)($_POST['reply_id'] ?? 0);
+        $curr_thread_id = (int)($_POST['thread_id'] ?? 0);
+        if ($del_reply_id > 0 && is_owner()) {
+            $del = $pdo->prepare('DELETE FROM forum_replies WHERE id = ?');
+            $del->execute([$del_reply_id]);
+            
+            log_action($pdo, "Admin {$_SESSION['username']} deleted reply ID {$del_reply_id}");
+            
+            header("Location: /forum.php?thread_id={$curr_thread_id}#reply-section");
+            exit;
+        } else {
+            $error = 'Unauthorized deletion or invalid reply ID.';
+        }
+    }
 }
 
 // Determine current view
@@ -909,6 +950,55 @@ if ($view === 'dashboard') {
         .profile-modal-dm-field textarea:focus {
             border-color: var(--accent);
         }
+
+        /* Toast Container & Notification styling (Global for both Desktop & Mobile) */
+        #toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .custom-toast {
+            pointer-events: auto;
+            background: rgba(10, 10, 12, 0.96);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent);
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            min-width: 280px;
+            max-width: 380px;
+            transform: translateX(130%);
+            transition: transform 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.35);
+            backdrop-filter: blur(8px);
+        }
+        .custom-toast.show {
+            transform: translateX(0);
+        }
+        .custom-toast.success {
+            border-left-color: #7be1a8;
+            box-shadow: 0 10px 25px rgba(123, 225, 168, 0.15), 0 15px 35px rgba(0, 0, 0, 0.7);
+        }
+        .custom-toast.error {
+            border-left-color: #ff3860;
+            box-shadow: 0 10px 25px rgba(255, 56, 96, 0.15), 0 15px 35px rgba(0, 0, 0, 0.7);
+        }
+        .custom-toast.info {
+            border-left-color: var(--accent);
+            box-shadow: 0 10px 25px rgba(0, 198, 255, 0.15), 0 15px 35px rgba(0, 0, 0, 0.7);
+        }
     </style>
 </head>
 <body class="page-forum">
@@ -934,11 +1024,10 @@ if ($view === 'dashboard') {
                 <li class="dropdown">
                     <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent); display: inline-flex; align-items: center; gap: 4px; padding-top: 4px; padding-bottom: 4px;">
                         <?= get_user_avatar_nav($pdo) ?>
-                        <span>Portal</span>
+                        <span>Profile</span>
                     </a>
                     <div class="dropdown-content">
-                        <a href="/portal/index.php?tab=settings">Account Settings</a>
-                        <a href="/portal/index.php">Client Portal</a>
+                        <a href="/portal/index.php">Client Profile</a>
                         <?php if (is_owner()): ?>
                             <a href="/admin/index.php">Admin Portal</a>
                         <?php endif; ?>
@@ -1093,7 +1182,16 @@ if ($view === 'dashboard') {
                         <div class="forum-post-text"><?= nl2br(h($thread['content'])) ?></div>
                         <div class="forum-post-footer">
                             <div>Original Post</div>
-                            <div><?= date('F j, Y, g:i a', strtotime($thread['created_at'])) ?></div>
+                            <div>
+                                <?php if (is_owner()): ?>
+                                    <form action="/forum.php" method="POST" style="display:inline; margin-right:1rem;" onsubmit="return confirm('Are you sure you want to delete this thread? This will also delete all replies.');">
+                                        <input type="hidden" name="action" value="delete_thread">
+                                        <input type="hidden" name="thread_id" value="<?= $thread['id'] ?>">
+                                        <button type="submit" style="background:transparent; border:none; color:#ff5c5c; cursor:pointer; font-family:'Montserrat',sans-serif; font-size:0.72rem; font-weight:700; padding:0; margin:0;">[DELETE THREAD]</button>
+                                    </form>
+                                <?php endif; ?>
+                                <?= date('F j, Y, g:i a', strtotime($thread['created_at'])) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1119,7 +1217,17 @@ if ($view === 'dashboard') {
                                     <div class="forum-post-text"><?= nl2br(h($rep['content'])) ?></div>
                                     <div class="forum-post-footer">
                                         <div>Reply #<?= $index + 1 ?></div>
-                                        <div><?= date('F j, Y, g:i a', strtotime($rep['created_at'])) ?></div>
+                                        <div>
+                                            <?php if (is_owner()): ?>
+                                                <form action="/forum.php" method="POST" style="display:inline; margin-right:1rem;" onsubmit="return confirm('Are you sure you want to delete this reply?');">
+                                                    <input type="hidden" name="action" value="delete_reply">
+                                                    <input type="hidden" name="reply_id" value="<?= $rep['id'] ?>">
+                                                    <input type="hidden" name="thread_id" value="<?= $thread_id ?>">
+                                                    <button type="submit" style="background:transparent; border:none; color:#ff5c5c; cursor:pointer; font-family:'Montserrat',sans-serif; font-size:0.72rem; font-weight:700; padding:0; margin:0;">[DELETE REPLY]</button>
+                                                </form>
+                                            <?php endif; ?>
+                                            <?= date('F j, Y, g:i a', strtotime($rep['created_at'])) ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1215,7 +1323,7 @@ if ($view === 'dashboard') {
 
         // Close dropdown when clicking outside
         window.onclick = function(event) {
-            if (!event.target.matches('.dropbtn')) {
+            if (!event.target.closest('.dropdown')) {
                 const dropdowns = document.getElementsByClassName("dropdown-content");
                 for (let i = 0; i < dropdowns.length; i++) {
                     const openDropdown = dropdowns[i];
@@ -1290,7 +1398,7 @@ if ($view === 'dashboard') {
 
                         document.getElementById('profileModal').classList.add('open');
                     } else {
-                        alert("Error loading profile: " + res.error);
+                        showToast("Error loading profile: " + res.error, "error");
                     }
                 });
         }
@@ -1310,8 +1418,17 @@ if ($view === 'dashboard') {
                     if (res.success) {
                         // Refresh profile modal
                         openUserProfile(userId);
+
+                        let actionLabel = "Action successful!";
+                        if (action === 'send_request') actionLabel = "Friend request sent successfully!";
+                        else if (action === 'accept_request') actionLabel = "Friend request accepted!";
+                        else if (action === 'decline_request') actionLabel = "Friend request declined.";
+                        else if (action === 'cancel_request') actionLabel = "Friend request cancelled.";
+                        else if (action === 'unfriend') actionLabel = "Removed from friends.";
+
+                        showToast(actionLabel, "success");
                     } else {
-                        alert("Action failed: " + res.error);
+                        showToast("Action failed: " + res.error, "error");
                     }
                 });
         }
@@ -1323,7 +1440,7 @@ if ($view === 'dashboard') {
             const text = document.getElementById('pm-dm-text').value.trim();
 
             if (!text) {
-                alert("Message cannot be empty.");
+                showToast("Message cannot be empty.", "error");
                 return;
             }
 
@@ -1336,13 +1453,129 @@ if ($view === 'dashboard') {
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
-                        alert("Message sent successfully!");
+                        showToast("Message sent successfully!", "success");
                         closeUserProfile();
                     } else {
-                        alert("Failed to send message: " + res.error);
+                        showToast("Failed to send message: " + res.error, "error");
                     }
                 });
         }
+
+        // ── TOAST & GLOBAL POLLING HELPERS ──
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function showToast(message, type = 'success') {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `custom-toast ${type}`;
+            toast.innerHTML = `
+                <span>${escapeHtml(message)}</span>
+                <button style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-size:1.1rem; padding:0; margin:0;" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 50);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 350);
+            }, 4000);
+        }
+
+        let previousPendingRequestsCount = null;
+        let previousPendingRequestsIds = [];
+        let previousUnreadDMsCount = null;
+
+        function updateNavbarBadge() {
+            if (previousPendingRequestsCount === null || previousUnreadDMsCount === null) return;
+            const totalNotifs = previousPendingRequestsCount + previousUnreadDMsCount;
+            let badgeEl = document.querySelector('.portal-nav-badge');
+            
+            if (totalNotifs > 0) {
+                if (!badgeEl) {
+                    const dropBtn = document.querySelector('.dropdown .dropbtn');
+                    if (dropBtn) {
+                        badgeEl = document.createElement('span');
+                        badgeEl.className = 'portal-nav-badge';
+                        badgeEl.setAttribute('style', "background:#ff3860; color:#fff; font-size:0.6rem; padding:1px 5px; border-radius:10px; margin-left:5px; font-family:'Montserrat',sans-serif; font-weight:700; box-shadow:0 0 5px rgba(255, 56, 96, 0.6); display:inline-block; vertical-align:middle;");
+                        dropBtn.appendChild(badgeEl);
+                    }
+                }
+                if (badgeEl) {
+                    badgeEl.innerText = totalNotifs;
+                    badgeEl.style.display = 'inline-block';
+                }
+            } else {
+                if (badgeEl) {
+                    badgeEl.style.display = 'none';
+                }
+            }
+        }
+
+        function runGlobalPoll() {
+            // 1. Fetch pending friend requests
+            fetch('/portal/friends_api.php?action=list_pending_requests')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const pending = res.pending || [];
+                        const currentCount = pending.length;
+                        
+                        // Check if any new friend request was received
+                        if (previousPendingRequestsCount !== null) {
+                            const currentIds = pending.map(u => parseInt(u.id));
+                            pending.forEach(u => {
+                                const uid = parseInt(u.id);
+                                if (!previousPendingRequestsIds.includes(uid)) {
+                                    showToast(`New friend request from ${u.username}!`, 'success');
+                                }
+                            });
+                            previousPendingRequestsIds = currentIds;
+                        } else {
+                            previousPendingRequestsIds = pending.map(u => parseInt(u.id));
+                        }
+                        previousPendingRequestsCount = currentCount;
+                        updateNavbarBadge();
+                    }
+                })
+                .catch(err => console.error("Friend request poll failed:", err));
+
+            // 2. Fetch unread DMs count
+            fetch('/portal/portal_messages_api.php?action=fetch_global_unread')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const currentUnread = parseInt(res.unread_count || 0);
+                        if (previousUnreadDMsCount !== null && currentUnread > previousUnreadDMsCount) {
+                            showToast("You received a new message!", "info");
+                        }
+                        previousUnreadDMsCount = currentUnread;
+                        updateNavbarBadge();
+                    }
+                })
+                .catch(err => console.error("DM unread poll failed:", err));
+        }
+
+        function startForumGlobalPolling() {
+            runGlobalPoll();
+            setInterval(runGlobalPoll, 4000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startForumGlobalPolling();
+        });
     </script>
 </body>
 </html>
