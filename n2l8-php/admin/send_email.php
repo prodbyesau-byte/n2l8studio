@@ -104,15 +104,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
     if ($sent_count > 0) {
         log_action($pdo, "Admin broadcasted email: '{$subject}' to {$sent_count} recipient(s).");
         $flash_msg = "Successfully sent {$sent_count} email(s) from admin@n2l8studios.com!";
         if (!empty($errors)) {
             $flash_msg .= " Failed to send to: " . implode(', ', $errors);
         }
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => $flash_msg, 'sent' => $sent_count]);
+            exit;
+        }
         flash($flash_msg);
     } else {
-        flash("Failed to send email. " . (!empty($errors) ? "Errors: " . implode(', ', $errors) : ""));
+        $err_msg = "Failed to send email. " . (!empty($errors) ? "Errors: " . implode(', ', $errors) : "");
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $err_msg]);
+            exit;
+        }
+        flash($err_msg);
     }
 }
 

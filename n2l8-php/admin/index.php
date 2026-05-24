@@ -83,60 +83,7 @@ try {
         .admin-tab-btn:hover { color:var(--text-main); }
         .admin-tab-btn.active { color:var(--accent); }
 
-        /* ── COMMUNICATIONS DROPDOWN ── */
-        .admin-tab-dropdown-comms {
-            position: relative;
-            display: inline-block;
-        }
-        .comms-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: rgba(18, 18, 21, 0.98);
-            border: 1px solid rgba(192, 21, 42, 0.3);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px rgba(192, 21, 42, 0.15);
-            z-index: 1000;
-            min-width: 200px;
-            border-radius: 4px;
-            padding: 0.5rem 0;
-            backdrop-filter: blur(10px);
-            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-            transform: translateY(10px);
-            opacity: 0;
-        }
-        .admin-tab-dropdown-comms:hover .comms-dropdown-menu,
-        .admin-tab-dropdown-comms.open .comms-dropdown-menu {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .dropdown-item-btn {
-            width: 100%;
-            padding: 0.7rem 1.2rem;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            text-align: left;
-            cursor: pointer;
-            letter-spacing: 1px;
-            transition: all 0.2s ease;
-        }
-        .dropdown-item-btn:hover {
-            color: var(--text-main);
-            background: rgba(192, 21, 42, 0.1);
-            padding-left: 1.5rem;
-        }
-        .dropdown-item-btn.active {
-            color: var(--accent);
-            background: rgba(192, 21, 42, 0.15);
-            border-left: 3px solid var(--accent);
-            padding-left: 1.4rem;
-        }
+
         /* Mobile: dropdown */
         .admin-tab-dropdown { display:none; }
         .admin-tab-toggle {
@@ -277,18 +224,323 @@ try {
         .content-row textarea { resize:vertical; min-height:60px; }
         @media(max-width:900px){ .stats-grid{grid-template-columns:1fr 1fr;} .form-grid{grid-template-columns:1fr;} .content-row{grid-template-columns:1fr;} }
 
-        /* ── EMAIL PORTAL REDESIGN ── */
-        .preset-btn { margin-bottom: 0.3rem; text-transform: none !important; font-size: 0.8rem !important; border-radius: 4px; padding: 0.4rem 0.8rem; }
-        .preset-btn:hover { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
-        .email-portal-layout { display:grid; grid-template-columns:1.2fr 1fr; gap:2rem; }
-        @media(max-width:992px){
-            .email-portal-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+        /* ── GMAIL-STYLE EMAIL CLIENT ── */
+        .email-client { 
+            display: grid; 
+            grid-template-columns: 240px 1fr; 
+            min-height: 650px; 
+            border: 1px solid rgba(192, 21, 42, 0.15); 
+            border-radius: 12px; 
+            overflow: hidden; 
+            background: rgba(10, 10, 14, 0.65); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 10px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(192, 21, 42, 0.05);
         }
-        .mock-inbox-wrapper { border: 1px solid var(--text-muted); border-radius: 8px; background: rgba(18,18,21,0.95); box-shadow: 0 4px 20px rgba(0,0,0,0.5); overflow:hidden; }
-        .mock-inbox-wrapper code { background: rgba(192,21,42,0.15); color: var(--accent); padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.85rem; font-family: monospace; }
-        #emailMessage:focus, #emailSubject:focus, #customEmailInput:focus, #recipientType:focus, #singleUserSelect:focus, #templateType:focus {
-            border-color: var(--accent) !important;
-            box-shadow: 0 0 10px rgba(192,21,42,0.3) !important;
+        .email-sidebar { 
+            background: rgba(14, 14, 18, 0.75); 
+            border-right: 1px solid rgba(255, 255, 255, 0.05); 
+            display: flex; 
+            flex-direction: column; 
+            padding: 1.5rem 0; 
+        }
+        .email-compose-btn { 
+            margin: 0 1.2rem 1.5rem; 
+            padding: 0.95rem 1.5rem; 
+            background: linear-gradient(135deg, var(--accent), #df1f37); 
+            color: #fff; 
+            border: none; 
+            border-radius: 8px; 
+            font-family: 'Montserrat', sans-serif; 
+            font-weight: 700; 
+            font-size: 0.85rem; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; 
+            align-items: center; 
+            gap: 0.6rem; 
+            justify-content: center; 
+            box-shadow: 0 4px 15px rgba(192, 21, 42, 0.35); 
+        }
+        .email-compose-btn:hover { 
+            background: linear-gradient(135deg, #df1f37, #ff334b); 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 25px rgba(192, 21, 42, 0.55); 
+        }
+        .email-folder-list { list-style: none; padding: 0; margin: 0; flex: 1; }
+        .email-folder-item { 
+            padding: 0.8rem 1.5rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.9rem; 
+            cursor: pointer; 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 0.88rem; 
+            font-weight: 500; 
+            color: var(--text-muted); 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            border-left: 3px solid transparent; 
+        }
+        .email-folder-item:hover { 
+            background: rgba(255, 255, 255, 0.025); 
+            color: var(--text-main); 
+            padding-left: 1.7rem; 
+        }
+        .email-folder-item.active { 
+            background: linear-gradient(90deg, rgba(192, 21, 42, 0.12) 0%, rgba(192, 21, 42, 0.02) 100%); 
+            color: var(--text-main); 
+            border-left-color: var(--accent); 
+            font-weight: 700; 
+            text-shadow: 0 0 10px rgba(192, 21, 42, 0.3);
+        }
+        .email-folder-item .folder-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+        .email-folder-item .folder-label { flex: 1; }
+        .email-folder-item .folder-badge { 
+            background: var(--accent); 
+            color: #fff; 
+            font-size: 0.72rem; 
+            font-weight: 700; 
+            padding: 0.2rem 0.6rem; 
+            border-radius: 10px; 
+            min-width: 22px; 
+            text-align: center; 
+            box-shadow: 0 0 8px rgba(192, 21, 42, 0.4);
+        }
+        .email-main { display: flex; flex-direction: column; background: rgba(6, 6, 8, 0.2); }
+        .email-toolbar { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.8rem; 
+            padding: 1rem 1.5rem; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+            background: rgba(14, 14, 18, 0.4); 
+            flex-shrink: 0; 
+        }
+        .email-toolbar-btn { 
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid rgba(255, 255, 255, 0.06); 
+            color: var(--text-muted); 
+            padding: 0.5rem 0.9rem; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 0.78rem; 
+            font-weight: 600; 
+            transition: all 0.2s ease; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .email-toolbar-btn:hover { 
+            background: rgba(192, 21, 42, 0.08); 
+            color: var(--text-main); 
+            border-color: rgba(192, 21, 42, 0.3); 
+            box-shadow: 0 0 10px rgba(192, 21, 42, 0.15);
+        }
+        .email-search { 
+            flex: 1; 
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            color: var(--text-main); 
+            padding: 0.55rem 1rem; 
+            border-radius: 6px; 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 0.88rem; 
+            outline: none; 
+            transition: all 0.3s ease; 
+        }
+        .email-search:focus { 
+            border-color: var(--accent); 
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px rgba(192, 21, 42, 0.25); 
+        }
+        .email-search::placeholder { color: var(--text-muted); opacity: 0.6; }
+        .email-content-area { display: grid; grid-template-columns: 400px 1fr; flex: 1; min-height: 0; }
+        .email-list { 
+            border-right: 1px solid rgba(255, 255, 255, 0.05); 
+            overflow-y: auto; 
+            max-height: 560px; 
+            background: rgba(8, 8, 10, 0.2);
+        }
+        /* Custom sleek scrollbar for email components */
+        .email-list::-webkit-scrollbar, .email-reading-pane::-webkit-scrollbar, .compose-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .email-list::-webkit-scrollbar-track, .email-reading-pane::-webkit-scrollbar-track, .compose-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .email-list::-webkit-scrollbar-thumb, .email-reading-pane::-webkit-scrollbar-thumb, .compose-body::-webkit-scrollbar-thumb {
+            background: rgba(192, 21, 42, 0.3);
+            border-radius: 3px;
+        }
+        .email-list::-webkit-scrollbar-thumb:hover, .email-reading-pane::-webkit-scrollbar-thumb:hover, .compose-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(192, 21, 42, 0.6);
+        }
+        .email-list-item { 
+            display: flex; 
+            gap: 1rem; 
+            padding: 1.1rem 1.2rem; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02); 
+            cursor: pointer; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            align-items: flex-start; 
+            position: relative; 
+        }
+        .email-list-item:hover { 
+            background: rgba(255, 255, 255, 0.025); 
+            transform: translateX(4px);
+        }
+        .email-list-item.active { 
+            background: rgba(192, 21, 42, 0.06); 
+            border-left: 4px solid var(--accent); 
+            box-shadow: inset 4px 0 0 var(--accent);
+        }
+        .email-list-item.unread { 
+            background: rgba(192, 21, 42, 0.02); 
+        }
+        .email-list-item.unread::before {
+            content: '●';
+            color: #ff4060;
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 8px;
+            text-shadow: 0 0 8px #ff4060;
+        }
+        .email-list-item.unread .email-item-from { font-weight: 700; color: var(--text-main); }
+        .email-list-item.unread .email-item-subject { font-weight: 600; color: var(--text-main); }
+        .email-avatar { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, var(--accent), #ff4060); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-family: 'Syncopate', sans-serif; 
+            font-weight: 700; 
+            font-size: 0.8rem; 
+            color: #fff; 
+            flex-shrink: 0; 
+            margin-top: 2px; 
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        .email-item-content { flex: 1; min-width: 0; }
+        .email-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .email-item-from { 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 0.88rem; 
+            font-weight: 500; 
+            color: var(--text-muted); 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            max-width: 220px; 
+        }
+        .email-item-date { font-family: 'Montserrat', sans-serif; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+        .email-item-subject { 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 0.86rem; 
+            font-weight: 500; 
+            color: rgba(255, 255, 255, 0.8); 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            margin-bottom: 4px; 
+        }
+        .email-item-snippet { font-family: 'Montserrat', sans-serif; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-reading-pane { overflow-y: auto; max-height: 560px; display: flex; flex-direction: column; background: rgba(6, 6, 8, 0.1); }
+        .email-read-header { padding: 1.8rem 1.8rem 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); flex-shrink: 0; }
+        .email-read-subject { font-family: 'Montserrat', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; line-height: 1.35; text-shadow: 0 0 15px rgba(255,255,255,0.05); }
+        .email-read-meta { display: flex; gap: 1.2rem; align-items: center; }
+        .email-read-avatar { 
+            width: 44px; 
+            height: 44px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, var(--accent), #ff4060); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-family: 'Syncopate', sans-serif; 
+            font-weight: 700; 
+            font-size: 0.85rem; 
+            color: #fff; 
+            flex-shrink: 0; 
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        .email-read-sender { flex: 1; }
+        .email-read-from { font-family: 'Montserrat', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
+        .email-read-email { font-family: 'Montserrat', sans-serif; font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+        .email-read-date { font-family: 'Montserrat', sans-serif; font-size: 0.8rem; color: var(--text-muted); text-align: right; }
+        .email-read-body { padding: 1.8rem; flex: 1; font-family: 'Montserrat', sans-serif; font-size: 0.92rem; color: rgba(255, 255, 255, 0.9); line-height: 1.75; }
+        .email-read-body img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .email-read-actions { padding: 1.2rem 1.8rem; border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 0.6rem; flex-shrink: 0; flex-wrap: wrap; background: rgba(14, 14, 18, 0.3); }
+        .email-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-family: 'Montserrat', sans-serif; gap: 0.5rem; padding: 4rem; text-align: center; }
+        .email-empty-state .empty-icon { font-size: 3.5rem; opacity: 0.25; margin-bottom: 0.5rem; }
+        .email-empty-state .empty-text { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
+        .email-empty-state .sync-badge {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.4);
+            background: rgba(192, 21, 42, 0.1);
+            border: 1px solid rgba(192, 21, 42, 0.2);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            margin-top: 0.6rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            letter-spacing: 0.5px;
+        }
+        .email-loading { text-align: center; padding: 4rem; color: var(--text-muted); font-family: 'Montserrat', sans-serif; }
+        .email-loading .loading-spinner { width: 32px; height: 32px; border: 3px solid rgba(255, 255, 255, 0.05); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.2rem; }
+        /* Compose Modal */
+        .compose-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); z-index: 2000; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); align-items: center; justify-content: center; }
+        .compose-overlay.open { display: flex; }
+        .compose-modal { 
+            background: rgba(16, 16, 20, 0.95); 
+            border: 1px solid rgba(192, 21, 42, 0.25); 
+            border-radius: 14px; 
+            width: 95%; 
+            max-width: 680px; 
+            max-height: 85vh; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.95), 0 0 40px rgba(192, 21, 42, 0.15); 
+            overflow: hidden;
+        }
+        .compose-header { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(10, 10, 13, 0.65); }
+        .compose-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 1.5px; }
+        .compose-close { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0.2rem; transition: color 0.15s; line-height: 1; }
+        .compose-close:hover { color: var(--accent); }
+        .compose-body { padding: 1.5rem 1.8rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+        .compose-field { display: flex; align-items: center; gap: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.8rem; }
+        .compose-field label { font-family: 'Montserrat', sans-serif; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; width: 60px; flex-shrink: 0; }
+        .compose-field input, .compose-field select { flex: 1; background: transparent; border: none; color: var(--text-main); font-family: 'Montserrat', sans-serif; font-size: 0.92rem; outline: none; padding: 0.4rem 0; }
+        .compose-field input::placeholder { color: rgba(255, 255, 255, 0.25); }
+        .compose-textarea { flex: 1; min-height: 240px; background: transparent; border: none; color: var(--text-main); font-family: 'Montserrat', sans-serif; font-size: 0.92rem; line-height: 1.7; resize: none; outline: none; padding: 0.5rem 0; }
+        .compose-textarea::placeholder { color: rgba(255, 255, 255, 0.25); }
+        .compose-footer { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.8rem; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(10, 10, 13, 0.45); }
+        .compose-send-btn { padding: 0.8rem 2.5rem; background: linear-gradient(135deg, var(--accent), #df1f37); color: #fff; border: none; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(192, 21, 42, 0.3); }
+        .compose-send-btn:hover { background: linear-gradient(135deg, #df1f37, #ff334b); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(192, 21, 42, 0.5); }
+        .compose-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .compose-template-select { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); padding: 0.5rem 0.8rem; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.2s ease; }
+        .compose-template-select:hover { border-color: rgba(255, 255, 255, 0.2); color: var(--text-main); }
+        @media(max-width:900px){
+            .email-client { grid-template-columns: 1fr; min-height: auto; }
+            .email-sidebar { flex-direction: row; overflow-x: auto; padding: 0.6rem; border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+            .email-compose-btn { margin: 0 0.6rem 0 0; white-space: nowrap; padding: 0.6rem 1.2rem; font-size: 0.78rem; }
+            .email-folder-list { display: flex; gap: 0; }
+            .email-folder-item { padding: 0.6rem 1rem; border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; font-size: 0.82rem; }
+            .email-folder-item:hover { padding-left: 1rem; }
+            .email-folder-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+            .email-content-area { grid-template-columns: 1fr; }
+            .email-list { max-height: 320px; border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+            .email-reading-pane { max-height: 450px; }
         }
     </style>
 </head>
@@ -325,16 +577,8 @@ try {
             <button class="admin-tab-btn" id="tab-btn-dashboard">Dashboard</button>
             <button class="admin-tab-btn" id="tab-btn-products">Products</button>
             <button class="admin-tab-btn" id="tab-btn-orders">Orders</button>
-            
-            <!-- Communications Dropdown -->
-            <div class="admin-tab-dropdown-comms" id="commsDropdownContainer">
-                <button class="admin-tab-btn dropdown-trigger" id="tab-btn-comms">Communications <span style="font-size:0.75rem;margin-left:0.3rem;">▼</span></button>
-                <div class="comms-dropdown-menu">
-                    <button class="dropdown-item-btn" id="tab-btn-email">📬 Email</button>
-                    <button class="dropdown-item-btn" id="tab-btn-messages">💬 Messages</button>
-                </div>
-            </div>
-            
+            <button class="admin-tab-btn" id="tab-btn-email">📧 Emails</button>
+            <button class="admin-tab-btn" id="tab-btn-messages">💬 Messages</button>
             <button class="admin-tab-btn" id="tab-btn-users">Users</button>
             <button class="admin-tab-btn" id="tab-btn-content">Content Editor</button>
             <button class="admin-tab-btn" id="tab-btn-stats">Analytics</button>
@@ -347,14 +591,8 @@ try {
             <button class="admin-tab-menu-item" data-tab="dashboard">Dashboard</button>
             <button class="admin-tab-menu-item" data-tab="products">Products</button>
             <button class="admin-tab-menu-item" data-tab="orders">Orders</button>
-            
-            <!-- Mobile Communications grouping -->
-            <div style="background:rgba(0,0,0,0.2);padding:0.4rem 0;border-bottom:1px dashed rgba(192,21,42,0.15);border-top:1px dashed rgba(192,21,42,0.15);">
-                <div style="font-family:'Syncopate',sans-serif;font-size:0.75rem;font-weight:700;color:var(--accent);letter-spacing:1px;padding:0.4rem 1.2rem 0.2rem 1.2rem;text-transform:uppercase;">Communications</div>
-                <button class="admin-tab-menu-item" data-tab="email" style="padding-left:2rem;border-bottom:none;width:100%;">📬 Email</button>
-                <button class="admin-tab-menu-item" data-tab="messages" style="padding-left:2rem;border-bottom:none;width:100%;">💬 Messages</button>
-            </div>
-
+            <button class="admin-tab-menu-item" data-tab="email">📧 Emails</button>
+            <button class="admin-tab-menu-item" data-tab="messages">💬 Messages</button>
             <button class="admin-tab-menu-item" data-tab="users">Users</button>
             <button class="admin-tab-menu-item" data-tab="content">Content Editor</button>
             <button class="admin-tab-menu-item" data-tab="stats">Analytics</button>
@@ -789,7 +1027,7 @@ try {
                         <td>
                             <div class="action-btns">
                                 <a href="/admin/user_action.php?action=deactivate&id=<?= $u['id'] ?>" class="btn btn-amber">Deactivate</a>
-                                <a href="/admin/user_action.php?action=reject&id=<?= $u['id'] ?>" class="btn btn-red" onclick="return confirm('Er du sikker på, at du vil slette denne brugerkonto permanent?');">Delete</a>
+                                <a href="/admin/user_action.php?action=reject&id=<?= $u['id'] ?>" class="btn btn-red" onclick="return confirm('Are you sure you want to permanently delete this user account?');">Delete</a>
                             </div>
                         </td>
                     </tr>
@@ -803,158 +1041,110 @@ try {
     </div><!-- /tab-users -->
 
     <!-- ── EMAIL PORTAL ── -->
-    <div id="tab-email" class="admin-panel">
-        <div class="section-title">Email Transmission Center</div>
-        <p style="color:var(--text-muted); margin-bottom:1.5rem; font-family:'Montserrat',sans-serif; font-size:0.95rem;">
-            Send direct email notifications and newsletters from <strong>admin@n2l8studios.com</strong>. All transmissions are fully aligned with SPF parameters to guarantee delivery.
-        </p>
-
-        <!-- Template Preset Bar -->
-        <div class="preset-container" style="margin-bottom: 1.5rem;">
-            <div style="font-family:'Montserrat',sans-serif; font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">Quick Templates / Draft Presets</div>
-            <div class="preset-buttons" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                <button type="button" class="preset-btn btn btn-muted" data-preset="community" style="font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.75rem;">👥 Community Update</button>
-                <button type="button" class="preset-btn btn btn-muted" data-preset="discount" style="font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.75rem;">🔥 Special Discount</button>
-                <button type="button" class="preset-btn btn btn-muted" data-preset="system" style="font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.75rem;">⚠️ System Announcement</button>
-                <button type="button" class="preset-btn btn btn-muted" data-preset="direct" style="font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.75rem;">✉️ Direct Inquiry</button>
+    <!-- ── COMPOSE MODAL ── -->
+    <div class="compose-overlay" id="composeOverlay">
+        <div class="compose-modal">
+            <div class="compose-header">
+                <span class="compose-title">✏️ New Email</span>
+                <button class="compose-close" onclick="closeCompose()">&times;</button>
+            </div>
+            <form id="composeForm" class="compose-body">
+                <div class="compose-field">
+                    <label>To</label>
+                    <select name="recipient_type" id="composeRecipientType" onchange="toggleComposeFields()" style="flex:0.4;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:0.35rem 0.5rem;color:var(--text-main);font-size:0.82rem;cursor:pointer;">
+                        <option value="custom">Custom Email</option>
+                        <option value="single_user">Registered User</option>
+                        <option value="all_approved">All Users (<?= count($approved_users) ?>)</option>
+                    </select>
+                    <input type="email" name="custom_email" id="composeCustomEmail" placeholder="recipient@email.com" style="flex:1;">
+                    <select name="user_id" id="composeUserId" style="display:none;flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:0.35rem 0.5rem;color:var(--text-main);font-size:0.82rem;">
+                        <?php foreach ($all_users as $u): ?>
+                            <option value="<?= (int)$u['id'] ?>"><?= h($u['username']) ?> (<?= h($u['email'] ?: 'No email') ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="compose-field">
+                    <label>Subject</label>
+                    <input type="text" name="subject" id="composeSubject" placeholder="Email subject..." required>
+                </div>
+                <textarea class="compose-textarea" name="message" id="composeMessage" placeholder="Write your message here..." required></textarea>
+            </form>
+            <div class="compose-footer">
+                <select class="compose-template-select" id="composeTemplate">
+                    <option value="premium_dark">N2L8 Premium Template</option>
+                    <option value="plain">Plain Text</option>
+                </select>
+                <button class="compose-send-btn" id="composeSendBtn" onclick="sendCompose()">Send</button>
             </div>
         </div>
+    </div>
 
-        <div class="email-portal-layout">
-            
-            <!-- Composer Panel -->
-            <div class="composer-panel form-card" style="margin-bottom:0;">
-                <form action="/admin/send_email.php" method="POST" id="emailPortalForm" onsubmit="showLoading()">
-                    
-                    <div class="form-group" style="margin-bottom:1.2rem;">
-                        <label>Recipient Target</label>
-                        <select name="recipient_type" id="recipientType" onchange="toggleRecipientFields(); updateLivePreview();" required style="width:100%; padding:0.8rem; background:rgba(26,26,31,0.9); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; font-family:'Montserrat',sans-serif; font-size:0.9rem; font-weight:600;">
-                            <option value="custom">Custom Email Address</option>
-                            <option value="single_user">Specific Registered User</option>
-                            <option value="all_approved">Broadcast to All Approved Users (<?= count($approved_users) ?> users)</option>
-                        </select>
-                    </div>
-
-                    <!-- Custom Email Field -->
-                    <div class="form-group" id="groupCustomEmail" style="margin-bottom:1.2rem;">
-                        <label>Custom Email Address</label>
-                        <input type="email" name="custom_email" id="customEmailInput" placeholder="e.g. buyer@gmail.com" oninput="updateLivePreview()" style="width:100%; padding:0.8rem; background:rgba(26,26,31,0.9); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; font-family:'Montserrat',sans-serif; font-size:0.9rem;">
-                    </div>
-
-                    <!-- Specific Registered User -->
-                    <div class="form-group" id="groupSingleUser" style="display:none; margin-bottom:1.2rem;">
-                        <label>Select User</label>
-                        <select name="user_id" id="singleUserSelect" onchange="updateLivePreview()" style="width:100%; padding:0.8rem; background:rgba(26,26,31,0.9); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; font-family:'Montserrat',sans-serif; font-size:0.9rem;">
-                            <?php foreach ($all_users as $u): ?>
-                                <option value="<?= (int)$u['id'] ?>" data-username="<?= h($u['username']) ?>" data-email="<?= h($u['email']) ?>"><?= h($u['username']) ?> (<?= h($u['email'] ?: 'No email') ?>)</option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <!-- Broadcast Safeguard Confirmation Checkbox -->
-                    <div class="form-group" id="groupBroadcastWarning" style="display:none; padding:1.2rem; background:rgba(192, 21, 42, 0.1); border:1px solid var(--accent); border-radius:4px; margin-bottom:1.2rem;">
-                        <div style="color:var(--accent); font-weight:700; font-family:'Syncopate',sans-serif; font-size:0.8rem; letter-spacing:1px; display:inline-block; margin-bottom:0.5rem; text-transform:uppercase;">⚠️ MASS TRANSMISSION WARNING</div><br>
-                        <span style="color:var(--text-muted); font-size:0.85rem; line-height:1.5; display:inline-block; margin-bottom:0.8rem;">This action will broadcast this email to all <?= count($approved_users) ?> approved, non-admin users. Ensure the content is finalized before proceeding.</span>
-                        <label class="checkbox-row" style="margin-top:0.4rem; cursor:pointer;">
-                            <input type="checkbox" id="confirmBroadcast" style="cursor:pointer; accent-color:var(--accent);">
-                            <span style="color:var(--text-main); font-size:0.85rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">I authorize this mass transmission</span>
-                        </label>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:1.2rem;">
-                        <label>Email Subject</label>
-                        <input type="text" name="subject" id="emailSubject" placeholder="Enter transmission subject" required oninput="updateLivePreview()" style="width:100%; padding:0.8rem; background:rgba(26,26,31,0.9); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; font-family:'Montserrat',sans-serif; font-size:0.9rem;">
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:1.2rem;">
-                        <label>Styling Template</label>
-                        <select name="template_type" id="templateType" onchange="updateLivePreview()" style="width:100%; padding:0.8rem; background:rgba(26,26,31,0.9); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; font-family:'Montserrat',sans-serif; font-size:0.9rem; font-weight:600;">
-                            <option value="premium_dark">N2L8 Cyberpunk Premium (Dark Mode, Glowing red accents)</option>
-                            <option value="plain">Minimal Plain Text (Safe / Developer-mode)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:0.5rem;">
-                        <label>Transmission Message Body</label>
-                        <textarea name="message" id="emailMessage" rows="10" placeholder="Write your transmission message here... Use {username} to personalize." required oninput="updateLivePreview()" style="width:100%; padding:0.8rem; background:rgba(26,26,31,0.9); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; font-family:'Montserrat',sans-serif; font-size:0.9rem; line-height:1.6;"></textarea>
-                    </div>
-
-                    <!-- Word & Character Counter -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; font-family:'Montserrat',sans-serif; font-size:0.75rem; color:var(--text-muted); margin-bottom:1.5rem;">
-                        <span>Use <code>{username}</code> to dynamically render name.</span>
-                        <span><span id="charCount">0</span> chars | <span id="wordCount">0</span> words</span>
-                    </div>
-
-                    <div>
-                        <button type="submit" class="cta-btn" style="width:100%; padding:1rem; font-family:'Syncopate',sans-serif; font-weight:700; font-size:1rem; background:var(--accent); color:#fff; border:none; border-radius:4px; cursor:pointer; box-shadow:0 0 15px rgba(192,21,42,0.4); text-transform:uppercase; letter-spacing:2px; transition:all 0.2s;">
-                            INJECT TRANSMISSION
-                        </button>
-                    </div>
-                </form>
+    <div id="tab-email" class="admin-panel">
+        <div class="email-client">
+            <!-- Sidebar -->
+            <div class="email-sidebar">
+                <button class="email-compose-btn" onclick="openCompose()">✏️ Compose</button>
+                <ul class="email-folder-list" id="emailFolderList">
+                    <li class="email-folder-item active" data-folder="INBOX" onclick="switchFolder('INBOX')">
+                        <span class="folder-icon">📥</span>
+                        <span class="folder-label">Primary</span>
+                        <span class="folder-badge" id="badge-INBOX" style="display:none;"></span>
+                    </li>
+                    <li class="email-folder-item" data-folder="IMPORTANT" onclick="switchFolder('IMPORTANT')">
+                        <span class="folder-icon">⭐</span>
+                        <span class="folder-label">Important</span>
+                    </li>
+                    <li class="email-folder-item" data-folder="SENT" onclick="switchFolder('SENT')">
+                        <span class="folder-icon">📤</span>
+                        <span class="folder-label">Sent</span>
+                    </li>
+                    <li class="email-folder-item" data-folder="SPAM" onclick="switchFolder('SPAM')">
+                        <span class="folder-icon">🚫</span>
+                        <span class="folder-label">Spam</span>
+                    </li>
+                    <li class="email-folder-item" data-folder="TRASH" onclick="switchFolder('TRASH')">
+                        <span class="folder-icon">🗑️</span>
+                        <span class="folder-label">Trash</span>
+                    </li>
+                    <li class="email-folder-item" data-folder="ARCHIVE" onclick="switchFolder('ARCHIVE')">
+                        <span class="folder-icon">📁</span>
+                        <span class="folder-label">Archive</span>
+                    </li>
+                </ul>
             </div>
 
-            <!-- Live Real-Time Preview Panel -->
-            <div class="preview-panel" style="display:flex; flex-direction:column; gap:1rem;">
-                <div style="font-family:'Syncopate',sans-serif; font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Live Transmission Preview</div>
-                
-                <!-- Mock Inbox Container -->
-                <div class="mock-inbox-wrapper">
-                    
-                    <!-- Inbox header -->
-                    <div style="background: rgba(26,26,31,0.9); padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border-color); display:flex; align-items:center; gap:0.6rem;">
-                        <div style="display:flex; gap:0.3rem;">
-                            <span style="width:10px; height:10px; border-radius:50%; background:#ff5f56; display:inline-block;"></span>
-                            <span style="width:10px; height:10px; border-radius:50%; background:#ffbd2e; display:inline-block;"></span>
-                            <span style="width:10px; height:10px; border-radius:50%; background:#27c93f; display:inline-block;"></span>
-                        </div>
-                        <div style="flex:1; text-align:center; font-family:'Montserrat',sans-serif; font-size:0.75rem; color:var(--text-muted); font-weight:600; letter-spacing:0.5px; text-transform:uppercase; display:flex; justify-content:center; align-items:center; gap:0.4rem;">
-                            <span>📬 Transmission Preview</span>
-                        </div>
-                    </div>
-
-                    <!-- Envelope Fields -->
-                    <div style="padding: 1rem 1.2rem; border-bottom: 1px solid var(--border-color); font-family:'Montserrat',sans-serif; font-size:0.8rem; display:flex; flex-direction:column; gap:0.5rem;">
-                        <div>
-                            <span style="color:var(--text-muted); font-weight:600; width:60px; display:inline-block;">From:</span>
-                            <span style="color:var(--text-main); font-weight:500;">N2L8 STUDIO &lt;admin@n2l8studios.com&gt;</span>
-                        </div>
-                        <div>
-                            <span style="color:var(--text-muted); font-weight:600; width:60px; display:inline-block;">To:</span>
-                            <span style="color:var(--accent); font-weight:600;" id="previewRecipient">Custom Email Address</span>
-                        </div>
-                        <div>
-                            <span style="color:var(--text-muted); font-weight:600; width:60px; display:inline-block;">Subject:</span>
-                            <span style="color:var(--text-main); font-weight:700;" id="previewSubject">(No Subject)</span>
-                        </div>
-                    </div>
-
-                    <!-- Rendered Email Body -->
-                    <div class="rendered-email-outer" id="previewEmailOuter" style="background:#0a0a0a; padding: 2rem; min-height: 250px; transition: all 0.3s ease; position:relative; overflow-y:auto; max-height: 400px;">
-                        
-                        <!-- Inside Premium Dark Mode Template -->
-                        <div id="premiumDarkTemplate" style="background:#111115; border:1px solid #c0152a; border-radius:6px; box-shadow:0 0 20px rgba(192,21,42,0.15); font-family:'Montserrat',sans-serif; color:#ffffff; max-width:500px; margin:0 auto; overflow:hidden;">
-                            <div style="background:#1a1a20; padding:1.5rem; text-align:center; border-bottom:1px solid rgba(192,21,42,0.3);">
-                                <h1 style="font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.1rem; color:#c0152a; margin:0; letter-spacing:3px;">N2L8 STUDIO</h1>
-                                <p style="font-size:0.75rem; color:#88888e; margin:5px 0 0 0; text-transform:uppercase; letter-spacing:1px;">Transmission Channel</p>
-                            </div>
-                            <div style="padding:1.8rem; line-height:1.6; font-size:0.9rem;" id="premiumDarkBody">
-                                Hello customer, welcome to the dark side.
-                            </div>
-                            <div style="background:#1a1a20; padding:1.2rem; text-align:center; border-top:1px solid rgba(192,21,42,0.1); font-size:0.75rem; color:#88888e;">
-                                © 2026 N2L8 STUDIO. All Rights Reserved.<br>
-                                <span style="font-size:0.7rem; color:#55555c;">To unsubscribe, click the link in your user portal.</span>
-                            </div>
-                        </div>
-
-                        <!-- Inside Plain Text Template -->
-                        <div id="plainTemplate" style="display:none; font-family:monospace; font-size:0.9rem; color:#cccccc; background:#000; border:1px solid #333; padding:1.5rem; border-radius:4px; white-space:pre-wrap; line-height:1.5;">
-                        </div>
-
-                    </div>
+            <!-- Main Content -->
+            <div class="email-main">
+                <!-- Toolbar -->
+                <div class="email-toolbar">
+                    <button class="email-toolbar-btn" onclick="refreshEmails()" title="Refresh">🔄 Refresh</button>
+                    <button class="email-toolbar-btn" id="btnMarkRead" onclick="emailAction('mark_read')" title="Mark Read">✓ Read</button>
+                    <button class="email-toolbar-btn" id="btnDelete" onclick="emailAction('delete')" title="Delete">🗑️ Delete</button>
+                    <button class="email-toolbar-btn" id="btnSpam" onclick="emailAction('move', 'Spam')" title="Move to Spam">🚫 Spam</button>
+                    <input type="text" class="email-search" id="emailSearchInput" placeholder="Search emails..." onkeydown="if(event.key==='Enter'){searchEmails();}">
                 </div>
 
-            </div>
+                <!-- Content: List + Reading Pane -->
+                <div class="email-content-area">
+                    <!-- Email List -->
+                    <div class="email-list" id="emailListContainer">
+                        <div class="email-loading" id="emailListLoading">
+                            <div class="loading-spinner"></div>
+                            Loading emails...
+                        </div>
+                    </div>
 
+                    <!-- Reading Pane -->
+                    <div class="email-reading-pane" id="emailReadingPane">
+                        <div class="email-empty-state" id="emailEmptyRead">
+                            <div class="empty-icon">📧</div>
+                            <div class="empty-text">Select an email to read</div>
+                            <div class="sync-badge">🛡️ Synced with admin@n2l8studios.com</div>
+                        </div>
+                        <div id="emailReadContent" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div><!-- /tab-email -->
 
@@ -962,14 +1152,7 @@ try {
 
 <script>
 const INITIAL_TAB = '<?= h($tab) ?>';
-const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', messages:'Messages', users:'Users', content:'Content Editor', stats:'Analytics', email:'Email' };
-
-function toggleRecipientFields() {
-    const type = document.getElementById('recipientType').value;
-    document.getElementById('groupCustomEmail').style.display = (type === 'custom') ? 'block' : 'none';
-    document.getElementById('groupSingleUser').style.display = (type === 'single_user') ? 'block' : 'none';
-    document.getElementById('groupBroadcastWarning').style.display = (type === 'all_approved') ? 'block' : 'none';
-}
+const TAB_NAMES = { dashboard:'Dashboard', products:'Products', orders:'Orders', messages:'Messages', users:'Users', content:'Content Editor', stats:'Analytics', email:'Emails' };
 
 function moveSlider(btn) {
     const slider = document.getElementById('tabSlider');
@@ -985,28 +1168,12 @@ function showTab(name) {
     document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.admin-tab-menu-item').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.dropdown-item-btn').forEach(b => b.classList.remove('active'));
 
-    const panel  = document.getElementById('tab-' + name);
-    let deskBtn = document.getElementById('tab-btn-' + name);
+    const panel = document.getElementById('tab-' + name);
+    const deskBtn = document.getElementById('tab-btn-' + name);
     
     if (panel) panel.classList.add('active');
-    
-    // If it's a sub-tab of Communications
-    if (name === 'email' || name === 'messages') {
-        const triggerBtn = document.getElementById('tab-btn-comms');
-        if (triggerBtn) {
-            triggerBtn.classList.add('active');
-            deskBtn = triggerBtn; // We align the sliding bar with the main dropdown trigger!
-        }
-        const subBtn = document.getElementById('tab-btn-' + name);
-        if (subBtn) subBtn.classList.add('active');
-    }
-
-    if (deskBtn) { 
-        deskBtn.classList.add('active'); 
-        moveSlider(deskBtn); 
-    }
+    if (deskBtn) { deskBtn.classList.add('active'); moveSlider(deskBtn); }
 
     // mobile dropdown
     document.querySelectorAll('.admin-tab-menu-item').forEach(b => {
@@ -1014,43 +1181,22 @@ function showTab(name) {
     });
     const toggle = document.getElementById('tabToggle');
     if (toggle) toggle.textContent = TAB_NAMES[name] || name;
-    // close menu
     document.getElementById('tabMenu')?.classList.remove('open');
     document.getElementById('tabToggle')?.classList.remove('open');
 
     history.replaceState(null,'','/admin/index.php?tab=' + name);
+
+    // Auto-load emails when switching to email tab
+    if (name === 'email' && !emailsLoaded) { refreshEmails(); emailsLoaded = true; }
 }
 
 function showLoading() { document.getElementById('loadingOverlay').classList.add('active'); }
 function showDelConfirm(id) { document.getElementById('del-confirm-' + id).style.display = 'inline'; }
 function hideDelConfirm(id) { document.getElementById('del-confirm-' + id).style.display = 'none'; }
 
-// Desktop tab click (excluding the communications dropdown trigger)
-document.querySelectorAll('.admin-tab-btn:not(.dropdown-trigger)').forEach(btn => {
+// Tab clicks
+document.querySelectorAll('.admin-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => showTab(btn.id.replace('tab-btn-','')));
-});
-
-// Dropdown sub-tab click
-document.querySelectorAll('.dropdown-item-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showTab(btn.id.replace('tab-btn-',''));
-        document.getElementById('commsDropdownContainer')?.classList.remove('open');
-    });
-});
-
-// Communications trigger click
-const commsTrigger = document.getElementById('tab-btn-comms');
-if (commsTrigger) {
-    commsTrigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.getElementById('commsDropdownContainer')?.classList.toggle('open');
-    });
-}
-
-// Close communications dropdown on click outside
-document.addEventListener('click', () => {
-    document.getElementById('commsDropdownContainer')?.classList.remove('open');
 });
 
 // Mobile dropdown toggle
@@ -1066,169 +1212,248 @@ document.querySelectorAll('.admin-tab-menu-item').forEach(item => {
     item.addEventListener('click', () => showTab(item.dataset.tab));
 });
 
-// Quick Templates Presets Data
-const PRESETS = {
-    community: {
-        subject: "⚡ N2L8 Transmission: Fresh Soundkits & Studio Progress",
-        template: "premium_dark",
-        body: `Hey {username},\n\nWe've been working day and night in the shadows of the studio, crafting some of the most hard-hitting, dark atmospheric soundscapes yet.\n\nHere's what just dropped:\n- "NOIR CRUNCH V2" - Ultra-dirty basslines and gritty analog drums.\n- "VORTEX SYNTHS" - Premium detuned leads to carry your melodies into late-night realms.\n\nLog into your user portal at n2l8studios.com to listen to the new loops and download your updated licensing terms.\n\nKeep creating,\nEsau // N2L8 STUDIO`
-    },
-    discount: {
-        subject: "🔥 EXCLUSIVE: 30% Off Lifetime Soundkit Vault Access",
-        template: "premium_dark",
-        body: `Greetings {username},\n\nFor the next 48 hours, we are unlocking a vault exclusive to our registered community members.\n\nUse code "LATE30" at checkout on the beats & shop portal to receive an immediate 30% discount on any drumkit, loops, or licensing plans.\n\nThis is a one-time transmission. Don't let this expire.\n\nClaim your access now at:\nhttps://n2l8studios.com/shop.php\n\nBest regards,\nN2L8 STUDIO ADMIN`
-    },
-    system: {
-        subject: "🚨 ACTION REQUIRED: Security Sync & Infrastructure Update",
-        template: "plain",
-        body: `Attention {username},\n\nWe have successfully migrated our user database to our new high-speed enterprise servers to ensure 100% security and high-fidelity streaming.\n\nPlease take a moment to:\n1. Log into your dashboard.\n2. Verify your email address is fully confirmed.\n3. Check your order history to download any previously purchased licenses.\n\nIf you encounter any glitches or latency, reply directly to this notification or contact us at admin@n2l8studios.com.\n\nThank you for being part of N2L8,\nSystem Operations Center`
-    },
-    direct: {
-        subject: "✉️ Project Discussion: Custom Beat Inquiry",
-        template: "premium_dark",
-        body: `Hello {username},\n\nI was reviewing your active visitor activity on our portal, and wanted to reach out personally to see if you have any active musical projects or custom beat inquiries.\n\nWe offer bespoke musical arrangements, professional mixes, and custom-tailored exclusive licenses.\n\nLet me know what you are currently working on, and let's construct a sonic masterpiece.\n\nSpeak soon,\nEsau // n2l8studio`
-    }
-};
+/* ═══════════════════════════════════════════════════════════
+   EMAIL CLIENT — IMAP AJAX FUNCTIONS
+   ═══════════════════════════════════════════════════════════ */
+let emailsLoaded = false;
+let currentFolder = 'INBOX';
+let currentEmails = [];
+let currentReadUid = null;
+let emailRefreshTimer = null;
 
-// Word & Character count helper
-function updateCounter() {
-    const msg = document.getElementById('emailMessage')?.value || '';
-    const chars = msg.length;
-    const words = msg.trim() ? msg.trim().split(/\s+/).length : 0;
-    
-    const charCountEl = document.getElementById('charCount');
-    const wordCountEl = document.getElementById('wordCount');
-    if (charCountEl) charCountEl.textContent = chars;
-    if (wordCountEl) wordCountEl.textContent = words;
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
 }
 
-// Live preview renderer
-function updateLivePreview() {
-    const recipientType = document.getElementById('recipientType')?.value || 'custom';
-    const customEmail = document.getElementById('customEmailInput')?.value || '';
-    const subject = document.getElementById('emailSubject')?.value || '';
-    const templateType = document.getElementById('templateType')?.value || 'premium_dark';
-    const message = document.getElementById('emailMessage')?.value || '';
-    
-    // 1. Update Recipient Preview
-    const previewRecipient = document.getElementById('previewRecipient');
-    if (previewRecipient) {
-        if (recipientType === 'custom') {
-            previewRecipient.textContent = customEmail ? customEmail : 'Custom Email Address';
-        } else if (recipientType === 'single_user') {
-            const select = document.getElementById('singleUserSelect');
-            if (select && select.options.length > 0) {
-                const opt = select.options[select.selectedIndex];
-                const name = opt.getAttribute('data-username') || 'user';
-                const email = opt.getAttribute('data-email') || '';
-                previewRecipient.textContent = `${name} <${email}>`;
-            } else {
-                previewRecipient.textContent = 'Selected User';
+function switchFolder(folder) {
+    currentFolder = folder;
+    currentReadUid = null;
+    document.querySelectorAll('.email-folder-item').forEach(f => f.classList.remove('active'));
+    const el = document.querySelector(`.email-folder-item[data-folder="${folder}"]`);
+    if (el) el.classList.add('active');
+    document.getElementById('emailReadContent').style.display = 'none';
+    document.getElementById('emailEmptyRead').style.display = 'flex';
+    refreshEmails();
+}
+
+function refreshEmails() {
+    const listContainer = document.getElementById('emailListContainer');
+    const search = document.getElementById('emailSearchInput')?.value || '';
+    listContainer.innerHTML = '<div class="email-loading"><div class="loading-spinner"></div>Loading emails...</div>';
+
+    fetch(`/admin/imap_fetch.php?folder=${currentFolder}&limit=30&search=${encodeURIComponent(search)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                listContainer.innerHTML = `<div class="email-empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">${data.error}</div></div>`;
+                return;
             }
-        } else {
-            previewRecipient.textContent = 'ALL APPROVED USERS (Broadcast Mode)';
-        }
-    }
-    
-    // 2. Update Subject Preview
-    const previewSubject = document.getElementById('previewSubject');
-    if (previewSubject) {
-        previewSubject.textContent = subject ? subject : '(No Subject)';
-    }
-    
-    // 3. Get personalized user name for placeholder replacement
-    let mockUser = 'guest_producer';
-    if (recipientType === 'single_user') {
-        const select = document.getElementById('singleUserSelect');
-        if (select && select.options.length > 0) {
-            mockUser = select.options[select.selectedIndex].getAttribute('data-username') || 'guest_producer';
-        }
-    }
-    
-    // Replace placeholder {username}
-    const personalizedText = message.replace(/{username}/g, mockUser);
-    
-    // 4. Update Template Preview
-    const premiumDark = document.getElementById('premiumDarkTemplate');
-    const plain = document.getElementById('plainTemplate');
-    const emailOuter = document.getElementById('previewEmailOuter');
-    
-    if (templateType === 'premium_dark') {
-        if (premiumDark) premiumDark.style.display = 'block';
-        if (plain) plain.style.display = 'none';
-        if (emailOuter) emailOuter.style.background = '#0a0a0a';
-        
-        const darkBody = document.getElementById('premiumDarkBody');
-        if (darkBody) {
-            darkBody.innerHTML = personalizedText ? personalizedText.replace(/\n/g, '<br>') : 'Hello customer, welcome to the dark side.';
-        }
-    } else {
-        if (premiumDark) premiumDark.style.display = 'none';
-        if (plain) plain.style.display = 'block';
-        if (emailOuter) emailOuter.style.background = '#020202';
-        
-        if (plain) {
-            plain.textContent = personalizedText ? personalizedText : 'Hello customer, welcome to the dark side.';
-        }
-    }
-    
-    updateCounter();
-    
-    // If broadcast is checked, require confirmation
-    const confirmBroadcast = document.getElementById('confirmBroadcast');
-    if (recipientType === 'all_approved') {
-        confirmBroadcast.setAttribute('required', 'required');
-    } else {
-        confirmBroadcast.removeAttribute('required');
-    }
+            currentEmails = data.emails || [];
+            // Update unread badge
+            if (currentFolder === 'INBOX' && data.unread > 0) {
+                const badge = document.getElementById('badge-INBOX');
+                if (badge) { badge.textContent = data.unread; badge.style.display = 'inline-block'; }
+            } else if (currentFolder === 'INBOX') {
+                const badge = document.getElementById('badge-INBOX');
+                if (badge) badge.style.display = 'none';
+            }
+            renderEmailList(currentEmails);
+        })
+        .catch(err => {
+            listContainer.innerHTML = `<div class="email-empty-state"><div class="empty-icon">❌</div><div class="empty-text">Failed to load emails</div></div>`;
+        });
 }
 
-// Attach preset template events
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const presetKey = btn.dataset.preset;
-            const data = PRESETS[presetKey];
-            if (!data) return;
-            
-            const subInput = document.getElementById('emailSubject');
-            const templateSelect = document.getElementById('templateType');
-            const msgTextarea = document.getElementById('emailMessage');
-            
-            if (subInput) subInput.value = data.subject;
-            if (templateSelect) templateSelect.value = data.template;
-            if (msgTextarea) msgTextarea.value = data.body;
-            
-            updateLivePreview();
-            
-            // Subtle highlight micro-animation on fields
-            [subInput, templateSelect, msgTextarea].forEach(el => {
-                if (!el) return;
-                el.style.borderColor = 'var(--accent)';
-                setTimeout(() => {
-                    el.style.borderColor = 'var(--text-muted)';
-                }, 800);
-            });
+function renderEmailList(emails) {
+    const container = document.getElementById('emailListContainer');
+    if (!emails || emails.length === 0) {
+        container.innerHTML = '<div class="email-empty-state"><div class="empty-icon">📭</div><div class="empty-text">No emails in this folder</div></div>';
+        return;
+    }
+    let html = '';
+    emails.forEach(e => {
+        const unreadClass = e.is_read ? '' : ' unread';
+        const activeClass = e.uid === currentReadUid ? ' active' : '';
+        const initials = getInitials(e.from_name);
+        html += `<div class="email-list-item${unreadClass}${activeClass}" data-uid="${e.uid}" onclick="readEmail(${e.uid})">
+            <div class="email-avatar">${initials}</div>
+            <div class="email-item-content">
+                <div class="email-item-top">
+                    <span class="email-item-from">${escHtml(e.from_name || e.from_email)}</span>
+                    <span class="email-item-date">${escHtml(e.date)}</span>
+                </div>
+                <div class="email-item-subject">${escHtml(e.subject)}</div>
+                <div class="email-item-snippet">${escHtml(e.snippet)}</div>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function readEmail(uid) {
+    currentReadUid = uid;
+    // Highlight in list
+    document.querySelectorAll('.email-list-item').forEach(el => el.classList.remove('active'));
+    const activeEl = document.querySelector(`.email-list-item[data-uid="${uid}"]`);
+    if (activeEl) { activeEl.classList.add('active'); activeEl.classList.remove('unread'); }
+
+    const readPane = document.getElementById('emailReadContent');
+    const emptyPane = document.getElementById('emailEmptyRead');
+    readPane.style.display = 'none';
+    emptyPane.innerHTML = '<div class="email-loading"><div class="loading-spinner"></div>Loading...</div>';
+    emptyPane.style.display = 'flex';
+
+    fetch(`/admin/imap_read.php?uid=${uid}&folder=${currentFolder}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                emptyPane.innerHTML = `<div class="email-empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">${data.error}</div></div>`;
+                return;
+            }
+            emptyPane.style.display = 'none';
+            readPane.style.display = 'flex';
+            readPane.style.flexDirection = 'column';
+
+            const initials = getInitials(data.from_name);
+            const bodyContent = data.body_html || ('<pre style="white-space:pre-wrap;font-family:Montserrat,sans-serif;">' + escHtml(data.body_text || '(No content)') + '</pre>');
+            const attachHtml = (data.attachments && data.attachments.length > 0)
+                ? `<div style="padding:0.8rem 1.5rem;border-top:1px solid rgba(255,255,255,0.06);font-family:Montserrat,sans-serif;font-size:0.82rem;color:var(--text-muted);">📎 ${data.attachments.length} attachment(s): ${data.attachments.map(a => escHtml(a.filename)).join(', ')}</div>`
+                : '';
+
+            readPane.innerHTML = `
+                <div class="email-read-header">
+                    <div class="email-read-subject">${escHtml(data.subject)}</div>
+                    <div class="email-read-meta">
+                        <div class="email-read-avatar">${initials}</div>
+                        <div class="email-read-sender">
+                            <div class="email-read-from">${escHtml(data.from_name)}</div>
+                            <div class="email-read-email">${escHtml(data.from_email)} → ${escHtml((data.to || []).join(', '))}</div>
+                        </div>
+                        <div class="email-read-date">${escHtml(data.date)}</div>
+                    </div>
+                </div>
+                <div class="email-read-body">${bodyContent}</div>
+                ${attachHtml}
+                <div class="email-read-actions">
+                    <button class="email-toolbar-btn" onclick="replyToEmail()">↩️ Reply</button>
+                    <button class="email-toolbar-btn" onclick="emailAction('flag')">⭐ Flag</button>
+                    <button class="email-toolbar-btn" onclick="emailAction('mark_unread')">📩 Mark Unread</button>
+                    <button class="email-toolbar-btn" onclick="emailAction('delete')">🗑️ Delete</button>
+                    <button class="email-toolbar-btn" onclick="emailAction('move','Spam')">🚫 Spam</button>
+                </div>`;
+        })
+        .catch(err => {
+            emptyPane.innerHTML = '<div class="email-empty-state"><div class="empty-icon">❌</div><div class="empty-text">Failed to load email</div></div>';
         });
-    });
-    
-    // Attach input listeners
-    ['emailSubject', 'customEmailInput', 'emailMessage'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', updateLivePreview);
+}
+
+function emailAction(action, target) {
+    if (!currentReadUid) return;
+    const fd = new FormData();
+    fd.append('action', action);
+    fd.append('uid', currentReadUid);
+    fd.append('folder', currentFolder);
+    if (target) fd.append('target_folder', target);
+
+    fetch('/admin/imap_action.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Remove from list and reset reading pane
+                if (action === 'delete' || action === 'move') {
+                    currentReadUid = null;
+                    document.getElementById('emailReadContent').style.display = 'none';
+                    document.getElementById('emailEmptyRead').style.display = 'flex';
+                    document.getElementById('emailEmptyRead').innerHTML = '<div class="email-empty-state"><div class="empty-icon">📧</div><div class="empty-text">Select an email to read</div><div class="sync-badge">🛡️ Synced with admin@n2l8studios.com</div></div>';
+                }
+                refreshEmails();
+            }
+        });
+}
+
+function searchEmails() { refreshEmails(); }
+
+function escHtml(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+
+/* ── Compose Modal ── */
+function openCompose() {
+    document.getElementById('composeOverlay').classList.add('open');
+}
+function closeCompose() {
+    document.getElementById('composeOverlay').classList.remove('open');
+}
+function toggleComposeFields() {
+    const type = document.getElementById('composeRecipientType').value;
+    document.getElementById('composeCustomEmail').style.display = (type === 'custom') ? 'block' : 'none';
+    document.getElementById('composeUserId').style.display = (type === 'single_user') ? 'block' : 'none';
+}
+function replyToEmail() {
+    // Find current email data
+    const email = currentEmails.find(e => e.uid === currentReadUid);
+    if (!email) return;
+    openCompose();
+    document.getElementById('composeRecipientType').value = 'custom';
+    toggleComposeFields();
+    document.getElementById('composeCustomEmail').value = email.from_email;
+    document.getElementById('composeSubject').value = 'Re: ' + email.subject;
+    document.getElementById('composeMessage').focus();
+}
+function sendCompose() {
+    const btn = document.getElementById('composeSendBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    const fd = new FormData();
+    fd.append('recipient_type', document.getElementById('composeRecipientType').value);
+    fd.append('custom_email', document.getElementById('composeCustomEmail').value);
+    fd.append('user_id', document.getElementById('composeUserId').value);
+    fd.append('subject', document.getElementById('composeSubject').value);
+    fd.append('message', document.getElementById('composeMessage').value);
+    fd.append('template_type', document.getElementById('composeTemplate').value);
+
+    fetch('/admin/send_email.php', {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.textContent = 'Send';
+        if (data.success) {
+            closeCompose();
+            document.getElementById('composeForm').reset();
+            alert('✅ ' + data.message);
+        } else {
+            alert('❌ ' + data.message);
         }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.textContent = 'Send';
+        alert('❌ Network error');
     });
-});
+}
+
+// Auto-refresh emails every 60 seconds when on the email tab
+setInterval(() => {
+    const emailPanel = document.getElementById('tab-email');
+    if (emailPanel && emailPanel.classList.contains('active')) {
+        refreshEmails();
+    }
+}, 60000);
 
 // Init — wait for layout so slider can measure button positions
 window.addEventListener('load', () => {
     showTab(INITIAL_TAB);
-    if (document.getElementById('recipientType')) {
-        toggleRecipientFields();
-        updateLivePreview();
-    }
 });
 </script>
 </body>

@@ -36,4 +36,11 @@ define('STRIPE_TEST_PUBLISHABLE_KEY', 'pk_test_replace_with_your_test_pub_key');
 define('STRIPE_LIVE_SECRET_KEY', 'sk_live_replace_with_your_live_secret_key');
 define('STRIPE_LIVE_PUBLISHABLE_KEY', 'pk_live_replace_with_your_live_pub_key');
 
+// ── IMAP / Incoming Mail settings ────────────────────────────────────────────
+define('IMAP_HOST',        'imap.simply.com');
+define('IMAP_PORT',        993);
+define('IMAP_USER',        'your-imap-username');
+define('IMAP_PASS',        'your-imap-password');
+define('IMAP_ENCRYPTION',  'ssl');
+
 
