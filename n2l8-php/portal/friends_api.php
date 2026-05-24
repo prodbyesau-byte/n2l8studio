@@ -186,14 +186,17 @@ try {
             SELECT u.id, u.username, u.profile_picture
             FROM users u
             JOIN friendships f ON (
-                (f.user_id1 = u.id AND f.user_id2 = :user_id) OR
-                (f.user_id2 = u.id AND f.user_id1 = :user_id)
+                (f.user_id1 = u.id AND f.user_id2 = :user_id1) OR
+                (f.user_id2 = u.id AND f.user_id1 = :user_id2)
             )
             WHERE f.status = "accepted"
             ORDER BY u.username ASC
         ';
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(['user_id' => $user_id]);
+        $stmt->execute([
+            'user_id1' => $user_id,
+            'user_id2' => $user_id
+        ]);
         $friends = $stmt->fetchAll();
         
         echo json_encode(['success' => true, 'friends' => $friends]);
@@ -206,14 +209,18 @@ try {
             SELECT u.id, u.username, u.profile_picture
             FROM users u
             JOIN friendships f ON (
-                (f.user_id1 = u.id AND f.user_id2 = :user_id) OR
-                (f.user_id2 = u.id AND f.user_id1 = :user_id)
+                (f.user_id1 = u.id AND f.user_id2 = :user_id1) OR
+                (f.user_id2 = u.id AND f.user_id1 = :user_id2)
             )
-            WHERE f.status = "pending" AND f.action_user_id != :user_id
+            WHERE f.status = "pending" AND f.action_user_id != :user_id3
             ORDER BY f.created_at DESC
         ';
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(['user_id' => $user_id]);
+        $stmt->execute([
+            'user_id1' => $user_id,
+            'user_id2' => $user_id,
+            'user_id3' => $user_id
+        ]);
         $pending = $stmt->fetchAll();
         
         echo json_encode(['success' => true, 'pending' => $pending]);
@@ -258,12 +265,12 @@ try {
                 f.action_user_id
             FROM users u
             LEFT JOIN friendships f ON (
-                (f.user_id1 = u.id AND f.user_id2 = :my_id) OR
-                (f.user_id1 = :my_id AND f.user_id2 = u.id)
+                (f.user_id1 = u.id AND f.user_id2 = :my_id1) OR
+                (f.user_id1 = :my_id2 AND f.user_id2 = u.id)
             )
             WHERE u.is_approved = 1 
               AND u.role != "admin" 
-              AND u.id != :my_id 
+              AND u.id != :my_id3 
               AND u.is_private = 0
         ';
         
@@ -274,7 +281,11 @@ try {
         $sql .= ' ORDER BY u.username ASC';
         
         $stmt = $pdo->prepare($sql);
-        $params = ['my_id' => $user_id];
+        $params = [
+            'my_id1' => $user_id,
+            'my_id2' => $user_id,
+            'my_id3' => $user_id
+        ];
         if (!empty($query)) {
             $params['query'] = '%' . $query . '%';
         }
