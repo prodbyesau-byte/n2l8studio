@@ -43,7 +43,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
 </head>
-<body class="page-beats">
+<body class="page-beats <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height:auto;padding-bottom:1rem;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>

@@ -1001,7 +1001,7 @@ if ($view === 'dashboard') {
         }
     </style>
 </head>
-<body class="page-forum">
+<body class="page-forum <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
     <!-- NAVIGATION BAR -->
     <header class="hero" style="min-height: auto; padding-bottom: 0;">
         <nav>

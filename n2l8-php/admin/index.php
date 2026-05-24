@@ -6,7 +6,35 @@ require_once __DIR__ . '/../includes/helpers.php';
 require_owner();
 $pdo = get_pdo();
 
-// Stats
+// Process Theme Switcher POST Request
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_theme'])) {
+    $theme = $_POST['active_theme'] ?? 'dark';
+    if (!in_array($theme, ['dark', 'beige'])) $theme = 'dark';
+    
+    // Check if the setting already exists in content table
+    $stmt = $pdo->prepare("SELECT id FROM content WHERE section_key = 'site_theme'");
+    $stmt->execute();
+    $exists = $stmt->fetch();
+    
+    if ($exists) {
+        $stmt = $pdo->prepare("UPDATE content SET text = ? WHERE section_key = 'site_theme'");
+        $stmt->execute([$theme]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO content (section_key, label, page, text) VALUES ('site_theme', 'Active Site Theme (dark or beige)', 'global', ?)");
+        $stmt->execute([$theme]);
+    }
+    
+    log_action($pdo, "Admin changed active site theme to: " . $theme);
+    set_flash(['type' => 'success', 'message' => 'Theme updated successfully to ' . ucfirst($theme) . '!']);
+    
+    header('Location: /admin/index.php?tab=dashboard');
+    exit;
+}
+
+// Fetch active theme
+$theme_stmt = $pdo->prepare("SELECT text FROM content WHERE section_key = 'site_theme'");
+$theme_stmt->execute();
+$site_theme = $theme_stmt->fetchColumn() ?: 'dark';
 $products = $pdo->query('SELECT * FROM products ORDER BY id DESC')->fetchAll();
 $orders   = $pdo->query('SELECT o.*, p.title as product_title FROM orders o LEFT JOIN products p ON o.product_id = p.id ORDER BY o.id DESC')->fetchAll();
 $logs     = $pdo->query('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 30')->fetchAll();
@@ -544,7 +572,7 @@ try {
         }
     </style>
 </head>
-<body class="page-home">
+<body class="page-home <?= $site_theme === 'beige' ? 'theme-beige' : '' ?>">
 
 <div id="loadingOverlay">
     <div class="spinner"></div>
@@ -607,6 +635,22 @@ try {
             <div class="stat-card"><div class="stat-num"><?= count($orders) ?></div><div class="stat-label">Total Orders</div></div>
             <div class="stat-card"><div class="stat-num"><?= count($contents) ?></div><div class="stat-label">Content Blocks</div></div>
         </div>
+
+        <div class="section-title">Site Appearance &amp; Custom Skins</div>
+        <div class="form-card" style="margin-bottom: 2rem;">
+            <form action="" method="POST" style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; width: 100%;">
+                <input type="hidden" name="update_theme" value="1">
+                <div style="flex:1; min-width:200px;">
+                    <label style="display:block; font-family:'Montserrat', sans-serif; font-weight:700; font-size:0.8rem; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">Select active site theme</label>
+                    <select name="active_theme" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.6rem; border-radius:4px; font-family:'Montserrat', sans-serif; font-size:0.9rem;">
+                        <option value="dark" <?= ($site_theme === 'dark') ? 'selected' : '' ?>>Luxury Noir Red (Classic Dark)</option>
+                        <option value="beige" <?= ($site_theme === 'beige') ? 'selected' : '' ?>>Luxury Beige &amp; Copper (Premium Light)</option>
+                    </select>
+                </div>
+                <button class="cta-btn" type="submit" style="margin-top:1.5rem; padding:0.6rem 2rem;">APPLY THEME</button>
+            </form>
+        </div>
+
         <div class="section-title">Recent System Activity</div>
         <div class="form-card">
             <ul class="log-list">

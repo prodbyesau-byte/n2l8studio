@@ -175,7 +175,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         }
     </style>
 </head>
-<body class="page-shop">
+<body class="page-shop <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height:auto;padding-bottom:2rem;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>

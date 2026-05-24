@@ -365,6 +365,49 @@ $tab = $_GET['tab'] ?? 'library';
             line-height: 1.5;
         }
 
+        /* ── RETRO FOLDER STYLES ── */
+        .retro-folder {
+            position: relative;
+            width: 80px;
+            height: 60px;
+            margin: 1rem auto;
+            transition: all 0.3s ease;
+        }
+        .folder-tab {
+            position: absolute;
+            top: -8px;
+            left: 5px;
+            width: 32px;
+            height: 10px;
+            background: var(--accent);
+            border: 1px solid var(--border-color);
+            border-radius: 3px 3px 0 0;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        .folder-body {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.08));
+            border: 1px solid var(--border-color);
+            border-radius: 0 5px 5px 5px;
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.05), var(--accent-glow);
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .retro-folder:hover .folder-body {
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.02);
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.1), var(--accent-glow), 0 0 12px rgba(192, 21, 42, 0.2);
+        }
+        .retro-folder:hover .folder-tab {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
         /* ── MODAL OVERLAY ── */
         .modal-overlay {
             display: none;
@@ -1759,7 +1802,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
     </style>
 </head>
-<body class="page-home">
+<body class="page-home <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height: auto; padding-bottom: 0;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
@@ -1869,9 +1912,13 @@ $tab = $_GET['tab'] ?? 'library';
                 <div class="library-grid" id="playlists-grid" style="margin-bottom:3rem;">
                     <?php foreach ($playlists_with_items as $pl_id => $pl): ?>
                         <div class="library-card" id="playlist-card-<?= $pl_id ?>">
-                            <div class="library-cover" style="cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); position:relative;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">
-                                <!-- Display a folder / library stack look for playlist cover -->
-                                <div style="font-size:3rem; color:var(--accent); filter:drop-shadow(0 0 10px rgba(192,21,42,0.3));">📁</div>
+                            <div class="library-cover" style="cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); position:relative;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">
+                                <div class="retro-folder">
+                                    <div class="folder-tab"></div>
+                                    <div class="folder-body">
+                                        <span style="font-family:'Syncopate', sans-serif; font-size:0.55rem; color:#fff; font-weight:700; opacity:0.8; letter-spacing:1px;">KITS</span>
+                                    </div>
+                                </div>
                                 <span style="position:absolute; bottom:10px; right:10px; background:var(--accent); color:#fff; font-size:0.7rem; font-weight:700; padding:2px 6px; border-radius:3px;">
                                     <?= count($pl['items']) ?> items
                                 </span>
@@ -2330,7 +2377,80 @@ $tab = $_GET['tab'] ?? 'library';
                 if (data.success) {
                     const modal = document.getElementById('createPlaylistPortalModal');
                     if (modal) modal.remove();
-                    window.location.reload();
+                    
+                    const pl = data.playlist; // Contains id and name
+                    
+                    // Check if grid exists, if not create it
+                    let grid = document.getElementById('playlists-grid');
+                    const notice = document.getElementById('empty-playlists-notice');
+                    if (!grid) {
+                        if (notice) notice.remove();
+                        grid = document.createElement('div');
+                        grid.className = 'library-grid';
+                        grid.id = 'playlists-grid';
+                        grid.style.marginBottom = '3rem';
+                        
+                        // Insert grid before "LIKED & UPVOTED" heading
+                        const heading = Array.from(document.querySelectorAll('#tab-liked h4')).find(el => el.textContent.includes('MY CUSTOM PLAYLISTS'));
+                        if (heading) {
+                            heading.after(grid);
+                        } else {
+                            const tab = document.getElementById('tab-liked');
+                            tab.insertBefore(grid, tab.lastElementChild);
+                        }
+                    }
+                    
+                    // Create playlist card
+                    const card = document.createElement('div');
+                    card.className = 'library-card';
+                    card.id = 'playlist-card-' + pl.id;
+                    
+                    const safeName = pl.name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    
+                    card.innerHTML = `
+                        <div class="library-cover" style="cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); position:relative;" onclick="togglePlaylistDetails(${pl.id})">
+                            <div class="retro-folder">
+                                <div class="folder-tab"></div>
+                                <div class="folder-body">
+                                    <span style="font-family:'Syncopate', sans-serif; font-size:0.55rem; color:#fff; font-weight:700; opacity:0.8; letter-spacing:1px;">KITS</span>
+                                </div>
+                            </div>
+                            <span style="position:absolute; bottom:10px; right:10px; background:var(--accent); color:#fff; font-size:0.7rem; font-weight:700; padding:2px 6px; border-radius:3px;">
+                                0 items
+                            </span>
+                        </div>
+                        <div class="library-info" style="cursor:pointer;" onclick="togglePlaylistDetails(${pl.id})">
+                            <h3>${safeName}</h3>
+                            <div class="author">Created: ${new Date().toISOString().split('T')[0]}</div>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; width:100%;">
+                            <button class="cta-btn secondary" style="flex:1; font-size:0.65rem; padding:0.5rem;" onclick="togglePlaylistDetails(${pl.id})">VIEW ITEMS</button>
+                            <button class="cta-btn secondary" style="border-color:rgba(192,21,42,0.4); color:rgba(255,255,255,0.6); font-size:0.65rem; padding:0.5rem; min-width:40px;" onclick="deletePlaylist(${pl.id})" title="Delete Playlist">🗑️</button>
+                        </div>
+                    `;
+                    
+                    grid.insertBefore(card, grid.firstChild);
+                    
+                    // Create details section
+                    const details = document.createElement('div');
+                    details.id = 'playlist-details-' + pl.id;
+                    details.className = 'playlist-details-section';
+                    details.style.display = 'none';
+                    details.style.background = 'rgba(5,5,8,0.9)';
+                    details.style.border = '1px solid var(--border-color)';
+                    details.style.borderRadius = '6px';
+                    details.style.padding = '1.5rem';
+                    details.style.marginBottom = '2rem';
+                    
+                    details.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">
+                            <h4 style="margin:0; font-family:'Syncopate', sans-serif; color:var(--accent); font-size:0.9rem;">${safeName.toUpperCase()} ITEMS</h4>
+                            <button class="cta-btn secondary" style="font-size:0.65rem; padding:0.3rem 0.8rem;" onclick="togglePlaylistDetails(${pl.id})">CLOSE</button>
+                        </div>
+                        <p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">This playlist has no items. Visit the Shop to add products!</p>
+                    `;
+                    
+                    grid.after(details);
                 }
             });
         }
