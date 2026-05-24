@@ -2748,30 +2748,30 @@ $tab = $_GET['tab'] ?? 'library';
                         gridList.innerHTML = '';
                         res.users.forEach(u => {
                             const avatarHtml = u.profile_picture
-                                ? `<img src="/static/uploads/${encodeURIComponent(u.profile_picture)}" class="community-avatar-large" alt="">`
-                                : `<div class="community-initial-large">${u.username.substr(0,1).toUpperCase()}</div>`;
+                                ? `<img src="/static/uploads/${encodeURIComponent(u.profile_picture)}" class="friend-tab-avatar" alt="">`
+                                : `<div class="friend-tab-avatar-placeholder">${u.username.substr(0,1).toUpperCase()}</div>`;
                             
                             let actionButton = '';
                             if (u.friendship_status === 'accepted') {
-                                actionButton = `<button class="cta-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.8; cursor:default;" disabled>✓ FRIENDS</button>`;
+                                actionButton = `<button class="friend-card-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.8; cursor:default;" disabled>✓ FRIENDS</button>`;
                             } else if (u.friendship_status === 'pending') {
                                 if (parseInt(u.action_user_id) === parseInt(<?= (int)$user_id ?>)) {
-                                    actionButton = `<button class="cta-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.7;" onclick="handleDiscoverFriendAction(${u.id}, 'cancel_request')">REQUEST SENT</button>`;
+                                    actionButton = `<button class="friend-card-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.7;" onclick="handleDiscoverFriendAction(${u.id}, 'cancel_request')">REQUEST SENT</button>`;
                                 } else {
-                                    actionButton = `<button class="cta-btn" style="width:100%; font-size:0.7rem; padding:0.6rem; background:#7be1a8; color:#000;" onclick="handleDiscoverFriendAction(${u.id}, 'accept_request')">ACCEPT REQUEST</button>`;
+                                    actionButton = `<button class="friend-card-btn primary" style="width:100%; font-size:0.7rem; padding:0.6rem; background:#7be1a8; color:#000;" onclick="handleDiscoverFriendAction(${u.id}, 'accept_request')">ACCEPT REQUEST</button>`;
                                 }
                             } else {
-                                actionButton = `<button class="cta-btn" style="width:100%; font-size:0.7rem; padding:0.6rem;" onclick="handleDiscoverFriendAction(${u.id}, 'send_request')">ADD FRIEND</button>`;
+                                actionButton = `<button class="friend-card-btn primary" style="width:100%; font-size:0.7rem; padding:0.6rem;" onclick="handleDiscoverFriendAction(${u.id}, 'send_request')">ADD FRIEND</button>`;
                             }
 
                             const itemHtml = `
-                                <div class="community-card">
-                                    <div onclick="openUserProfile(${u.id})" style="cursor:pointer; margin-bottom:1.2rem; position:relative;">
+                                <div class="friend-list-card">
+                                    <div class="friend-tab-avatar-wrap" onclick="openUserProfile(${u.id})">
                                         ${avatarHtml}
                                     </div>
-                                    <div class="community-username" onclick="openUserProfile(${u.id})" style="cursor:pointer; font-size:0.92rem; font-weight:700; color:#fff;" title="${escapeHtml(u.username)}">${escapeHtml(u.username)}</div>
-                                    <div class="community-role">${escapeHtml(u.role)}</div>
-                                    <div style="width:100%; display:flex; flex-direction:column; gap:0.5rem; margin-top:auto;">
+                                    <span class="friend-card-username" onclick="openUserProfile(${u.id})" title="${escapeHtml(u.username)}">${escapeHtml(u.username)}</span>
+                                    <span class="friend-card-role">${escapeHtml(u.role)}</span>
+                                    <div class="friend-card-actions">
                                         ${actionButton}
                                     </div>
                                 </div>
