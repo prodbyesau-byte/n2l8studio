@@ -8,9 +8,21 @@ require_once __DIR__ . '/includes/config.php';
 $pdo  = get_pdo();
 $site = get_site_content($pdo);
 
-// Fetch only beats
-$stmt = $pdo->query("SELECT * FROM products WHERE is_active = 1 AND type = 'beat' ORDER BY id DESC");
+$user_id_for_query = is_customer_user() ? $_SESSION['user_id'] : 0;
+$query_base = "SELECT p.*, 
+    (SELECT COUNT(*) FROM product_upvotes WHERE product_id = p.id) as upvotes,
+    (SELECT 1 FROM product_upvotes WHERE product_id = p.id AND user_id = " . (int)$user_id_for_query . ") as user_upvoted
+    FROM products p WHERE p.is_active = 1 ";
+
+$stmt = $pdo->query($query_base . "AND p.type = 'beat' ORDER BY p.id DESC");
 $beats = $stmt->fetchAll();
+
+$saved_ids = [];
+if ($user_id_for_query) {
+    $saved_stmt = $pdo->prepare('SELECT product_id FROM user_saved_products WHERE user_id = ?');
+    $saved_stmt->execute([$user_id_for_query]);
+    $saved_ids = array_map('intval', array_column($saved_stmt->fetchAll(), 'product_id'));
+}
 
 // Fetch shop settings
 $settings = get_site_content($pdo);
@@ -94,7 +106,16 @@ log_visitor($pdo, 'page_view', '/beats.php');
                 <div class="beat-bpm-key">
                     <?= h($beat['bpm'] ?? '') ?> BPM | <?= h($beat['key'] ?? '') ?>
                 </div>
-                <div class="beat-price-btn">
+                <div class="beat-price-btn" style="display:flex; align-items:center; gap:0.5rem; justify-content:flex-end;">
+                    <?php if (!is_owner()): ?>
+                    <button class="kit-save-btn <?= !empty($beat['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="toggleUpvote(this, <?= (int)$beat['id'] ?>)" title="Upvote" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
+                        <?= !empty($beat['user_upvoted']) ? '★' : '☆' ?>
+                    </button>
+                    <button class="kit-save-btn <?= in_array((int)$beat['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="togglePlaylist(this, <?= (int)$beat['id'] ?>)" title="Add to Playlist" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
+                        <?= in_array((int)$beat['id'], $saved_ids, true) ? '✅' : '➕' ?>
+                    </button>
+                    <div style="text-align:right; font-size:0.8rem; color:var(--text-muted); margin-right:0.5rem; min-width:50px;"><span id="upvotes-<?= $beat['id'] ?>"><?= (int)$beat['upvotes'] ?></span> votes</div>
+                    <?php endif; ?>
                     <button class="cta-btn beat-buy-btn btn-buy" data-id="<?= $beat['id'] ?>">
                         <?= (float)$beat['price'] > 0 ? '$' . number_format($beat['price'], 2) : 'FREE' ?>
                     </button>
@@ -141,6 +162,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <script src="https://www.paypal.com/sdk/js?client-id=<?= h($pp_id) ?>&currency=USD&intent=capture" data-sdk-integration-source="button-factory"></script>
     
     <script>
+    const IS_LOGGED_IN = <?= is_logged_in() ? 'true' : 'false' ?>;
     let currentAudio = new Audio();
     let playingId = null;
     let _ppButtons = null;
@@ -151,6 +173,43 @@ log_visitor($pdo, 'page_view', '/beats.php');
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: 'action=' + encodeURIComponent(action) + '&metadata=' + encodeURIComponent(metadata)
+        });
+    }
+
+    function toggleUpvote(btn, productId) {
+        fetch('/api/product_actions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=toggle_upvote&product_id=' + encodeURIComponent(productId)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) {
+                window.location.href = '/login.php';
+                return;
+            }
+            btn.classList.toggle('saved', data.is_active);
+            btn.textContent = data.is_active ? '★' : '☆';
+            if (data.count !== undefined) {
+                document.getElementById('upvotes-' + productId).textContent = data.count;
+            }
+        });
+    }
+
+    function togglePlaylist(btn, productId) {
+        fetch('/api/product_actions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=toggle_save&product_id=' + encodeURIComponent(productId)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) {
+                window.location.href = '/login.php';
+                return;
+            }
+            btn.classList.toggle('saved', data.is_active);
+            btn.textContent = data.is_active ? '✅' : '➕';
         });
     }
 
@@ -343,8 +402,13 @@ log_visitor($pdo, 'page_view', '/beats.php');
         const wrap = document.getElementById('paypal-btn-wrap');
         wrap.innerHTML = '';
         if (parseFloat(price) <= 0) {
-            if (data && data.allow_download && data.zip_file) {
-                wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
+            // Free download
+            if (data.allow_download && data.zip_file) {
+                if (IS_LOGGED_IN) {
+                    wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;width:100%;text-align:center;" download>FREE DOWNLOAD</a>`;
+                } else {
+                    wrap.innerHTML = `<a href="/login.php" class="cta-btn" style="display:block;width:100%;text-align:center;">LOGIN TO CLAIM KIT</a>`;
+                }
             } else {
                 wrap.innerHTML = `<button disabled class="cta-btn" style="display:block;width:100%;text-align:center;opacity:0.4;cursor:not-allowed;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);">FREE DOWNLOAD — COMING SOON</button>`;
             }

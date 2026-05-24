@@ -9,9 +9,15 @@ $site = get_site_content($pdo);
 $shop_page_type = $shop_page_type ?? 'kits';
 $is_graphics_page = $shop_page_type === 'graphics';
 
+$user_id_for_query = is_customer_user() ? $_SESSION['user_id'] : 0;
+$query_base = "SELECT p.*, 
+    (SELECT COUNT(*) FROM product_upvotes WHERE product_id = p.id) as upvotes,
+    (SELECT 1 FROM product_upvotes WHERE product_id = p.id AND user_id = " . (int)$user_id_for_query . ") as user_upvoted
+    FROM products p WHERE p.is_active = 1 ";
+
 $stmt = $is_graphics_page
-    ? $pdo->query("SELECT * FROM products WHERE is_active = 1 AND type = 'graphics' ORDER BY id DESC")
-    : $pdo->query("SELECT * FROM products WHERE is_active = 1 AND type IN ('loopkit', 'drumkit') ORDER BY id DESC");
+    ? $pdo->query($query_base . "AND p.type = 'graphics' ORDER BY p.id DESC")
+    : $pdo->query($query_base . "AND p.type IN ('loopkit', 'drumkit') ORDER BY p.id DESC");
 $products = $stmt->fetchAll();
 $saved_ids = [];
 if (is_customer_user()) {
@@ -257,12 +263,18 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                             <span class="kit-price-original">$<?= number_format((float)$p['original_price'], 2) ?></span>
                             <?php endif; ?>
                         </div>
-                        <button class="cta-btn kit-btn" onclick="openModal(<?= (int)$p['id'] ?>)">Preview &amp; Buy</button>
-                        <?php if (!is_owner()): ?>
-                        <button class="kit-save-btn <?= in_array((int)$p['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="saveProduct(this, <?= (int)$p['id'] ?>)">
-                            <?= in_array((int)$p['id'], $saved_ids, true) ? 'Saved' : 'Save' ?>
-                        </button>
-                        <?php endif; ?>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; gap:0.5rem;">
+                            <button class="cta-btn kit-btn" style="flex:1; margin-top:0;" onclick="openModal(<?= (int)$p['id'] ?>)">Preview &amp; Buy</button>
+                            <?php if (!is_owner()): ?>
+                            <button class="kit-save-btn <?= !empty($p['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="toggleUpvote(this, <?= (int)$p['id'] ?>)" title="Upvote" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">
+                                <?= !empty($p['user_upvoted']) ? '★' : '☆' ?>
+                            </button>
+                            <button class="kit-save-btn <?= in_array((int)$p['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="togglePlaylist(this, <?= (int)$p['id'] ?>)" title="Add to Playlist" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+                                <?= in_array((int)$p['id'], $saved_ids, true) ? '✅' : '➕' ?>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                        <div style="text-align:right; font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"><span id="upvotes-<?= $p['id'] ?>"><?= (int)$p['upvotes'] ?></span> upvotes</div>
                     </div>
                 </div>
                 <?php endforeach; endif; ?>
@@ -311,6 +323,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     <audio id="audioEl" preload="metadata"></audio>
 
     <script>
+    const IS_LOGGED_IN = <?= is_logged_in() ? 'true' : 'false' ?>;
     function logAction(action, metadata = '', productId = '') {
         fetch('/api/log_action.php', {
             method: 'POST',
@@ -318,11 +331,11 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             body: 'action=' + encodeURIComponent(action) + '&metadata=' + encodeURIComponent(metadata) + '&product_id=' + encodeURIComponent(productId)
         });
     }
-    function saveProduct(btn, productId) {
-        fetch('/api/save_product.php', {
+    function toggleUpvote(btn, productId) {
+        fetch('/api/product_actions.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'product_id=' + encodeURIComponent(productId)
+            body: 'action=toggle_upvote&product_id=' + encodeURIComponent(productId)
         })
         .then(r => r.json())
         .then(data => {
@@ -330,8 +343,28 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 window.location.href = '/login.php';
                 return;
             }
-            btn.classList.toggle('saved', data.saved);
-            btn.textContent = data.saved ? 'Saved' : 'Save';
+            btn.classList.toggle('saved', data.is_active);
+            btn.textContent = data.is_active ? '★' : '☆';
+            if (data.count !== undefined) {
+                document.getElementById('upvotes-' + productId).textContent = data.count;
+            }
+        });
+    }
+
+    function togglePlaylist(btn, productId) {
+        fetch('/api/product_actions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=toggle_save&product_id=' + encodeURIComponent(productId)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) {
+                window.location.href = '/login.php';
+                return;
+            }
+            btn.classList.toggle('saved', data.is_active);
+            btn.textContent = data.is_active ? '✅' : '➕';
         });
     }
 
@@ -588,7 +621,11 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     renderPayPalButtons(productId, p.price);
                 } else {
                     if (p.allow_download && p.zip_file) {
-                        wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323', monospace;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
+                        if (IS_LOGGED_IN) {
+                            wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323', monospace;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
+                        } else {
+                            wrap.innerHTML = `<a href="/login.php" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323', monospace;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;">LOGIN TO CLAIM KIT</a>`;
+                        }
                     } else {
                         // Download disabled — greyed out placeholder
                         wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323', monospace;font-weight:700;letter-spacing:1px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
