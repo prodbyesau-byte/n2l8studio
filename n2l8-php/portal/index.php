@@ -5,6 +5,11 @@ require_once __DIR__ . '/../includes/helpers.php';
 
 require_client_login();
 
+// Prevent browser caching of the portal page to ensure scripts, counts and dynamic templates are always fresh
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
+
 $pdo = get_pdo();
 $site = get_site_content($pdo);
 log_visitor($pdo, 'page_view', '/portal/index.php');
@@ -26,6 +31,17 @@ $msg_stmt->execute([$user_id]);
 $messages = $msg_stmt->fetchAll();
 $unread_count = count(array_filter($messages, fn($m) => !$m['is_read']));
 
+// 2b. Fetch pending friend requests count
+$friend_req_stmt = $pdo->prepare('
+    SELECT COUNT(*) 
+    FROM friendships 
+    WHERE status = "pending" 
+      AND (user_id1 = ? OR user_id2 = ?) 
+      AND action_user_id != ?
+');
+$friend_req_stmt->execute([$user_id, $user_id, $user_id]);
+$pending_friends_count = (int)$friend_req_stmt->fetchColumn();
+
 // 3. Fetch purchased products
 $stmt = $pdo->prepare('
     SELECT o.id as order_id, p.* 
@@ -37,12 +53,48 @@ $stmt = $pdo->prepare('
 $stmt->execute([$user_email]);
 $purchased_products = $stmt->fetchAll();
 
-// 4. Fetch free products from shop
-$free_products = $pdo->query('
-    SELECT * FROM products 
-    WHERE price = 0.00 AND is_active = 1 
-    ORDER BY id DESC
-')->fetchAll();
+// 4a. Fetch user's custom playlists and their products
+$playlists_stmt = $pdo->prepare('SELECT * FROM playlists WHERE user_id = ? ORDER BY created_at DESC');
+$playlists_stmt->execute([$user_id]);
+$user_playlists = $playlists_stmt->fetchAll();
+
+$playlist_items_stmt = $pdo->prepare('
+    SELECT pi.playlist_id, p.* 
+    FROM playlist_items pi
+    JOIN products p ON pi.product_id = p.id
+    JOIN playlists pl ON pi.playlist_id = pl.id
+    WHERE pl.user_id = ?
+    ORDER BY pi.created_at DESC
+');
+$playlist_items_stmt->execute([$user_id]);
+$all_playlist_items = $playlist_items_stmt->fetchAll();
+
+$playlists_with_items = [];
+foreach ($user_playlists as $pl) {
+    $playlists_with_items[$pl['id']] = [
+        'id' => $pl['id'],
+        'name' => $pl['name'],
+        'created_at' => $pl['created_at'],
+        'items' => []
+    ];
+}
+foreach ($all_playlist_items as $item) {
+    if (isset($playlists_with_items[$item['playlist_id']])) {
+        $playlists_with_items[$item['playlist_id']]['items'][] = $item;
+    }
+}
+
+// 4b. Fetch user's upvoted (liked) products
+$upvotes_stmt = $pdo->prepare('
+    SELECT p.* 
+    FROM product_upvotes pu
+    JOIN products p ON pu.product_id = p.id
+    WHERE pu.user_id = ?
+    ORDER BY pu.id DESC
+');
+$upvotes_stmt->execute([$user_id]);
+$liked_products = $upvotes_stmt->fetchAll();
+
 
 // 5. Form handling
 $success_msg = '';
@@ -132,7 +184,7 @@ $tab = $_GET['tab'] ?? 'library';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Portal - N2L8 STUDIO</title>
+    <title>Client Profile - N2L8 STUDIO</title>
     <link rel="stylesheet" href="/static/style.css?v=12">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
@@ -312,6 +364,93 @@ $tab = $_GET['tab'] ?? 'library';
             margin: 0 auto 2rem auto;
             line-height: 1.5;
         }
+
+        /* ── RETRO FOLDER STYLES ── */
+        .retro-folder {
+            position: relative;
+            width: 80px;
+            height: 60px;
+            margin: 1rem auto;
+            transition: all 0.3s ease;
+        }
+        .folder-tab {
+            position: absolute;
+            top: -8px;
+            left: 5px;
+            width: 32px;
+            height: 10px;
+            background: var(--accent);
+            border: 1px solid var(--border-color);
+            border-radius: 3px 3px 0 0;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        .folder-body {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.08));
+            border: 1px solid var(--border-color);
+            border-radius: 0 5px 5px 5px;
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.05), var(--accent-glow);
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .retro-folder:hover .folder-body {
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.02);
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.1), var(--accent-glow), 0 0 12px rgba(192, 21, 42, 0.2);
+        }
+        .retro-folder:hover .folder-tab {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* ── MODAL OVERLAY ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5,5,8,0.92);
+            z-index: 1000;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem 0;
+            backdrop-filter: blur(10px);
+        }
+        .modal-overlay.open { display: block; }
+        .modal-box {
+            background: rgba(5, 5, 8, 0.95);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--purple-glow);
+            width: 92%;
+            max-width: 450px;
+            margin: 5rem auto;
+            position: relative;
+            padding: 2.5rem 2rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .modal-close {
+            position: absolute;
+            top: 0.8rem; right: 0.8rem;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.2s;
+            font-family: 'VT323', monospace;
+            font-weight: 300;
+            width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10;
+            border-radius: 50%;
+        }
+        .modal-close:hover { color:#ff5c5c; border-color: #ff5c5c; }
 
         /* Forms */
         .portal-card {
@@ -1193,35 +1332,163 @@ $tab = $_GET['tab'] ?? 'library';
             display: none;
         }
 
-        /* Friends Tab Styling */
+        /* Friends Tab Redesign & Optimization Styles */
         .friends-tab-grid {
             display: grid;
-            grid-template-columns: 1fr 1.6fr;
-            gap: 2.5rem;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+        }
+        @media(max-width: 768px) {
+            .friends-tab-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
         }
         .friends-grid-layout {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
             gap: 1.2rem;
         }
         .friends-search-item:hover {
-            background: rgba(192, 21, 42, 0.08) !important;
+            background: rgba(168, 85, 247, 0.08) !important;
         }
-        .friend-tab-avatar {
-            width: 64px;
-            height: 64px;
+        .social-stats-hub {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+        .stat-hub-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem 0.6rem;
+            text-align: center;
+            transition: all 0.25s ease;
+        }
+        .stat-hub-card:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(168, 85, 247, 0.3);
+            transform: translateY(-2px);
+        }
+        .stat-hub-num {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.25rem;
+            line-height: 1.1;
+        }
+        .stat-hub-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .social-profile-card {
+            background: linear-gradient(180deg, rgba(168,85,247,0.03) 0%, rgba(5,5,8,0.85) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.8rem 1.2rem 1.5rem 1.2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .social-profile-avatar {
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--accent);
             box-shadow: var(--accent-glow);
-            transition: transform 0.3s ease;
+            margin: 0 auto 1.2rem auto;
+            display: block;
+        }
+        .social-profile-avatar-placeholder {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 auto 1.2rem auto;
+        }
+        .social-profile-name {
+            font-family: 'Syncopate', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #fff;
+            margin: 0 0 0.25rem 0;
+            word-break: break-all;
+            line-height: 1.2;
+        }
+        .social-profile-role {
+            font-size: 0.68rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            display: block;
+        }
+        .friend-list-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(255,255,255,0.01) 0%, rgba(5,5,8,0.75) 100%);
+            border: 1px solid var(--border-color);
+            padding: 1.6rem 1rem 1rem 1rem;
+            border-radius: 8px;
+            position: relative;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            min-height: 260px;
+            justify-content: space-between;
+            will-change: transform, box-shadow;
+        }
+        .friend-list-card:hover {
+            border-color: rgba(168, 85, 247, 0.45);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(168, 85, 247, 0.12), var(--accent-glow);
+        }
+        .friend-tab-avatar-wrap {
+            position: relative;
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+            width: 68px;
+            height: 68px;
+            flex-shrink: 0;
+        }
+        .friend-tab-avatar {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+            display: block;
+        }
+        .friend-list-card:hover .friend-tab-avatar {
+            border-color: var(--accent);
+            box-shadow: var(--accent-glow);
+            transform: scale(1.05);
         }
         .friend-tab-avatar-placeholder {
-            width: 64px;
-            height: 64px;
+            width: 68px;
+            height: 68px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.04);
+            border: 2px solid rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1229,30 +1496,90 @@ $tab = $_GET['tab'] ?? 'library';
             font-size: 1.5rem;
             font-weight: 700;
             color: #fff;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
-            transition: transform 0.3s ease;
-        }
-        .friend-list-card:hover .friend-tab-avatar,
-        .friend-list-card:hover .friend-tab-avatar-placeholder {
-            transform: scale(1.08);
-        }
-        .friend-list-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            background: rgba(5,5,8,0.6);
-            border: 1px solid var(--border-color);
-            padding: 1.2rem;
-            border-radius: 6px;
-            position: relative;
             transition: all 0.3s ease;
-            backdrop-filter: blur(6px);
         }
-        .friend-list-card:hover {
-            border-color: rgba(192, 21, 42, 0.4);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(192, 21, 42, 0.08), var(--accent-glow);
+        .friend-list-card:hover .friend-tab-avatar-placeholder {
+            border-color: var(--accent);
+            box-shadow: var(--accent-glow);
+            transform: scale(1.05);
+        }
+        .friend-status-dot {
+            width: 10px;
+            height: 10px;
+            background: #7be1a8;
+            border: 2px solid #050508;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            box-shadow: 0 0 8px #7be1a8;
+        }
+        .friend-card-username {
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: #fff;
+            font-family: 'Syncopate', sans-serif;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            word-break: break-all;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+            height: 1.2rem;
+        }
+        .friend-card-role {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            height: 1.2rem;
+            display: block;
+        }
+        .friend-card-actions {
+            display: flex;
+            gap: 0.4rem;
+            width: 100%;
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+        .friend-card-btn {
+            flex: 1;
+            font-size: 0.62rem !important;
+            padding: 0.45rem 0.3rem !important;
+            font-family: 'Syncopate', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .friend-card-btn.primary {
+            background: var(--accent);
+            color: #fff;
+            border: 1px solid var(--accent);
+        }
+        .friend-card-btn.primary:hover {
+            background: #b57cff;
+            border-color: #b57cff;
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        }
+        .friend-card-btn.secondary {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+        .friend-card-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
         }
         .friend-card-unfriend-btn {
             position: absolute;
@@ -1261,18 +1588,68 @@ $tab = $_GET['tab'] ?? 'library';
             background: transparent;
             border: none;
             color: var(--text-muted);
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
             line-height: 1;
             padding: 0.2rem;
-            transition: color 0.2s;
+            transition: all 0.2s;
             opacity: 0;
         }
         .friend-list-card:hover .friend-card-unfriend-btn {
-            opacity: 1;
+            opacity: 0.6;
         }
         .friend-card-unfriend-btn:hover {
-            color: var(--accent);
+            opacity: 1 !important;
+            color: #ff5c5c;
+        }
+
+        /* Toast Container & Notification styling (Global for both Desktop & Mobile) */
+        #toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .custom-toast {
+            pointer-events: auto;
+            background: rgba(10, 10, 12, 0.96);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent);
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            min-width: 280px;
+            max-width: 380px;
+            transform: translateX(130%);
+            transition: transform 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.35);
+            backdrop-filter: blur(8px);
+        }
+        .custom-toast.show {
+            transform: translateX(0);
+        }
+        .custom-toast.success {
+            border-left-color: #7be1a8;
+            box-shadow: 0 10px 25px rgba(123, 225, 168, 0.15), 0 15px 35px rgba(0, 0, 0, 0.7);
+        }
+        .custom-toast.error {
+            border-left-color: #ff3860;
+            box-shadow: 0 10px 25px rgba(255, 56, 96, 0.15), 0 15px 35px rgba(0, 0, 0, 0.7);
+        }
+        .custom-toast.info {
+            border-left-color: var(--accent);
+            box-shadow: 0 10px 25px rgba(0, 198, 255, 0.15), 0 15px 35px rgba(0, 0, 0, 0.7);
         }
 
         /* ── RESPONSIVE / MOBILE OPTIMIZATION ── */
@@ -1425,7 +1802,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
     </style>
 </head>
-<body class="page-home">
+<body class="page-home <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height: auto; padding-bottom: 0;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
@@ -1454,20 +1831,23 @@ $tab = $_GET['tab'] ?? 'library';
                     </div>
                 <?php endif; ?>
                 <div class="portal-welcome">
-                    <h2>CLIENT PORTAL</h2>
+                    <h2>CLIENT PROFILE</h2>
                     <p>Welcome back, <span><?= h($username) ?></span> &nbsp;|&nbsp; Credentials: <span><?= h($user_email) ?></span></p>
                 </div>
-            </div>
-            <div>
-                <a href="/logout.php" class="cta-btn secondary" style="font-size: 0.72rem; padding: 0.6rem 1.2rem;">LOGOUT</a>
             </div>
         </div>
 
         <div class="portal-tabs">
             <button class="portal-tab-btn <?= $tab === 'library' ? 'active' : '' ?>" onclick="switchTab('library')">My Library (<?= count($purchased_products) ?>)</button>
-            <button class="portal-tab-btn <?= $tab === 'free' ? 'active' : '' ?>" onclick="switchTab('free')">Claim Free Kits (<?= count($free_products) ?>)</button>
-            <button class="portal-tab-btn <?= $tab === 'friends' ? 'active' : '' ?>" onclick="switchTab('friends')">Friends</button>
-            <button class="portal-tab-btn <?= $tab === 'inbox' ? 'active' : '' ?>" onclick="switchTab('inbox')">Inbox (<?= $unread_count ?>)</button>
+            <button class="portal-tab-btn <?= $tab === 'liked' ? 'active' : '' ?>" onclick="switchTab('liked')">Liked &amp; Saved</button>
+            <button class="portal-tab-btn <?= $tab === 'friends' ? 'active' : '' ?>" onclick="switchTab('friends')">
+                Friends
+                <span id="friends-tab-badge" style="background:var(--accent); color:#fff; font-size:0.62rem; padding:0.15rem 0.4rem; border-radius:10px; font-family:'Montserrat',sans-serif; font-weight:700; margin-left:4px; <?= $pending_friends_count > 0 ? '' : 'display:none;' ?>"><?= $pending_friends_count ?></span>
+            </button>
+            <button class="portal-tab-btn <?= $tab === 'inbox' ? 'active' : '' ?>" onclick="switchTab('inbox')">
+                Inbox
+                <span id="inbox-tab-badge" style="background:var(--accent); color:#fff; font-size:0.62rem; padding:0.15rem 0.4rem; border-radius:10px; font-family:'Montserrat',sans-serif; font-weight:700; margin-left:4px; <?= $unread_count > 0 ? '' : 'display:none;' ?>"><?= $unread_count ?></span>
+            </button>
             <button class="portal-tab-btn <?= $tab === 'settings' ? 'active' : '' ?>" onclick="switchTab('settings')">Account Settings</button>
         </div>
 
@@ -1510,12 +1890,100 @@ $tab = $_GET['tab'] ?? 'library';
             <?php endif; ?>
         </div>
 
-        <!-- ── TAB: FREE KITS ── -->
-        <div id="tab-free" class="portal-tab <?= $tab === 'free' ? 'active' : '' ?>">
-            <?php if (!empty($free_products)): ?>
-                <div class="library-grid">
-                    <?php foreach ($free_products as $p): ?>
-                        <div class="library-card">
+        <!-- ── TAB: LIKED & SAVED ── -->
+        <div id="tab-liked" class="portal-tab <?= $tab === 'liked' ? 'active' : '' ?>">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <h3 style="margin:0; font-family:'Syncopate', sans-serif; color:var(--accent); font-size:1.2rem;">PLAYLISTS &amp; LIKED KITS</h3>
+                    <p style="margin:0.2rem 0 0 0; color:var(--text-muted); font-size:0.85rem;">Manage your custom collections and see your upvoted products.</p>
+                </div>
+                <button class="cta-btn" onclick="openCreatePlaylistModal()" style="font-size:0.75rem; padding:0.6rem 1.2rem;">CREATE NEW PLAYLIST</button>
+            </div>
+
+            <!-- Custom Playlists Grid -->
+            <h4 style="font-family:'Syncopate', sans-serif; font-size:0.85rem; letter-spacing:0.05em; margin-bottom:1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">MY CUSTOM PLAYLISTS</h4>
+            
+            <?php if (empty($playlists_with_items)): ?>
+                <div class="empty-library" id="empty-playlists-notice" style="padding: 2rem; margin-bottom: 2rem;">
+                    <h3>No Playlists Yet</h3>
+                    <p>Create a playlist using the button above or by clicking ➕ on products in the Shop.</p>
+                </div>
+            <?php else: ?>
+                <div class="library-grid" id="playlists-grid" style="margin-bottom:3rem;">
+                    <?php foreach ($playlists_with_items as $pl_id => $pl): ?>
+                        <div class="library-card" id="playlist-card-<?= $pl_id ?>">
+                            <div class="library-cover" style="cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); position:relative;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">
+                                <div class="retro-folder">
+                                    <div class="folder-tab"></div>
+                                    <div class="folder-body">
+                                        <span style="font-family:'Syncopate', sans-serif; font-size:0.55rem; color:#fff; font-weight:700; opacity:0.8; letter-spacing:1px;">KITS</span>
+                                    </div>
+                                </div>
+                                <span style="position:absolute; bottom:10px; right:10px; background:var(--accent); color:#fff; font-size:0.7rem; font-weight:700; padding:2px 6px; border-radius:3px;">
+                                    <?= count($pl['items']) ?> items
+                                </span>
+                            </div>
+                            <div class="library-info" style="cursor:pointer;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">
+                                <h3><?= h($pl['name']) ?></h3>
+                                <div class="author">Created: <?= date('Y-m-d', strtotime($pl['created_at'])) ?></div>
+                            </div>
+                            <div style="display:flex; gap:0.5rem; width:100%;">
+                                <button class="cta-btn secondary" style="flex:1; font-size:0.65rem; padding:0.5rem;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">VIEW ITEMS</button>
+                                <button class="cta-btn secondary" style="border-color:rgba(192,21,42,0.4); color:rgba(255,255,255,0.6); font-size:0.65rem; padding:0.5rem; min-width:40px;" onclick="deletePlaylist(<?= $pl_id ?>)" title="Delete Playlist">🗑️</button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Playlist Items Detailed View -->
+                <?php foreach ($playlists_with_items as $pl_id => $pl): ?>
+                    <div id="playlist-details-<?= $pl_id ?>" class="playlist-details-section" style="display:none; background:rgba(5,5,8,0.9); border:1px solid var(--border-color); border-radius:6px; padding:1.5rem; margin-bottom:2rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">
+                            <h4 style="margin:0; font-family:'Syncopate', sans-serif; color:var(--accent); font-size:0.9rem;"><?= strtoupper(h($pl['name'])) ?> ITEMS</h4>
+                            <button class="cta-btn secondary" style="font-size:0.65rem; padding:0.3rem 0.8rem;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">CLOSE</button>
+                        </div>
+                        <?php if (empty($pl['items'])): ?>
+                            <p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">This playlist has no items. Visit the Shop to add products!</p>
+                        <?php else: ?>
+                            <div class="library-grid">
+                                <?php foreach ($pl['items'] as $p): ?>
+                                    <div class="library-card" id="playlist-item-card-<?= $pl_id ?>-<?= $p['id'] ?>">
+                                        <div class="library-cover">
+                                            <?php if ($p['cover_image']): ?>
+                                                <img src="/static/uploads/<?= h($p['cover_image']) ?>" alt="">
+                                            <?php else: ?>
+                                                <div style="width:100%;height:100%;background:rgba(255,255,255,0.02);"></div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="library-info">
+                                            <h3><?= h($p['title']) ?></h3>
+                                            <div class="author">By <?= h($p['author'] ?: 'N2L8 STUDIO') ?></div>
+                                            <span class="tag"><?= h($p['type']) ?></span>
+                                        </div>
+                                        <div style="display:flex; gap:0.5rem;">
+                                            <a href="/shop.php" class="cta-btn" style="flex:1; font-size:0.65rem; padding:0.5rem; text-align:center;">GO TO SHOP</a>
+                                            <button class="cta-btn secondary" style="border-color:rgba(192,21,42,0.4); font-size:0.65rem; padding:0.5rem;" onclick="removeFromPlaylist(<?= $pl_id ?>, <?= (int)$p['id'] ?>, this)">REMOVE</button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <!-- Liked/Upvoted Products Section -->
+            <h4 style="font-family:'Syncopate', sans-serif; font-size:0.85rem; letter-spacing:0.05em; margin-bottom:1rem; margin-top:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">LIKED &amp; UPVOTED</h4>
+            
+            <?php if (empty($liked_products)): ?>
+                <div class="empty-library" id="empty-liked-notice" style="padding: 2rem;">
+                    <h3>No Liked Products</h3>
+                    <p>Upvote products in the Shop by clicking the star (☆) button!</p>
+                </div>
+            <?php else: ?>
+                <div class="library-grid" id="liked-products-grid">
+                    <?php foreach ($liked_products as $p): ?>
+                        <div class="library-card" id="liked-card-<?= $p['id'] ?>">
                             <div class="library-cover">
                                 <?php if ($p['cover_image']): ?>
                                     <img src="/static/uploads/<?= h($p['cover_image']) ?>" alt="">
@@ -1528,18 +1996,12 @@ $tab = $_GET['tab'] ?? 'library';
                                 <div class="author">By <?= h($p['author'] ?: 'N2L8 STUDIO') ?></div>
                                 <span class="tag"><?= h($p['type']) ?></span>
                             </div>
-                            <?php if ($p['zip_file']): ?>
-                                <a href="/static/uploads/<?= h($p['zip_file']) ?>" class="cta-btn" download>CLAIM FREE KIT</a>
-                            <?php else: ?>
-                                <button class="cta-btn secondary" style="cursor: not-allowed; opacity: 0.6;" disabled>NO FILE LOADED</button>
-                            <?php endif; ?>
+                            <div style="display:flex; gap:0.5rem;">
+                                <a href="/shop.php" class="cta-btn" style="flex:1; font-size:0.65rem; padding:0.5rem; text-align:center;">GO TO SHOP</a>
+                                <button class="cta-btn secondary" style="border-color:rgba(192,21,42,0.4); font-size:0.65rem; padding:0.5rem;" onclick="unlikeProduct(<?= (int)$p['id'] ?>, this)">UNLIKE</button>
+                            </div>
                         </div>
                     <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <div class="empty-library">
-                    <h3>No Free Kits Available</h3>
-                    <p>There are currently no free sample packs active on the shop server. Check back soon!</p>
                 </div>
             <?php endif; ?>
         </div>
@@ -1718,8 +2180,21 @@ $tab = $_GET['tab'] ?? 'library';
                 <!-- Grid Columns -->
                 <div class="friends-tab-grid">
                     
-                    <!-- Pending Requests Column -->
+                    <!-- Left Sidebar Column: Profile Card + Incoming Requests -->
                     <div class="friends-requests-column">
+                        <!-- Miniature Profile Card -->
+                        <div class="social-profile-card">
+                            <?php if ($profile_pic): ?>
+                                <img src="/static/uploads/<?= rawurlencode($profile_pic) ?>" class="social-profile-avatar" alt="Avatar">
+                            <?php else: ?>
+                                <div class="social-profile-avatar-placeholder"><?= strtoupper(substr($username, 0, 1)) ?></div>
+                            <?php endif; ?>
+                            <h4 class="social-profile-name"><?= h($username) ?></h4>
+                            <span class="social-profile-role"><?= h(current_user_role()) ?></span>
+                            <button onclick="switchTab('settings')" class="cta-btn secondary" style="width:100%; font-size:0.65rem; padding:0.45rem 0.8rem; margin:0;">Edit Profile</button>
+                        </div>
+
+                        <!-- Incoming Requests List -->
                         <h4 style="font-family:'Syncopate',sans-serif; font-size:0.85rem; letter-spacing:1px; color:#fff; margin:0 0 1.2rem 0; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.6rem; display:flex; align-items:center; gap:0.6rem;">
                             <span>REQUESTS</span>
                             <span id="friends-req-badge" style="background:var(--accent); color:#fff; font-size:0.62rem; padding:0.15rem 0.4rem; border-radius:10px; font-family:'Montserrat',sans-serif; font-weight:700; display:none;">0</span>
@@ -1727,10 +2202,27 @@ $tab = $_GET['tab'] ?? 'library';
                         <div id="friends-requests-list" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
                     </div>
                     
-                    <!-- Accepted Friends Grid -->
+                    <!-- Right Main Area Column: Social Stats Hub + Friends Directory Grid -->
                     <div class="friends-list-column">
+                        <!-- Social Stats Hub -->
+                        <div class="social-stats-hub">
+                            <div class="stat-hub-card">
+                                <div id="stats-friends-count" class="stat-hub-num">0</div>
+                                <div class="stat-hub-label">Friends</div>
+                            </div>
+                            <div class="stat-hub-card">
+                                <div id="stats-pending-count" class="stat-hub-num">0</div>
+                                <div class="stat-hub-label">Requests</div>
+                            </div>
+                            <div class="stat-hub-card">
+                                <div id="stats-messages-count" class="stat-hub-num"><?= $unread_count ?></div>
+                                <div class="stat-hub-label">Unread DMs</div>
+                            </div>
+                        </div>
+
+                        <!-- Friends Directory Header -->
                         <h4 style="font-family:'Syncopate',sans-serif; font-size:0.85rem; letter-spacing:1px; color:#fff; margin:0 0 1.2rem 0; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.6rem; display:flex; align-items:center; gap:0.6rem;">
-                            <span>FRIENDS</span>
+                            <span>FRIENDS DIRECTORY</span>
                             <span id="friends-count-badge" style="background:rgba(255,255,255,0.1); color:var(--text-muted); font-size:0.62rem; padding:0.15rem 0.4rem; border-radius:10px; font-family:'Montserrat',sans-serif; font-weight:700; display:none;">0</span>
                         </h4>
                         <div id="friends-grid-list" class="friends-grid-layout"></div>
@@ -1851,6 +2343,220 @@ $tab = $_GET['tab'] ?? 'library';
             }
         }
 
+        // ── PLAYLISTS & LIKED PRODUCTS JS LOGIC ──
+        function openCreatePlaylistModal() {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay open';
+            overlay.id = 'createPlaylistPortalModal';
+            overlay.style.zIndex = '9999';
+            overlay.innerHTML = `
+                <div class="modal-box" style="max-width:400px; padding:2rem; text-align:center;">
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                    <h3 style="margin-top:0; font-family:'Syncopate', sans-serif; color:var(--accent);">CREATE PLAYLIST</h3>
+                    <div style="margin:1.5rem 0;">
+                        <input type="text" id="newPortalPlaylistName" placeholder="Playlist Name" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'VT323', monospace; font-size:1.2rem; box-sizing:border-box;">
+                    </div>
+                    <button class="cta-btn" onclick="submitCreatePlaylist()" style="width:100%; padding:0.6rem;">CREATE</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function submitCreatePlaylist() {
+            const input = document.getElementById('newPortalPlaylistName');
+            if (!input || !input.value.trim()) return;
+            const name = input.value.trim();
+
+            fetch('/api/product_actions.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=create_playlist&name=' + encodeURIComponent(name)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = document.getElementById('createPlaylistPortalModal');
+                    if (modal) modal.remove();
+                    
+                    const pl = data.playlist; // Contains id and name
+                    
+                    // Check if grid exists, if not create it
+                    let grid = document.getElementById('playlists-grid');
+                    const notice = document.getElementById('empty-playlists-notice');
+                    if (!grid) {
+                        if (notice) notice.remove();
+                        grid = document.createElement('div');
+                        grid.className = 'library-grid';
+                        grid.id = 'playlists-grid';
+                        grid.style.marginBottom = '3rem';
+                        
+                        // Insert grid before "LIKED & UPVOTED" heading
+                        const heading = Array.from(document.querySelectorAll('#tab-liked h4')).find(el => el.textContent.includes('MY CUSTOM PLAYLISTS'));
+                        if (heading) {
+                            heading.after(grid);
+                        } else {
+                            const tab = document.getElementById('tab-liked');
+                            tab.insertBefore(grid, tab.lastElementChild);
+                        }
+                    }
+                    
+                    // Create playlist card
+                    const card = document.createElement('div');
+                    card.className = 'library-card';
+                    card.id = 'playlist-card-' + pl.id;
+                    
+                    const safeName = pl.name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    
+                    card.innerHTML = `
+                        <div class="library-cover" style="cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); position:relative;" onclick="togglePlaylistDetails(${pl.id})">
+                            <div class="retro-folder">
+                                <div class="folder-tab"></div>
+                                <div class="folder-body">
+                                    <span style="font-family:'Syncopate', sans-serif; font-size:0.55rem; color:#fff; font-weight:700; opacity:0.8; letter-spacing:1px;">KITS</span>
+                                </div>
+                            </div>
+                            <span style="position:absolute; bottom:10px; right:10px; background:var(--accent); color:#fff; font-size:0.7rem; font-weight:700; padding:2px 6px; border-radius:3px;">
+                                0 items
+                            </span>
+                        </div>
+                        <div class="library-info" style="cursor:pointer;" onclick="togglePlaylistDetails(${pl.id})">
+                            <h3>${safeName}</h3>
+                            <div class="author">Created: ${new Date().toISOString().split('T')[0]}</div>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; width:100%;">
+                            <button class="cta-btn secondary" style="flex:1; font-size:0.65rem; padding:0.5rem;" onclick="togglePlaylistDetails(${pl.id})">VIEW ITEMS</button>
+                            <button class="cta-btn secondary" style="border-color:rgba(192,21,42,0.4); color:rgba(255,255,255,0.6); font-size:0.65rem; padding:0.5rem; min-width:40px;" onclick="deletePlaylist(${pl.id})" title="Delete Playlist">🗑️</button>
+                        </div>
+                    `;
+                    
+                    grid.insertBefore(card, grid.firstChild);
+                    
+                    // Create details section
+                    const details = document.createElement('div');
+                    details.id = 'playlist-details-' + pl.id;
+                    details.className = 'playlist-details-section';
+                    details.style.display = 'none';
+                    details.style.background = 'rgba(5,5,8,0.9)';
+                    details.style.border = '1px solid var(--border-color)';
+                    details.style.borderRadius = '6px';
+                    details.style.padding = '1.5rem';
+                    details.style.marginBottom = '2rem';
+                    
+                    details.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">
+                            <h4 style="margin:0; font-family:'Syncopate', sans-serif; color:var(--accent); font-size:0.9rem;">${safeName.toUpperCase()} ITEMS</h4>
+                            <button class="cta-btn secondary" style="font-size:0.65rem; padding:0.3rem 0.8rem;" onclick="togglePlaylistDetails(${pl.id})">CLOSE</button>
+                        </div>
+                        <p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">This playlist has no items. Visit the Shop to add products!</p>
+                    `;
+                    
+                    grid.after(details);
+                }
+            });
+        }
+
+        function deletePlaylist(playlistId) {
+            if (!confirm('Are you sure you want to delete this playlist?')) return;
+            
+            fetch('/api/product_actions.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=delete_playlist&playlist_id=${playlistId}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const card = document.getElementById('playlist-card-' + playlistId);
+                    if (card) card.remove();
+                    const details = document.getElementById('playlist-details-' + playlistId);
+                    if (details) details.remove();
+                    
+                    const grid = document.getElementById('playlists-grid');
+                    if (grid && grid.children.length === 0) {
+                        window.location.reload();
+                    }
+                }
+            });
+        }
+
+        function togglePlaylistDetails(playlistId) {
+            document.querySelectorAll('.playlist-details-section').forEach(el => {
+                if (el.id !== 'playlist-details-' + playlistId) {
+                    el.style.display = 'none';
+                }
+            });
+            
+            const target = document.getElementById('playlist-details-' + playlistId);
+            if (target) {
+                if (target.style.display === 'none') {
+                    target.style.display = 'block';
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    target.style.display = 'none';
+                }
+            }
+        }
+
+        function removeFromPlaylist(playlistId, productId, btn) {
+            fetch('/api/product_actions.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=toggle_playlist_item&playlist_id=${playlistId}&product_id=${productId}`
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && !res.is_active) {
+                    const card = document.getElementById(`playlist-item-card-${playlistId}-${productId}`);
+                    if (card) {
+                        card.remove();
+                    }
+                    const detailsSection = document.getElementById('playlist-details-' + playlistId);
+                    if (detailsSection) {
+                        const itemsGrid = detailsSection.querySelector('.library-grid');
+                        if (itemsGrid && itemsGrid.children.length === 0) {
+                            detailsSection.innerHTML = `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.5rem;">
+                                    <h4 style="margin:0; font-family:'Syncopate', sans-serif; color:var(--accent); font-size:0.9rem;">ITEMS</h4>
+                                    <button class="cta-btn secondary" style="font-size:0.65rem; padding:0.3rem 0.8rem;" onclick="togglePlaylistDetails(${playlistId})">CLOSE</button>
+                                </div>
+                                <p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">This playlist has no items. Visit the Shop to add products!</p>
+                            `;
+                        }
+                    }
+                }
+            });
+        }
+
+        function unlikeProduct(productId, btn) {
+            fetch('/api/product_actions.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=toggle_upvote&product_id=${productId}`
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && !res.is_active) {
+                    const card = document.getElementById('liked-card-' + productId);
+                    if (card) card.remove();
+                    
+                    const grid = document.getElementById('liked-products-grid');
+                    if (grid && grid.children.length === 0) {
+                        const container = grid.parentElement;
+                        grid.remove();
+                        const notice = document.createElement('div');
+                        notice.className = 'empty-library';
+                        notice.style.padding = '2rem';
+                        notice.id = 'empty-liked-notice';
+                        notice.innerHTML = `
+                            <h3>No Liked Products</h3>
+                            <p>Upvote products in the Shop by clicking the star (☆) button!</p>
+                        `;
+                        container.appendChild(notice);
+                    }
+                }
+            });
+        }
+
         // ── DIRECT MESSAGING JS LOGIC ──
 
         function switchDMFolder(folder) {
@@ -1884,7 +2590,7 @@ $tab = $_GET['tab'] ?? 'library';
             const listContainer = document.getElementById('dm-conversations-list');
             
             if (currentDMFolder === 'important') {
-                fetch('/portal/portal_messages_api.php?action=fetch_important')
+                fetch(`/portal/portal_messages_api.php?action=fetch_important&t=${Date.now()}`)
                     .then(r => r.json())
                     .then(res => {
                         if (res.success) renderIndividualMessages(res.messages, listContainer);
@@ -1893,7 +2599,7 @@ $tab = $_GET['tab'] ?? 'library';
             }
             
             if (currentDMFolder === 'deleted') {
-                fetch('/portal/portal_messages_api.php?action=fetch_deleted')
+                fetch(`/portal/portal_messages_api.php?action=fetch_deleted&t=${Date.now()}`)
                     .then(r => r.json())
                     .then(res => {
                         if (res.success) renderIndividualMessages(res.messages, listContainer);
@@ -1901,7 +2607,7 @@ $tab = $_GET['tab'] ?? 'library';
                 return;
             }
 
-            fetch('/portal/portal_messages_api.php?action=fetch_conversations')
+            fetch(`/portal/portal_messages_api.php?action=fetch_conversations&t=${Date.now()}`)
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -1930,9 +2636,10 @@ $tab = $_GET['tab'] ?? 'library';
 
                         // Also update header tab unread count
                         const totalUnread = pUnread + gUnread;
-                        const tabBtn = Array.from(document.querySelectorAll('.portal-tab-btn')).find(btn => btn.innerText.toLowerCase().includes('inbox'));
-                        if (tabBtn) {
-                            tabBtn.innerText = `Inbox (${totalUnread})`;
+                        const inboxBadge = document.getElementById('inbox-tab-badge');
+                        if (inboxBadge) {
+                            inboxBadge.innerText = totalUnread;
+                            inboxBadge.style.display = totalUnread > 0 ? 'inline-block' : 'none';
                         }
 
                         if (conversations.length === 0) {
@@ -2038,7 +2745,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
 
         function loadThread(partnerId, partnerName, partnerAvatar) {
-            fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${partnerId}`)
+            fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${partnerId}&t=${Date.now()}`)
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -2172,7 +2879,7 @@ $tab = $_GET['tab'] ?? 'library';
         function deleteDMConversation(partnerId) {
             if (!confirm("Are you sure you want to delete this conversation? This will clear all messages in this thread for you.")) return;
             
-            fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${partnerId}`)
+            fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${partnerId}&t=${Date.now()}`)
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -2208,7 +2915,7 @@ $tab = $_GET['tab'] ?? 'library';
             }
 
             searchTimeout = setTimeout(() => {
-                fetch(`/portal/friends_api.php?action=search_users&query=${encodeURIComponent(query)}`)
+                fetch(`/portal/friends_api.php?action=search_users&query=${encodeURIComponent(query)}&t=${Date.now()}`)
                     .then(r => r.json())
                     .then(res => {
                         if (res.success) {
@@ -2249,7 +2956,7 @@ $tab = $_GET['tab'] ?? 'library';
 
         function loadFriendsList() {
             const container = document.getElementById('dm-friends-list');
-            fetch('/portal/friends_api.php?action=list_friends')
+            fetch(`/portal/friends_api.php?action=list_friends&t=${Date.now()}`)
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -2303,11 +3010,11 @@ $tab = $_GET['tab'] ?? 'library';
             const text = document.getElementById('compose-text').value.trim();
             
             if (!recId) {
-                alert("Please select a friend to send a message to.");
+                showToast("Please select a friend to send a message to.", "error");
                 return;
             }
             if (!text) {
-                alert("Message cannot be empty.");
+                showToast("Message cannot be empty.", "error");
                 return;
             }
 
@@ -2321,10 +3028,11 @@ $tab = $_GET['tab'] ?? 'library';
                 .then(res => {
                     if (res.success) {
                         closeComposeModal();
+                        showToast("Message sent successfully!", "success");
                         switchDMFolder('primary');
                         openConversation(recId, recName, '');
                     } else {
-                        alert("Error: " + res.error);
+                        showToast("Error: " + res.error, "error");
                     }
                 });
         }
@@ -2336,7 +3044,7 @@ $tab = $_GET['tab'] ?? 'library';
             if (searchResultsDiv) {
                 searchResultsDiv.style.display = 'none';
             }
-            fetch(`/portal/friends_api.php?action=get_profile&user_id=${userId}`)
+            fetch(`/portal/friends_api.php?action=get_profile&user_id=${userId}&t=${Date.now()}`)
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -2396,7 +3104,7 @@ $tab = $_GET['tab'] ?? 'library';
 
                         document.getElementById('profileModal').classList.add('open');
                     } else {
-                        alert("Error loading profile: " + res.error);
+                        showToast("Error loading profile: " + res.error, "error");
                     }
                 });
         }
@@ -2425,8 +3133,17 @@ $tab = $_GET['tab'] ?? 'library';
                         // Refresh friends tab lists
                         loadTabFriends();
                         loadTabPending();
+
+                        let actionLabel = "Action successful!";
+                        if (action === 'send_request') actionLabel = "Friend request sent successfully!";
+                        else if (action === 'accept_request') actionLabel = "Friend request accepted!";
+                        else if (action === 'decline_request') actionLabel = "Friend request declined.";
+                        else if (action === 'cancel_request') actionLabel = "Friend request cancelled.";
+                        else if (action === 'unfriend') actionLabel = "Removed from friends.";
+
+                        showToast(actionLabel, "success");
                     } else {
-                        alert("Action failed: " + res.error);
+                        showToast("Action failed: " + res.error, "error");
                     }
                 });
         }
@@ -2487,30 +3204,30 @@ $tab = $_GET['tab'] ?? 'library';
                         gridList.innerHTML = '';
                         res.users.forEach(u => {
                             const avatarHtml = u.profile_picture
-                                ? `<img src="/static/uploads/${encodeURIComponent(u.profile_picture)}" class="community-avatar-large" alt="">`
-                                : `<div class="community-initial-large">${u.username.substr(0,1).toUpperCase()}</div>`;
+                                ? `<img src="/static/uploads/${encodeURIComponent(u.profile_picture)}" class="friend-tab-avatar" alt="">`
+                                : `<div class="friend-tab-avatar-placeholder">${u.username.substr(0,1).toUpperCase()}</div>`;
                             
                             let actionButton = '';
                             if (u.friendship_status === 'accepted') {
-                                actionButton = `<button class="cta-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.8; cursor:default;" disabled>✓ FRIENDS</button>`;
+                                actionButton = `<button class="friend-card-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.8; cursor:default;" disabled>✓ FRIENDS</button>`;
                             } else if (u.friendship_status === 'pending') {
                                 if (parseInt(u.action_user_id) === parseInt(<?= (int)$user_id ?>)) {
-                                    actionButton = `<button class="cta-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.7;" onclick="handleDiscoverFriendAction(${u.id}, 'cancel_request')">REQUEST SENT</button>`;
+                                    actionButton = `<button class="friend-card-btn secondary" style="width:100%; font-size:0.7rem; padding:0.6rem; opacity:0.7;" onclick="handleDiscoverFriendAction(${u.id}, 'cancel_request')">REQUEST SENT</button>`;
                                 } else {
-                                    actionButton = `<button class="cta-btn" style="width:100%; font-size:0.7rem; padding:0.6rem; background:#7be1a8; color:#000;" onclick="handleDiscoverFriendAction(${u.id}, 'accept_request')">ACCEPT REQUEST</button>`;
+                                    actionButton = `<button class="friend-card-btn primary" style="width:100%; font-size:0.7rem; padding:0.6rem; background:#7be1a8; color:#000;" onclick="handleDiscoverFriendAction(${u.id}, 'accept_request')">ACCEPT REQUEST</button>`;
                                 }
                             } else {
-                                actionButton = `<button class="cta-btn" style="width:100%; font-size:0.7rem; padding:0.6rem;" onclick="handleDiscoverFriendAction(${u.id}, 'send_request')">ADD FRIEND</button>`;
+                                actionButton = `<button class="friend-card-btn primary" style="width:100%; font-size:0.7rem; padding:0.6rem;" onclick="handleDiscoverFriendAction(${u.id}, 'send_request')">ADD FRIEND</button>`;
                             }
 
                             const itemHtml = `
-                                <div class="community-card">
-                                    <div onclick="openUserProfile(${u.id})" style="cursor:pointer; margin-bottom:1.2rem; position:relative;">
+                                <div class="friend-list-card">
+                                    <div class="friend-tab-avatar-wrap" onclick="openUserProfile(${u.id})">
                                         ${avatarHtml}
                                     </div>
-                                    <div class="community-username" onclick="openUserProfile(${u.id})" style="cursor:pointer; font-size:0.92rem; font-weight:700; color:#fff;" title="${escapeHtml(u.username)}">${escapeHtml(u.username)}</div>
-                                    <div class="community-role">${escapeHtml(u.role)}</div>
-                                    <div style="width:100%; display:flex; flex-direction:column; gap:0.5rem; margin-top:auto;">
+                                    <span class="friend-card-username" onclick="openUserProfile(${u.id})" title="${escapeHtml(u.username)}">${escapeHtml(u.username)}</span>
+                                    <span class="friend-card-role">${escapeHtml(u.role)}</span>
+                                    <div class="friend-card-actions">
                                         ${actionButton}
                                     </div>
                                 </div>
@@ -2545,9 +3262,10 @@ $tab = $_GET['tab'] ?? 'library';
         function loadTabFriends() {
             const gridList = document.getElementById('friends-grid-list');
             const badge = document.getElementById('friends-count-badge');
+            const statsFriendsCount = document.getElementById('stats-friends-count');
             if (!gridList) return;
 
-            fetch('/portal/friends_api.php?action=list_friends')
+            fetch(`/portal/friends_api.php?action=list_friends&t=${Date.now()}`)
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -2555,6 +3273,9 @@ $tab = $_GET['tab'] ?? 'library';
                         if (badge) {
                             badge.innerText = count;
                             badge.style.display = count > 0 ? 'inline-block' : 'none';
+                        }
+                        if (statsFriendsCount) {
+                            statsFriendsCount.innerText = count;
                         }
                         
                         if (count === 0) {
@@ -2571,14 +3292,21 @@ $tab = $_GET['tab'] ?? 'library';
                                 ? `<img src="/static/uploads/${encodeURIComponent(f.profile_picture)}" class="friend-tab-avatar" alt="">`
                                 : `<div class="friend-tab-avatar-placeholder">${f.username.substr(0,1).toUpperCase()}</div>`;
                             
+                            const roleText = f.role ? f.role : 'Member';
+
                             const itemHtml = `
                                 <div class="friend-list-card">
                                     <button onclick="handleFriendshipAction(${f.id}, 'unfriend')" class="friend-card-unfriend-btn" title="Remove Friend">&times;</button>
-                                    <div onclick="openUserProfile(${f.id})" style="cursor:pointer; margin-bottom:0.8rem; position:relative;">
+                                    <div class="friend-tab-avatar-wrap" onclick="openUserProfile(${f.id})">
                                         ${avatarHtml}
+                                        <div class="friend-status-dot"></div>
                                     </div>
-                                    <span onclick="openUserProfile(${f.id})" style="font-weight:700; font-size:0.82rem; color:#fff; font-family:'Syncopate',sans-serif; letter-spacing:0.5px; cursor:pointer; word-break:break-all; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;" title="${escapeHtml(f.username)}">${escapeHtml(f.username)}</span>
-                                    <button onclick="openUserProfile(${f.id})" class="cta-btn secondary" style="margin-top:1rem; width:100%; font-size:0.68rem; padding:0.45rem;">VIEW PROFILE</button>
+                                    <span class="friend-card-username" onclick="openUserProfile(${f.id})" title="${escapeHtml(f.username)}">${escapeHtml(f.username)}</span>
+                                    <span class="friend-card-role">${escapeHtml(roleText)}</span>
+                                    <div class="friend-card-actions">
+                                        <button onclick="openDirectMessage(${f.id}, '${escapeHtml(f.username)}', '${f.profile_picture ? encodeURIComponent(f.profile_picture) : ''}')" class="friend-card-btn primary">MESSAGE</button>
+                                        <button onclick="openUserProfile(${f.id})" class="friend-card-btn secondary">PROFILE</button>
+                                    </div>
                                 </div>
                             `;
                             gridList.insertAdjacentHTML('beforeend', itemHtml);
@@ -2590,9 +3318,11 @@ $tab = $_GET['tab'] ?? 'library';
         function loadTabPending() {
             const listEl = document.getElementById('friends-requests-list');
             const badge = document.getElementById('friends-req-badge');
+            const tabBadge = document.getElementById('friends-tab-badge');
+            const statsPendingCount = document.getElementById('stats-pending-count');
             if (!listEl) return;
 
-            fetch('/portal/friends_api.php?action=list_pending_requests')
+            fetch(`/portal/friends_api.php?action=list_pending_requests&t=${Date.now()}`)
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
@@ -2600,6 +3330,13 @@ $tab = $_GET['tab'] ?? 'library';
                         if (badge) {
                             badge.innerText = count;
                             badge.style.display = count > 0 ? 'inline-block' : 'none';
+                        }
+                        if (tabBadge) {
+                            tabBadge.innerText = count;
+                            tabBadge.style.display = count > 0 ? 'inline-block' : 'none';
+                        }
+                        if (statsPendingCount) {
+                            statsPendingCount.innerText = count;
                         }
                         
                         if (count === 0) {
@@ -2634,6 +3371,13 @@ $tab = $_GET['tab'] ?? 'library';
                 });
         }
 
+        function openDirectMessage(partnerId, partnerName, partnerAvatar) {
+            switchTab('inbox');
+            setTimeout(() => {
+                openConversation(partnerId, partnerName, partnerAvatar);
+            }, 150);
+        }
+
         let friendsTabSearchTimeout = null;
 
         function searchTabMembers() {
@@ -2652,7 +3396,7 @@ $tab = $_GET['tab'] ?? 'library';
             }
 
             friendsTabSearchTimeout = setTimeout(() => {
-                fetch(`/portal/friends_api.php?action=search_users&query=${encodeURIComponent(query)}`)
+                fetch(`/portal/friends_api.php?action=search_users&query=${encodeURIComponent(query)}&t=${Date.now()}`)
                     .then(r => r.json())
                     .then(res => {
                         if (res.success) {
@@ -2702,7 +3446,7 @@ $tab = $_GET['tab'] ?? 'library';
             const text = document.getElementById('pm-dm-text').value.trim();
 
             if (!text) {
-                alert("Message cannot be empty.");
+                showToast("Message cannot be empty.", "error");
                 return;
             }
 
@@ -2715,7 +3459,7 @@ $tab = $_GET['tab'] ?? 'library';
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
-                        alert("Message sent successfully!");
+                        showToast("Message sent successfully!", "success");
                         closeUserProfile();
                         // If we are currently on the inbox tab, reload it and open conversation
                         const inboxTab = document.getElementById('tab-inbox');
@@ -2724,12 +3468,142 @@ $tab = $_GET['tab'] ?? 'library';
                             openConversation(recId, recName, '');
                         }
                     } else {
-                        alert("Failed to send message: " + res.error);
+                        showToast("Failed to send message: " + res.error, "error");
                     }
                 });
         }
 
         // ── HELPERS ──
+
+        function showToast(message, type = 'success') {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `custom-toast ${type}`;
+            toast.innerHTML = `
+                <span>${escapeHtml(message)}</span>
+                <button style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-size:1.1rem; padding:0; margin:0;" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 50);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 350);
+            }, 4000);
+        }
+
+        let previousPendingRequestsCount = null;
+        let previousPendingRequestsIds = [];
+        let previousUnreadDMsCount = null;
+
+        function runGlobalPoll() {
+            // 1. Fetch pending friend requests
+            fetch(`/portal/friends_api.php?action=list_pending_requests&t=${Date.now()}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const pending = res.pending || [];
+                        const currentCount = pending.length;
+                        
+                        // Update badge elements
+                        const tabBadge = document.getElementById('friends-tab-badge');
+                        if (tabBadge) {
+                            tabBadge.innerText = currentCount;
+                            tabBadge.style.display = currentCount > 0 ? 'inline-block' : 'none';
+                        }
+                        
+                        const reqBadge = document.getElementById('friends-req-badge');
+                        if (reqBadge) {
+                            reqBadge.innerText = currentCount;
+                            reqBadge.style.display = currentCount > 0 ? 'inline-block' : 'none';
+                        }
+                        
+                        // Check if any new friend request was received
+                        if (previousPendingRequestsCount !== null) {
+                            const currentIds = pending.map(u => parseInt(u.id));
+                            pending.forEach(u => {
+                                const uid = parseInt(u.id);
+                                if (!previousPendingRequestsIds.includes(uid)) {
+                                    showToast(`New friend request from ${u.username}!`, 'success');
+                                    
+                                    // Dynamically refresh the pending list UI if it's currently visible
+                                    const listEl = document.getElementById('friends-requests-list');
+                                    if (listEl && listEl.offsetHeight > 0) {
+                                        loadTabPending();
+                                    }
+                                }
+                            });
+                            previousPendingRequestsIds = currentIds;
+                        } else {
+                            previousPendingRequestsIds = pending.map(u => parseInt(u.id));
+                        }
+                        previousPendingRequestsCount = currentCount;
+                    }
+                })
+                .catch(err => console.error("Friend request poll failed:", err));
+
+            // 2. Fetch unread DMs count
+            fetch(`/portal/portal_messages_api.php?action=fetch_global_unread&t=${Date.now()}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        const currentUnread = parseInt(res.unread_count || 0);
+                        
+                        // Update badge element
+                        const inboxBadge = document.getElementById('inbox-tab-badge');
+                        if (inboxBadge) {
+                            inboxBadge.innerText = currentUnread;
+                            inboxBadge.style.display = currentUnread > 0 ? 'inline-block' : 'none';
+                        }
+                        
+                        const inboxTab = document.getElementById('tab-inbox');
+                        const isInboxActive = inboxTab && inboxTab.classList.contains('active');
+                        
+                        if (previousUnreadDMsCount !== null && currentUnread > previousUnreadDMsCount) {
+                            if (!isInboxActive || !currentActivePartner) {
+                                showToast("You received a new message!", "info");
+                            } else {
+                                // Fetch conversations to see if the unread is from someone else
+                                fetch(`/portal/portal_messages_api.php?action=fetch_conversations&t=${Date.now()}`)
+                                    .then(r => r.json())
+                                    .then(convosRes => {
+                                        if (convosRes.success) {
+                                            const allConvos = [...convosRes.primary, ...convosRes.general];
+                                            let hasOtherUnread = false;
+                                            let senderName = "someone";
+                                            for (let c of allConvos) {
+                                                if (parseInt(c.partner_id) !== currentActivePartner && parseInt(c.unread_count) > 0) {
+                                                    hasOtherUnread = true;
+                                                    senderName = c.partner_username;
+                                                    break;
+                                                }
+                                            }
+                                            if (hasOtherUnread) {
+                                                showToast(`New message from ${senderName}!`, "info");
+                                            }
+                                        }
+                                    });
+                            }
+                            
+                            if (isInboxActive) {
+                                loadConversations();
+                            }
+                        }
+                        
+                        previousUnreadDMsCount = currentUnread;
+                    }
+                })
+                .catch(err => console.error("DM unread poll failed:", err));
+        }
+
+        function startGlobalPolling() {
+            runGlobalPoll();
+            setInterval(runGlobalPoll, 4000);
+        }
 
         function formatConvoTime(dateStr) {
             const d = new Date(dateStr);
@@ -2770,7 +3644,7 @@ $tab = $_GET['tab'] ?? 'library';
                 loadConversations();
                 if (currentActivePartner) {
                     // Update current thread (silently without resetting inputs)
-                    fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${currentActivePartner}`)
+                    fetch(`/portal/portal_messages_api.php?action=fetch_thread&partner_id=${currentActivePartner}&t=${Date.now()}`)
                         .then(r => r.json())
                         .then(res => {
                             if (res.success) {
@@ -2838,6 +3712,9 @@ $tab = $_GET['tab'] ?? 'library';
 
         // Initialize polling or lists if Inbox or Friends tab starts active
         document.addEventListener('DOMContentLoaded', () => {
+            // Start the global polling loop for real-time background notification toasts & badge syncing
+            startGlobalPolling();
+
             const activeTabBtn = document.querySelector('.portal-tab-btn.active');
             if (activeTabBtn) {
                 const tabText = activeTabBtn.innerText.toLowerCase();

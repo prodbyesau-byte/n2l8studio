@@ -159,6 +159,37 @@ SCHEMA = [
       FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
+    ("product_upvotes", """
+    CREATE TABLE IF NOT EXISTS `product_upvotes` (
+      `id`         INT AUTO_INCREMENT PRIMARY KEY,
+      `user_id`    INT NOT NULL,
+      `product_id` INT NOT NULL,
+      `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY `uniq_user_upvote` (`user_id`, `product_id`),
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
+    ("playlists", """
+    CREATE TABLE IF NOT EXISTS `playlists` (
+      `id`         INT AUTO_INCREMENT PRIMARY KEY,
+      `user_id`    INT NOT NULL,
+      `name`       VARCHAR(255) NOT NULL,
+      `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
+    ("playlist_items", """
+    CREATE TABLE IF NOT EXISTS `playlist_items` (
+      `id`         INT AUTO_INCREMENT PRIMARY KEY,
+      `playlist_id` INT NOT NULL,
+      `product_id` INT NOT NULL,
+      `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY `uniq_playlist_item` (`playlist_id`, `product_id`),
+      FOREIGN KEY (`playlist_id`) REFERENCES `playlists`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
     ("user_activity", """
     CREATE TABLE IF NOT EXISTS `user_activity` (
       `id`         INT AUTO_INCREMENT PRIMARY KEY,

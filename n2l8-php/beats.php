@@ -8,9 +8,21 @@ require_once __DIR__ . '/includes/config.php';
 $pdo  = get_pdo();
 $site = get_site_content($pdo);
 
-// Fetch only beats
-$stmt = $pdo->query("SELECT * FROM products WHERE is_active = 1 AND type = 'beat' ORDER BY id DESC");
+$user_id_for_query = is_customer_user() ? $_SESSION['user_id'] : 0;
+$query_base = "SELECT p.*, 
+    (SELECT COUNT(*) FROM product_upvotes WHERE product_id = p.id) as upvotes,
+    (SELECT 1 FROM product_upvotes WHERE product_id = p.id AND user_id = " . (int)$user_id_for_query . ") as user_upvoted
+    FROM products p WHERE p.is_active = 1 ";
+
+$stmt = $pdo->query($query_base . "AND p.type = 'beat' ORDER BY p.id DESC");
 $beats = $stmt->fetchAll();
+
+$saved_ids = [];
+if ($user_id_for_query) {
+    $saved_stmt = $pdo->prepare('SELECT product_id FROM user_saved_products WHERE user_id = ?');
+    $saved_stmt->execute([$user_id_for_query]);
+    $saved_ids = array_map('intval', array_column($saved_stmt->fetchAll(), 'product_id'));
+}
 
 // Fetch shop settings
 $settings = get_site_content($pdo);
@@ -31,7 +43,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
 </head>
-<body class="page-beats">
+<body class="page-beats <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height:auto;padding-bottom:1rem;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
@@ -94,8 +106,17 @@ log_visitor($pdo, 'page_view', '/beats.php');
                 <div class="beat-bpm-key">
                     <?= h($beat['bpm'] ?? '') ?> BPM | <?= h($beat['key'] ?? '') ?>
                 </div>
-                <div class="beat-price-btn">
-                    <button class="cta-btn beat-buy-btn btn-buy" data-id="<?= $beat['id'] ?>">
+                <div class="beat-price-btn" style="display:flex; align-items:center; gap:0.5rem; justify-content:flex-end;">
+                    <?php if (!is_owner()): ?>
+                    <button class="kit-save-btn <?= !empty($beat['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); toggleUpvote(this, <?= (int)$beat['id'] ?>)" title="Upvote" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
+                        <?= !empty($beat['user_upvoted']) ? '★' : '☆' ?>
+                    </button>
+                    <button class="kit-save-btn <?= in_array((int)$beat['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); togglePlaylist(this, <?= (int)$beat['id'] ?>)" title="Add to Playlist" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
+                        ➕
+                    </button>
+                    <div style="text-align:right; font-size:0.8rem; color:var(--text-muted); margin-right:0.5rem; min-width:50px;"><span id="upvotes-<?= $beat['id'] ?>"><?= (int)$beat['upvotes'] ?></span> votes</div>
+                    <?php endif; ?>
+                    <button class="cta-btn beat-buy-btn btn-buy" data-id="<?= $beat['id'] ?>" onclick="event.stopPropagation(); event.preventDefault(); openModal(<?= $beat['id'] ?>);">
                         <?= (float)$beat['price'] > 0 ? '$' . number_format($beat['price'], 2) : 'FREE' ?>
                     </button>
                 </div>
@@ -111,14 +132,14 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <div id="playerBar" style="position:fixed; bottom:0; left:0; width:100%; background:rgba(5,5,8,0.96); border-top:1.5px solid var(--accent); padding:1.2rem; display:none; z-index:1000; box-shadow: 0 -5px 25px rgba(0,0,0,0.5);">
         <div class="container" style="display:flex; align-items:center; gap:2rem; justify-content:space-between;">
             <div id="playerInfo" style="flex:1;">
-                <div id="playerTitle" style="font-family:'Montserrat',sans-serif; font-weight:700; color:var(--text-main); font-size: 0.95rem;"></div>
-                <div id="playerArtist" style="font-size:0.75rem; color:var(--text-muted); font-family:'Montserrat',sans-serif; margin-top: 0.2rem;"></div>
+                <div id="playerTitle" style="font-family:'VT323', monospace; font-weight:700; color:var(--text-main); font-size: 0.95rem;"></div>
+                <div id="playerArtist" style="font-size:0.75rem; color:var(--text-muted); font-family:'VT323', monospace; margin-top: 0.2rem;"></div>
             </div>
             <div class="player-controls" style="display:flex; align-items:center; gap:1.2rem; flex:2;">
                 <button id="globalPlayBtn" class="beat-play-btn">▶</button>
-                <div style="font-family:'Montserrat',sans-serif; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="currentTime">0:00</div>
+                <div style="font-family:'VT323', monospace; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="currentTime">0:00</div>
                 <input type="range" id="seekSlider" style="flex:1; accent-color:var(--accent); cursor:pointer; height:4px; border-radius:2px;" value="0" step="0.1">
-                <div style="font-family:'Montserrat',sans-serif; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="durationTime">0:00</div>
+                <div style="font-family:'VT323', monospace; font-size: 0.8rem; color:var(--text-muted); min-width:40px;" id="durationTime">0:00</div>
             </div>
         </div>
     </div>
@@ -142,6 +163,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     
     <script>
     const isLoggedIn = <?= is_logged_in() ? 'true' : 'false' ?>;
+    const IS_LOGGED_IN = isLoggedIn;
     let currentAudio = new Audio();
     let playingId = null;
     let _ppButtons = null;
@@ -152,6 +174,132 @@ log_visitor($pdo, 'page_view', '/beats.php');
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: 'action=' + encodeURIComponent(action) + '&metadata=' + encodeURIComponent(metadata)
+        });
+    }
+
+    function toggleUpvote(btn, productId) {
+        fetch('/api/product_actions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=toggle_upvote&product_id=' + encodeURIComponent(productId)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) {
+                window.location.href = '/login.php';
+                return;
+            }
+            btn.classList.toggle('saved', data.is_active);
+            btn.textContent = data.is_active ? '★' : '☆';
+            if (data.count !== undefined) {
+                document.getElementById('upvotes-' + productId).textContent = data.count;
+            }
+        });
+    }
+
+    function togglePlaylist(btn, productId) {
+        if (!IS_LOGGED_IN) {
+            window.location.href = '/login.php';
+            return;
+        }
+        
+        // Open playlist selection modal
+        const wrap = document.createElement('div');
+        wrap.className = 'modal-overlay open';
+        wrap.id = 'playlistSelectModal';
+        wrap.style.zIndex = '9999';
+        
+        wrap.innerHTML = `
+            <div class="modal-box" style="max-width:400px; padding:2rem; text-align:center;">
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                <h3 style="margin-top:0; font-family:'Syncopate', sans-serif; color:var(--accent);">ADD TO PLAYLIST</h3>
+                <div id="playlistList" style="margin:1.5rem 0; display:flex; flex-direction:column; gap:0.5rem; max-height:250px; overflow-y:auto; text-align:left;">
+                    <div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">Loading...</div>
+                </div>
+                <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                    <input type="text" id="newPlaylistName" placeholder="New Playlist Name" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'VT323', monospace; font-size:1rem;">
+                    <button class="cta-btn" onclick="createNewPlaylist(${productId})" style="padding:0.5rem 1rem;">CREATE</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(wrap);
+        
+        fetchPlaylistsForProduct(productId);
+    }
+
+    function fetchPlaylistsForProduct(productId) {
+        fetch('/api/product_actions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=fetch_playlists&product_id=' + productId
+        })
+        .then(r => r.json())
+        .then(data => {
+            const list = document.getElementById('playlistList');
+            if (!list) return;
+            list.innerHTML = '';
+            if (!data.playlists || data.playlists.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">No playlists found. Create one below!</div>';
+                return;
+            }
+            
+            data.playlists.forEach(pl => {
+                const btn = document.createElement('button');
+                btn.className = 'cta-btn';
+                btn.style.width = '100%';
+                btn.style.textAlign = 'left';
+                btn.style.background = 'rgba(255,255,255,0.05)';
+                if (pl.is_in_playlist == 1) {
+                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.color = 'var(--accent)';
+                    btn.textContent = pl.name + ' (Added)';
+                } else {
+                    btn.style.borderColor = 'var(--border-color)';
+                    btn.style.color = 'var(--text-muted)';
+                    btn.textContent = pl.name;
+                }
+                
+                btn.onclick = () => {
+                    fetch('/api/product_actions.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: `action=toggle_playlist_item&playlist_id=${pl.id}&product_id=${productId}`
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            if (res.is_active) {
+                                btn.style.borderColor = 'var(--accent)';
+                                btn.style.color = 'var(--accent)';
+                                btn.textContent = pl.name + ' (Added)';
+                            } else {
+                                btn.style.borderColor = 'var(--border-color)';
+                                btn.style.color = 'var(--text-muted)';
+                                btn.textContent = pl.name;
+                            }
+                        }
+                    });
+                };
+                list.appendChild(btn);
+            });
+        });
+    }
+
+    function createNewPlaylist(productId) {
+        const nameInput = document.getElementById('newPlaylistName');
+        if (!nameInput || !nameInput.value.trim()) return;
+        
+        fetch('/api/product_actions.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=create_playlist&name=' + encodeURIComponent(nameInput.value.trim())
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                nameInput.value = '';
+                fetchPlaylistsForProduct(productId);
+            }
         });
     }
 
@@ -277,7 +425,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
 
                 content.innerHTML = `
                     <div class="modal-license-header" style="text-align:center; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid var(--accent);">
-                        <h2 style="font-family:'Syncopate',sans-serif; color:var(--text-main); margin:0; font-size:1.3rem; letter-spacing:2px;">SELECT LICENSE</h2>
+                        <h2 style="font-family:'VT323', monospace; color:var(--text-main); margin:0; font-size:1.3rem; letter-spacing:2px;">SELECT LICENSE</h2>
                         <p style="color:var(--text-muted); font-size:0.9rem;">${data.title} - ${data.author || 'n2l8studio'}</p>
                     </div>
                     
@@ -285,7 +433,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <!-- MP3/WAV -->
                         <div class="license-card" style="border:1px solid var(--text-muted); padding:1.5rem; text-align:center; transition:0.3s; border-radius:4px;">
                             <h3 style="color:var(--accent); margin-top:0;">MP3 & WAV</h3>
-                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${basePrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'VT323', monospace; margin:1rem 0; font-weight:700;">$${basePrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.basic)}
                             </ul>
@@ -296,7 +444,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <div class="license-card" style="border:2px solid var(--accent); padding:1.5rem; text-align:center; position:relative; border-radius:4px; transform: scale(1.05);">
                             <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:#000; font-size:0.7rem; padding:2px 8px; font-weight:bold;">POPULAR</div>
                             <h3 style="color:var(--accent); margin-top:0;">WAV & STEMS</h3>
-                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${premiumPrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'VT323', monospace; margin:1rem 0; font-weight:700;">$${premiumPrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.premium)}
                             </ul>
@@ -306,7 +454,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <!-- EXCLUSIVE -->
                         <div class="license-card" style="border:1px solid var(--text-muted); padding:1.5rem; text-align:center; border-radius:4px;">
                             <h3 style="color:var(--accent); margin-top:0;">EXCLUSIVE</h3>
-                            <div style="font-size:1.5rem; font-family:'Syncopate',sans-serif; margin:1rem 0; font-weight:700;">$${exclusivePrice.toFixed(2)}</div>
+                            <div style="font-size:1.5rem; font-family:'VT323', monospace; margin:1rem 0; font-weight:700;">$${exclusivePrice.toFixed(2)}</div>
                             <ul style="list-style:none; padding:0; font-size:0.8rem; text-align:left; color:var(--text-muted); margin-bottom:1.5rem;">
                                 ${renderList(benefits.exclusive)}
                             </ul>
@@ -344,12 +492,12 @@ log_visitor($pdo, 'page_view', '/beats.php');
         const wrap = document.getElementById('paypal-btn-wrap');
         wrap.innerHTML = '';
         if (parseFloat(price) <= 0) {
-            if (data && data.allow_download && data.zip_file) {
-                if (isLoggedIn) {
-                    wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
+            if (data.allow_download && data.zip_file) {
+                if (IS_LOGGED_IN) {
+                    wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;width:100%;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
                 } else {
                     const returnUrl = encodeURIComponent(window.location.pathname + '?preview=' + productId);
-                    wrap.innerHTML = `<a href="/login.php?redirect=${returnUrl}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;background:#C0152A;">🔒 LOGIN TO DOWNLOAD</a>`;
+                    wrap.innerHTML = `<a href="/login.php?redirect=${returnUrl}" class="cta-btn" style="display:block;width:100%;text-align:center;text-decoration:none;background:#C0152A;">🔒 LOGIN TO CLAIM KIT</a>`;
                 }
             } else {
                 wrap.innerHTML = `<button disabled class="cta-btn" style="display:block;width:100%;text-align:center;opacity:0.4;cursor:not-allowed;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);">FREE DOWNLOAD — COMING SOON</button>`;
@@ -365,7 +513,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
         stripeBtn.style.border = 'none';
         stripeBtn.style.padding = '0.85rem';
         stripeBtn.style.fontSize = '0.9rem';
-        stripeBtn.style.fontFamily = "'Syncopate', sans-serif";
+        stripeBtn.style.fontFamily = "'VT323', monospace";
         stripeBtn.style.fontWeight = '700';
         stripeBtn.style.letterSpacing = '1px';
         stripeBtn.style.borderRadius = '4px';
@@ -414,7 +562,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
         const sep = document.createElement('div');
         sep.style.textAlign = 'center';
         sep.style.color = 'var(--text-muted)';
-        sep.style.fontFamily = "'Montserrat', sans-serif";
+        sep.style.fontFamily = "'VT323', monospace";
         sep.style.fontSize = '0.72rem';
         sep.style.fontWeight = '600';
         sep.style.letterSpacing = '1px';

@@ -4,6 +4,9 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -183,7 +186,7 @@ try {
     elseif ($action === 'list_friends') {
         // Fetch all accepted friends for the user
         $sql = '
-            SELECT u.id, u.username, u.profile_picture
+            SELECT u.id, u.username, u.profile_picture, u.role
             FROM users u
             JOIN friendships f ON (
                 (f.user_id1 = u.id AND f.user_id2 = :user_id1) OR
@@ -206,7 +209,7 @@ try {
     elseif ($action === 'list_pending_requests') {
         // Fetch pending requests received by the user
         $sql = '
-            SELECT u.id, u.username, u.profile_picture
+            SELECT u.id, u.username, u.profile_picture, u.role
             FROM users u
             JOIN friendships f ON (
                 (f.user_id1 = u.id AND f.user_id2 = :user_id1) OR

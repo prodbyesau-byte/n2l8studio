@@ -4,6 +4,9 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -35,29 +38,29 @@ try {
                     SELECT COUNT(*) 
                     FROM messages 
                     WHERE sender_id = u.id 
-                      AND recipient_id = :user_id 
+                      AND recipient_id = :user_id1 
                       AND is_read = 0 
                       AND deleted_by_recipient = 0
                 ) AS unread_count
             FROM (
                 SELECT DISTINCT 
                     CASE 
-                        WHEN sender_id = :user_id THEN recipient_id 
+                        WHEN sender_id = :user_id2 THEN recipient_id 
                         ELSE sender_id 
                     END AS partner_id
                 FROM messages
-                WHERE (sender_id = :user_id AND deleted_by_sender = 0)
-                   OR (recipient_id = :user_id AND deleted_by_recipient = 0)
+                WHERE (sender_id = :user_id3 AND deleted_by_sender = 0)
+                   OR (recipient_id = :user_id4 AND deleted_by_recipient = 0)
             ) AS partners
             JOIN users u ON u.id = partners.partner_id
             LEFT JOIN friendships f ON (
-                (f.user_id1 = LEAST(:user_id, u.id) AND f.user_id2 = GREATEST(:user_id, u.id))
+                (f.user_id1 = LEAST(:user_id5, u.id) AND f.user_id2 = GREATEST(:user_id6, u.id))
             )
             JOIN messages m ON m.id = (
                 SELECT id 
                 FROM messages 
-                WHERE ((sender_id = :user_id AND recipient_id = u.id AND deleted_by_sender = 0)
-                   OR (recipient_id = :user_id AND sender_id = u.id AND deleted_by_recipient = 0))
+                WHERE ((sender_id = :user_id7 AND recipient_id = u.id AND deleted_by_sender = 0)
+                   OR (recipient_id = :user_id8 AND sender_id = u.id AND deleted_by_recipient = 0))
                 ORDER BY id DESC 
                 LIMIT 1
             )
@@ -65,7 +68,16 @@ try {
         ';
         
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(['user_id' => $user_id]);
+        $stmt->execute([
+            'user_id1' => $user_id,
+            'user_id2' => $user_id,
+            'user_id3' => $user_id,
+            'user_id4' => $user_id,
+            'user_id5' => $user_id,
+            'user_id6' => $user_id,
+            'user_id7' => $user_id,
+            'user_id8' => $user_id
+        ]);
         $conversations = $stmt->fetchAll();
         
         $primary = [];
