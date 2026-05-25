@@ -311,6 +311,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     <audio id="audioEl" preload="metadata"></audio>
 
     <script>
+    const isLoggedIn = <?= is_logged_in() ? 'true' : 'false' ?>;
     function logAction(action, metadata = '', productId = '') {
         fetch('/api/log_action.php', {
             method: 'POST',
@@ -588,7 +589,12 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     renderPayPalButtons(productId, p.price);
                 } else {
                     if (p.allow_download && p.zip_file) {
-                        wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
+                        if (isLoggedIn) {
+                            wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
+                        } else {
+                            const returnUrl = encodeURIComponent(window.location.pathname + '?preview=' + productId);
+                            wrap.innerHTML = `<a href="/login.php?redirect=${returnUrl}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;background:#C0152A;">🔒 LOGIN TO DOWNLOAD</a>`;
+                        }
                     } else {
                         // Download disabled — greyed out placeholder
                         wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;

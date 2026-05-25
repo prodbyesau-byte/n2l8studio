@@ -1,6 +1,7 @@
 <?php
 // /api/product.php?id=X — returns JSON for the shop modal player
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/config.php';
 
@@ -22,6 +23,9 @@ $tracks_stmt = $pdo->prepare('SELECT id, title, filename, preview_start, preview
 $tracks_stmt->execute([$id]);
 $tracks = $tracks_stmt->fetchAll();
 
+$is_free = (float)($p['price'] ?? 0) <= 0;
+$zip_url = ($p['zip_file'] && $is_free && is_logged_in()) ? UPLOAD_URL . $p['zip_file'] : null;
+
 echo json_encode([
     'id'             => (int)$p['id'],
     'title'          => $p['title'],
@@ -36,7 +40,7 @@ echo json_encode([
     'bpm'            => $p['bpm'],
     'key'            => $p['key'],
     'cover_image'    => $p['cover_image'] ? UPLOAD_URL . $p['cover_image'] : null,
-    'zip_file'       => $p['zip_file']    ? UPLOAD_URL . $p['zip_file']    : null,
+    'zip_file'       => $zip_url,
     'allow_download' => (int)($p['allow_download'] ?? 0),
     'tracks'         => array_map(fn($t) => [
         'id'    => (int)$t['id'],

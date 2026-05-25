@@ -9,12 +9,21 @@ if (is_logged_in()) {
     if (is_owner()) {
         redirect('/admin/index.php');
     } else {
-        redirect('/portal/index.php');
+        $redirect_url = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
+        if (empty($redirect_url) || strpos($redirect_url, '/') !== 0) {
+            $redirect_url = '/portal/index.php';
+        }
+        redirect($redirect_url);
     }
 }
 
 $pdo = get_pdo();
 $content = get_site_content($pdo);
+
+$redirect_url = trim($_REQUEST['redirect'] ?? '');
+if (empty($redirect_url) || strpos($redirect_url, '/') !== 0) {
+    $redirect_url = '/portal/index.php';
+}
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -43,7 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['email']     = $user['email'];
 
                 log_action($pdo, "User logged in: {$user['username']} ({$user['role']})");
-                redirect('/portal/index.php');
+                
+                $redirect_url = trim($_POST['redirect'] ?? $_GET['redirect'] ?? '');
+                if (empty($redirect_url) || strpos($redirect_url, '/') !== 0) {
+                    $redirect_url = '/portal/index.php';
+                }
+                redirect($redirect_url);
             }
         } else {
             $error = 'Invalid credentials — access denied.';
@@ -193,6 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <form method="POST">
+                <input type="hidden" name="redirect" value="<?= h($redirect_url) ?>">
                 <div class="form-group">
                     <label>Username or Email Address</label>
                     <input type="text" name="login_input" required autocomplete="username" placeholder="e.g. alex">

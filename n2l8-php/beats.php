@@ -141,6 +141,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <script src="https://www.paypal.com/sdk/js?client-id=<?= h($pp_id) ?>&currency=USD&intent=capture" data-sdk-integration-source="button-factory"></script>
     
     <script>
+    const isLoggedIn = <?= is_logged_in() ? 'true' : 'false' ?>;
     let currentAudio = new Audio();
     let playingId = null;
     let _ppButtons = null;
@@ -344,7 +345,12 @@ log_visitor($pdo, 'page_view', '/beats.php');
         wrap.innerHTML = '';
         if (parseFloat(price) <= 0) {
             if (data && data.allow_download && data.zip_file) {
-                wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
+                if (isLoggedIn) {
+                    wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
+                } else {
+                    const returnUrl = encodeURIComponent(window.location.pathname + '?preview=' + productId);
+                    wrap.innerHTML = `<a href="/login.php?redirect=${returnUrl}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;background:#C0152A;">🔒 LOGIN TO DOWNLOAD</a>`;
+                }
             } else {
                 wrap.innerHTML = `<button disabled class="cta-btn" style="display:block;width:100%;text-align:center;opacity:0.4;cursor:not-allowed;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);">FREE DOWNLOAD — COMING SOON</button>`;
             }
@@ -473,6 +479,11 @@ log_visitor($pdo, 'page_view', '/beats.php');
             document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
         }
     });
+
+    window.onload = () => {
+        const previewId = new URLSearchParams(window.location.search).get('preview');
+        if (previewId) openModal(previewId);
+    };
     </script>
 </body>
 </html>
