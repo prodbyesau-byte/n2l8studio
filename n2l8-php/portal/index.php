@@ -365,8 +365,8 @@ $tab = $_GET['tab'] ?? 'library';
             line-height: 1.5;
         }
 
-        /* ── RETRO FOLDER STYLES ── */
-        .retro-folder {
+        /* ── PREMIUM FOLDER STYLES ── */
+        .premium-folder {
             position: relative;
             width: 80px;
             height: 60px;
@@ -398,12 +398,12 @@ $tab = $_GET['tab'] ?? 'library';
             justify-content: center;
             transition: all 0.3s ease;
         }
-        .retro-folder:hover .folder-body {
+        .premium-folder:hover .folder-body {
             border-color: rgba(255, 255, 255, 0.4);
             transform: scale(1.02);
             box-shadow: inset 0 1px 3px rgba(255,255,255,0.1), var(--accent-glow), 0 0 12px rgba(192, 21, 42, 0.2);
         }
-        .retro-folder:hover .folder-tab {
+        .premium-folder:hover .folder-tab {
             background: var(--accent-hover);
             transform: translateY(-1px);
         }
@@ -443,7 +443,7 @@ $tab = $_GET['tab'] ?? 'library';
             cursor: pointer;
             line-height: 1;
             transition: all 0.2s;
-            font-family: 'VT323', monospace;
+            font-family: 'Montserrat', sans-serif;
             font-weight: 300;
             width: 38px; height: 38px;
             display: flex; align-items: center; justify-content: center;
@@ -1913,7 +1913,7 @@ $tab = $_GET['tab'] ?? 'library';
                     <?php foreach ($playlists_with_items as $pl_id => $pl): ?>
                         <div class="library-card" id="playlist-card-<?= $pl_id ?>">
                             <div class="library-cover" style="cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); position:relative;" onclick="togglePlaylistDetails(<?= $pl_id ?>)">
-                                <div class="retro-folder">
+                                <div class="premium-folder">
                                     <div class="folder-tab"></div>
                                     <div class="folder-body">
                                         <span style="font-family:'Syncopate', sans-serif; font-size:0.55rem; color:#fff; font-weight:700; opacity:0.8; letter-spacing:1px;">KITS</span>
@@ -2354,7 +2354,7 @@ $tab = $_GET['tab'] ?? 'library';
                     <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
                     <h3 style="margin-top:0; font-family:'Syncopate', sans-serif; color:var(--accent);">CREATE PLAYLIST</h3>
                     <div style="margin:1.5rem 0;">
-                        <input type="text" id="newPortalPlaylistName" placeholder="Playlist Name" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'VT323', monospace; font-size:1.2rem; box-sizing:border-box;">
+                        <input type="text" id="newPortalPlaylistName" placeholder="Playlist Name" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'Montserrat', sans-serif; font-size:0.95rem; box-sizing:border-box;">
                     </div>
                     <button class="cta-btn" onclick="submitCreatePlaylist()" style="width:100%; padding:0.6rem;">CREATE</button>
                 </div>
@@ -2409,7 +2409,7 @@ $tab = $_GET['tab'] ?? 'library';
                     
                     card.innerHTML = `
                         <div class="library-cover" style="cursor:pointer; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); position:relative;" onclick="togglePlaylistDetails(${pl.id})">
-                            <div class="retro-folder">
+                            <div class="premium-folder">
                                 <div class="folder-tab"></div>
                                 <div class="folder-body">
                                     <span style="font-family:'Syncopate', sans-serif; font-size:0.55rem; color:#fff; font-weight:700; opacity:0.8; letter-spacing:1px;">KITS</span>

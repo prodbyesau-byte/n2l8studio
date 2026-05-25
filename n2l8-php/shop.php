@@ -80,8 +80,8 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         .modal-cover-col { background:rgba(5,5,8,0.5); display:flex; flex-direction:column; align-items:center; padding:2rem 1.5rem; border-right:1px solid var(--border-color); }
         .modal-cover-img { width:100%; max-width:200px; aspect-ratio:1; object-fit:cover; border:1px solid var(--border-color); margin-bottom:1.2rem; border-radius:4px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
         .modal-cover-placeholder { width:200px; height:200px; background:#121217; border:1px solid var(--border-color); margin-bottom:1.2rem; border-radius:4px; }
-        .modal-price { font-family:'VT323', monospace; font-weight:700; color:var(--accent); font-size:1.8rem; text-align:center; line-height:1; }
-        .modal-price-orig { color:var(--text-muted); text-decoration:line-through; font-size:0.95rem; text-align:center; margin-bottom:1rem; font-family:'VT323', monospace; }
+        .modal-price { font-family:'Syncopate',sans-serif; font-weight:700; color:var(--accent); font-size:1.8rem; text-align:center; line-height:1; }
+        .modal-price-orig { color:var(--text-muted); text-decoration:line-through; font-size:0.95rem; text-align:center; margin-bottom:1rem; font-family:'Montserrat',sans-serif; }
         .modal-buy-btn { width:100%; margin-top:auto; }
         .modal-info-col { padding:2rem; display:flex; flex-direction:column; gap:0.5rem; }
         .modal-close {
@@ -94,7 +94,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             cursor: pointer;
             line-height: 1;
             transition: all 0.2s;
-            font-family: 'VT323', monospace;
+            font-family: 'Montserrat', sans-serif;
             font-weight: 300;
             width: 38px; height: 38px; /* big tap target */
             display: flex; align-items: center; justify-content: center;
@@ -102,14 +102,14 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             border-radius: 50%;
         }
         .modal-close:hover { color:#ff5c5c; border-color: #ff5c5c; }
-        .modal-title { font-family:'VT323', monospace; font-weight:700; font-size:1.4rem; color:var(--text-main); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.2rem; }
-        .modal-author { color:var(--text-muted); font-size:0.9rem; margin-bottom:0.5rem; font-family:'VT323', monospace; font-weight:500; }
+        .modal-title { font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.4rem; color:var(--text-main); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.2rem; }
+        .modal-author { color:var(--text-muted); font-size:0.9rem; margin-bottom:0.5rem; font-family:'Montserrat',sans-serif; font-weight:500; }
         .modal-tags { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.8rem; }
-        .modal-tag { background:rgba(168,85,247,0.05); border:1px solid rgba(168,85,247,0.2); color:var(--accent); padding:0.25rem 0.7rem; font-family:'VT323', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; font-weight:600; border-radius:3px; }
+        .modal-tag { background:rgba(168,85,247,0.05); border:1px solid rgba(168,85,247,0.2); color:var(--accent); padding:0.25rem 0.7rem; font-family:'Montserrat',sans-serif; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; font-weight:600; border-radius:3px; }
         .modal-tag.accent { color:var(--accent); border-color:var(--accent); background:rgba(168,85,247,0.1); }
-        .modal-desc { color:var(--text-muted); font-size:0.9rem; line-height:1.6; margin-bottom:1rem; border-top:1px dashed rgba(255,255,255,0.05); padding-top:0.8rem; font-family:'VT323', monospace; }
+        .modal-desc { color:var(--text-muted); font-size:0.9rem; line-height:1.6; margin-bottom:1rem; border-top:1px dashed rgba(255,255,255,0.05); padding-top:0.8rem; font-family:'Montserrat',sans-serif; }
         .player-section { border-top:1px dashed rgba(255,255,255,0.05); padding-top:1rem; }
-        .player-section-label { font-family:'VT323', monospace; font-weight:700; color:var(--accent); font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.8rem; }
+        .player-section-label { font-family:'Syncopate',sans-serif; font-weight:700; color:var(--accent); font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.8rem; }
         .track-list { list-style:none; padding:0; margin-bottom:1rem; }
         .track-item {
             display:flex; align-items:center; gap:0.8rem;
@@ -121,11 +121,11 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         .track-item:hover { background:rgba(168,85,247,0.04); border-left-color:var(--accent); }
         .track-item.playing { border-left-color:var(--accent); background:rgba(168,85,247,0.08); }
         .track-item.playing .track-item-name { color:var(--text-main); font-weight:600; }
-        .track-num { font-family:'VT323', monospace; font-weight:700; color:var(--text-muted); min-width:20px; font-size:0.75rem; }
-        .track-item-name { flex:1; font-size:0.85rem; color:var(--text-muted); font-family:'VT323', monospace; }
+        .track-num { font-family:'Syncopate',sans-serif; font-weight:700; color:var(--text-muted); min-width:20px; font-size:0.75rem; }
+        .track-item-name { flex:1; font-size:0.85rem; color:var(--text-muted); font-family:'Montserrat',sans-serif; }
         .play-icon { color:var(--accent); font-size:1rem; min-width:18px; text-align:center; }
         .player-controls { display:flex; flex-direction:column; gap:0.5rem; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.03); padding:0.8rem 1rem; border-radius:4px; }
-        .player-now-playing { font-family:'VT323', monospace; color:var(--text-muted); font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .player-now-playing { font-family:'Montserrat',sans-serif; color:var(--text-muted); font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .player-now-playing span { color:var(--text-main); font-weight:600; }
         .player-row { display:flex; align-items:center; gap:0.8rem; }
         .player-btn {
@@ -134,7 +134,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             padding:0.4rem 0.6rem; /* bigger touch target */
             min-width: 44px; min-height: 44px;
             transition:all 0.2s;
-            font-family:'VT323', monospace; line-height:1;
+            font-family:'Montserrat',sans-serif; line-height:1;
             display:flex; align-items:center; justify-content:center;
         }
         .player-btn:hover { color:var(--accent); text-shadow:var(--accent-glow); }
@@ -165,8 +165,8 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             pointer-events: none;
             border-radius: 2px;
         }
-        .player-time { font-family:'VT323', monospace; color:var(--text-muted); font-size:0.75rem; min-width:70px; text-align:right; font-weight:500; }
-        .no-tracks-msg { color:var(--text-muted); font-size:0.85rem; font-style:italic; padding:0.5rem 0; font-family:'VT323', monospace; }
+        .player-time { font-family:'Montserrat',sans-serif; color:var(--text-muted); font-size:0.75rem; min-width:70px; text-align:right; font-weight:500; }
+        .no-tracks-msg { color:var(--text-muted); font-size:0.85rem; font-style:italic; padding:0.5rem 0; font-family:'Montserrat',sans-serif; }
         @media(max-width:640px){
             .modal-box { grid-template-columns:1fr; width:96%; margin: 1rem auto; }
             .modal-cover-col { border-right:none; border-bottom:1px solid var(--border-color); padding:1.5rem 1rem; }
@@ -372,7 +372,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     <div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">Loading...</div>
                 </div>
                 <div style="display:flex; gap:0.5rem; margin-top:1rem;">
-                    <input type="text" id="newPlaylistName" placeholder="New Playlist Name" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'VT323', monospace; font-size:1rem;">
+                    <input type="text" id="newPlaylistName" placeholder="New Playlist Name" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.5rem; border-radius:4px; font-family:'Montserrat', sans-serif; font-size:0.9rem;">
                     <button class="cta-btn" onclick="createNewPlaylist(${productId})" style="padding:0.5rem 1rem;">CREATE</button>
                 </div>
             </div>
@@ -712,14 +712,14 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 } else {
                     if (p.allow_download && p.zip_file) {
                         if (IS_LOGGED_IN) {
-                            wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323', monospace;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
+                            wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
                         } else {
                             const returnUrl = encodeURIComponent(window.location.pathname + '?preview=' + productId);
-                            wrap.innerHTML = `<a href="/login.php?redirect=${returnUrl}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323', monospace;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;background:#C0152A;">🔒 LOGIN TO CLAIM KIT</a>`;
+                            wrap.innerHTML = `<a href="/login.php?redirect=${returnUrl}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;background:#C0152A;">🔒 LOGIN TO CLAIM KIT</a>`;
                         }
                     } else {
                         // Download disabled — greyed out placeholder
-                        wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'VT323', monospace;font-weight:700;letter-spacing:1px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
+                        wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
                     }
                 }
 
