@@ -38,7 +38,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beats - N2L8 STUDIO</title>
     <meta name="description" content="Premium beats from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css?v=12">
+    <link rel="stylesheet" href="/static/style.css?v=20">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
@@ -277,7 +277,13 @@ log_visitor($pdo, 'page_view', '/beats.php');
                                 btn.style.color = 'var(--text-muted)';
                                 btn.textContent = pl.name;
                             }
+                        } else {
+                            alert('Error: ' + (res.error || 'Could not toggle playlist item'));
                         }
+                    })
+                    .catch(err => {
+                        console.error('Error toggling playlist item:', err);
+                        alert('Failed to update playlist. Please try again.');
                     });
                 };
                 list.appendChild(btn);
@@ -299,7 +305,13 @@ log_visitor($pdo, 'page_view', '/beats.php');
             if (data.success) {
                 nameInput.value = '';
                 fetchPlaylistsForProduct(productId);
+            } else {
+                alert('Error creating playlist: ' + (data.error || 'Unknown error'));
             }
+        })
+        .catch(err => {
+            console.error('Error creating playlist:', err);
+            alert('Failed to create playlist. Please try again.');
         });
     }
 

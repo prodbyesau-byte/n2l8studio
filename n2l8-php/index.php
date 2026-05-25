@@ -14,7 +14,7 @@ log_visitor($pdo, 'page_view', '/');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>n2l8studio - Our Music Community</title>
     <meta name="description" content="n2l8studio is a creative music community and studio for passionate artists, producers, and creative souls.">
-    <link rel="stylesheet" href="/static/style.css?v=12">
+    <link rel="stylesheet" href="/static/style.css?v=20">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">

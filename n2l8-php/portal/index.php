@@ -185,7 +185,7 @@ $tab = $_GET['tab'] ?? 'library';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Profile - N2L8 STUDIO</title>
-    <link rel="stylesheet" href="/static/style.css?v=12">
+    <link rel="stylesheet" href="/static/style.css?v=20">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -1839,7 +1839,7 @@ $tab = $_GET['tab'] ?? 'library';
 
         <div class="portal-tabs">
             <button class="portal-tab-btn <?= $tab === 'library' ? 'active' : '' ?>" onclick="switchTab('library')">My Library (<?= count($purchased_products) ?>)</button>
-            <button class="portal-tab-btn <?= $tab === 'liked' ? 'active' : '' ?>" onclick="switchTab('liked')">Liked &amp; Saved</button>
+            <button class="portal-tab-btn <?= $tab === 'liked' ? 'active' : '' ?>" onclick="switchTab('liked')">Playlists &amp; Liked</button>
             <button class="portal-tab-btn <?= $tab === 'friends' ? 'active' : '' ?>" onclick="switchTab('friends')">
                 Friends
                 <span id="friends-tab-badge" style="background:var(--accent); color:#fff; font-size:0.62rem; padding:0.15rem 0.4rem; border-radius:10px; font-family:'Montserrat',sans-serif; font-weight:700; margin-left:4px; <?= $pending_friends_count > 0 ? '' : 'display:none;' ?>"><?= $pending_friends_count ?></span>

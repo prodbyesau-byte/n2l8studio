@@ -34,7 +34,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $is_graphics_page ? 'Graphics' : 'Shop' ?> - N2L8 STUDIO</title>
     <meta name="description" content="<?= $is_graphics_page ? 'Graphic art from n2l8studio.' : 'Shop loopkits and drumkits from n2l8studio.' ?>">
-    <link rel="stylesheet" href="/static/style.css?v=12">
+    <link rel="stylesheet" href="/static/style.css?v=20">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -432,7 +432,13 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                                 btn.style.color = 'var(--text-muted)';
                                 btn.textContent = pl.name;
                             }
+                        } else {
+                            alert('Error: ' + (res.error || 'Could not toggle playlist item'));
                         }
+                    })
+                    .catch(err => {
+                        console.error('Error toggling playlist item:', err);
+                        alert('Failed to update playlist. Please try again.');
                     });
                 };
                 list.appendChild(btn);
@@ -454,7 +460,13 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             if (data.success) {
                 nameInput.value = '';
                 fetchPlaylistsForProduct(productId);
+            } else {
+                alert('Error creating playlist: ' + (data.error || 'Unknown error'));
             }
+        })
+        .catch(err => {
+            console.error('Error creating playlist:', err);
+            alert('Failed to create playlist. Please try again.');
         });
     }
 
