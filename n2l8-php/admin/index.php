@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_theme'])) {
     }
     
     log_action($pdo, "Admin changed active site theme to: " . $theme);
-    set_flash(['type' => 'success', 'message' => 'Theme updated successfully to ' . ucfirst($theme) . '!']);
+    flash('Theme updated successfully to ' . ucfirst($theme) . '!');
     
     header('Location: /admin/index.php?tab=dashboard');
     exit;

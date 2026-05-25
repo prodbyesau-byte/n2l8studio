@@ -5,7 +5,7 @@ require_once __DIR__ . '/../includes/helpers.php';
 
 header('Content-Type: application/json');
 
-$user_id = get_current_user_id();
+$user_id = $_SESSION['user_id'] ?? 0;
 if (!$user_id) {
     echo json_encode(['success' => false, 'error' => 'Not logged in']);
     exit;
