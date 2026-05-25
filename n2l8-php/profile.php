@@ -78,7 +78,7 @@ log_visitor($pdo, 'page_view', '/profile.php');
         @media(max-width:520px){ .profile-products { grid-template-columns:1fr; } .history-row { grid-template-columns:54px 1fr; } .history-time { grid-column:2; } }
     </style>
 </head>
-<body class="page-home profile-page">
+<body class="page-home profile-page <?= get_active_theme($pdo) === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height:auto;padding-bottom:1rem;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>

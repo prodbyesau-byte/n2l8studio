@@ -8,7 +8,7 @@ require_once __DIR__ . '/includes/config.php';
 $pdo  = get_pdo();
 $site = get_site_content($pdo);
 
-$user_id_for_query = is_customer_user() ? $_SESSION['user_id'] : 0;
+$user_id_for_query = is_logged_in() ? $_SESSION['user_id'] : 0;
 $query_base = "SELECT p.*, 
     (SELECT COUNT(*) FROM product_upvotes WHERE product_id = p.id) as upvotes,
     (SELECT 1 FROM product_upvotes WHERE product_id = p.id AND user_id = " . (int)$user_id_for_query . ") as user_upvoted
@@ -18,10 +18,15 @@ $stmt = $pdo->query($query_base . "AND p.type = 'beat' ORDER BY p.id DESC");
 $beats = $stmt->fetchAll();
 
 $saved_ids = [];
+$playlist_product_ids = [];
 if ($user_id_for_query) {
     $saved_stmt = $pdo->prepare('SELECT product_id FROM user_saved_products WHERE user_id = ?');
     $saved_stmt->execute([$user_id_for_query]);
     $saved_ids = array_map('intval', array_column($saved_stmt->fetchAll(), 'product_id'));
+
+    $pl_stmt = $pdo->prepare('SELECT DISTINCT product_id FROM playlist_items pi JOIN playlists pl ON pi.playlist_id = pl.id WHERE pl.user_id = ?');
+    $pl_stmt->execute([$user_id_for_query]);
+    $playlist_product_ids = array_map('intval', array_column($pl_stmt->fetchAll(), 'product_id'));
 }
 
 // Fetch shop settings
@@ -43,7 +48,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
 </head>
-<body class="page-beats <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
+<body class="page-beats <?= get_active_theme($pdo) === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height:auto;padding-bottom:1rem;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
@@ -107,15 +112,13 @@ log_visitor($pdo, 'page_view', '/beats.php');
                     <?= h($beat['bpm'] ?? '') ?> BPM | <?= h($beat['key'] ?? '') ?>
                 </div>
                 <div class="beat-price-btn" style="display:flex; align-items:center; gap:0.5rem; justify-content:flex-end;">
-                    <?php if (!is_owner()): ?>
                     <button class="kit-save-btn <?= !empty($beat['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); toggleUpvote(this, <?= (int)$beat['id'] ?>)" title="Upvote" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
                         <?= !empty($beat['user_upvoted']) ? '★' : '☆' ?>
                     </button>
-                    <button class="kit-save-btn <?= in_array((int)$beat['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); togglePlaylist(this, <?= (int)$beat['id'] ?>)" title="Add to Playlist" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
+                    <button class="kit-save-btn playlist-btn-<?= $beat['id'] ?> <?= in_array((int)$beat['id'], $playlist_product_ids, true) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); togglePlaylist(this, <?= (int)$beat['id'] ?>)" title="Add to Playlist" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid rgba(123,225,168,0.2);background:transparent;color:var(--text-muted);border-radius:4px;cursor:pointer;">
                         ➕
                     </button>
                     <div style="text-align:right; font-size:0.8rem; color:var(--text-muted); margin-right:0.5rem; min-width:50px;"><span id="upvotes-<?= $beat['id'] ?>"><?= (int)$beat['upvotes'] ?></span> votes</div>
-                    <?php endif; ?>
                     <button class="cta-btn beat-buy-btn btn-buy" data-id="<?= $beat['id'] ?>" onclick="event.stopPropagation(); event.preventDefault(); openModal(<?= $beat['id'] ?>);">
                         <?= (float)$beat['price'] > 0 ? '$' . number_format($beat['price'], 2) : 'FREE' ?>
                     </button>
@@ -186,7 +189,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
         .then(r => r.json())
         .then(data => {
             if (!data.success) {
-                window.location.href = '/login.php';
+                window.location.href = '/login.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
                 return;
             }
             btn.classList.toggle('saved', data.is_active);
@@ -199,7 +202,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
 
     function togglePlaylist(btn, productId) {
         if (!IS_LOGGED_IN) {
-            window.location.href = '/login.php';
+            window.location.href = '/login.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
             return;
         }
         
@@ -227,6 +230,23 @@ log_visitor($pdo, 'page_view', '/beats.php');
         fetchPlaylistsForProduct(productId);
     }
 
+    function updatePlaylistButtonState(productId) {
+        const list = document.getElementById('playlistList');
+        if (!list) return;
+        const buttons = list.querySelectorAll('button');
+        let isInAny = false;
+        buttons.forEach(btn => {
+            if (btn.textContent.includes('(Added)')) {
+                isInAny = true;
+            }
+        });
+        const pageBtns = document.querySelectorAll('.playlist-btn-' + productId);
+        pageBtns.forEach(pBtn => {
+            pBtn.classList.toggle('saved', isInAny);
+        });
+    }
+
+    // Identical to shop.php
     function fetchPlaylistsForProduct(productId) {
         fetch('/api/product_actions.php', {
             method: 'POST',
@@ -240,6 +260,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
             list.innerHTML = '';
             if (!data.playlists || data.playlists.length === 0) {
                 list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">No playlists found. Create one below!</div>';
+                updatePlaylistButtonState(productId);
                 return;
             }
             
@@ -277,6 +298,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                                 btn.style.color = 'var(--text-muted)';
                                 btn.textContent = pl.name;
                             }
+                            updatePlaylistButtonState(productId);
                         } else {
                             alert('Error: ' + (res.error || 'Could not toggle playlist item'));
                         }
@@ -288,6 +310,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
                 };
                 list.appendChild(btn);
             });
+            updatePlaylistButtonState(productId);
         });
     }
 
@@ -303,8 +326,18 @@ log_visitor($pdo, 'page_view', '/beats.php');
         .then(r => r.json())
         .then(data => {
             if (data.success) {
+                const playlistId = data.playlist.id;
                 nameInput.value = '';
-                fetchPlaylistsForProduct(productId);
+                // Auto-add product to the newly created playlist!
+                fetch('/api/product_actions.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `action=toggle_playlist_item&playlist_id=${playlistId}&product_id=${productId}`
+                })
+                .then(r => r.json())
+                .then(res => {
+                    fetchPlaylistsForProduct(productId);
+                });
             } else {
                 alert('Error creating playlist: ' + (data.error || 'Unknown error'));
             }
@@ -474,10 +507,59 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         </div>
                     </div>
 
-                    <div id="paypal-btn-wrap" style="margin-top:2rem; min-height:50px;"></div>
+                    <!-- Terms of Agreement Checkbox -->
+                    <div id="modalTermsSection" style="margin-top:2rem; text-align:left; font-family:'Montserrat',sans-serif; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem; width:100%; box-sizing:border-box;">
+                        <div id="modalPdfLinkWrap" style="margin-bottom:0.8rem;"></div>
+                        <label style="display:flex; align-items:flex-start; gap:0.5rem; color:var(--text-muted); cursor:pointer; line-height:1.3; font-weight:500;">
+                            <input type="checkbox" id="termsCheckbox" style="margin-top:2px; cursor:pointer; accent-color:var(--accent); width:15px; height:15px; flex-shrink:0;">
+                            <span>I agree to the terms of agreement and rights for this product.</span>
+                        </label>
+                    </div>
+                    <div id="paypal-btn-wrap" style="margin-top:1rem; min-height:50px;"></div>
                 `;
                 
                 logAction('modal_open_beat', data.title);
+
+                // Reset terms checkbox state
+                const termsCheckbox = document.getElementById('termsCheckbox');
+                if (termsCheckbox) {
+                    termsCheckbox.checked = false;
+                }
+                
+                // Show PDF link if available
+                const pdfLinkWrap = document.getElementById('modalPdfLinkWrap');
+                if (pdfLinkWrap) {
+                    if (data.terms_pdf) {
+                        pdfLinkWrap.innerHTML = `
+                            <a href="${data.terms_pdf}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--accent); text-decoration:none; font-weight:700;">
+                                📄 READ TERMS &amp; RIGHTS (PDF)
+                            </a>
+                        `;
+                    } else {
+                        pdfLinkWrap.innerHTML = '';
+                    }
+                }
+
+                // Initially disable the checkout/download button block
+                const btnWrap = document.getElementById('paypal-btn-wrap');
+                if (btnWrap) {
+                    btnWrap.style.pointerEvents = 'none';
+                    btnWrap.style.opacity = '0.4';
+                }
+
+                // Bind checkbox change
+                if (termsCheckbox) {
+                    termsCheckbox.addEventListener('change', function() {
+                        const wrap = document.getElementById('paypal-btn-wrap');
+                        if (this.checked) {
+                            wrap.style.pointerEvents = 'auto';
+                            wrap.style.opacity = '1';
+                        } else {
+                            wrap.style.pointerEvents = 'none';
+                            wrap.style.opacity = '0.4';
+                        }
+                    });
+                }
 
                 // Bind license selection
                 content.querySelectorAll('.buy-tier').forEach(btn => {

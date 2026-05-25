@@ -91,7 +91,8 @@ SCHEMA = [
       `cover_image`    VARCHAR(255)  NULL,
       `zip_file`       VARCHAR(255)  NULL,
       `is_active`      TINYINT(1)    NOT NULL DEFAULT 1,
-      `allow_download` TINYINT(1)    NOT NULL DEFAULT 0
+      `allow_download` TINYINT(1)    NOT NULL DEFAULT 0,
+      `terms_pdf`      VARCHAR(255)  NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
     ("product_tracks", """
@@ -286,6 +287,8 @@ UPGRADES = [
     ("messages.is_flagged_by_sender", "ALTER TABLE messages ADD COLUMN is_flagged_by_sender TINYINT(1) NOT NULL DEFAULT 0"),
     ("messages.is_flagged_by_recipient", "ALTER TABLE messages ADD COLUMN is_flagged_by_recipient TINYINT(1) NOT NULL DEFAULT 0"),
     ("users.is_private", "ALTER TABLE users ADD COLUMN is_private TINYINT(1) NOT NULL DEFAULT 0"),
+    ("users.theme", "ALTER TABLE users ADD COLUMN theme VARCHAR(20) NOT NULL DEFAULT 'dark'"),
+    ("products.terms_pdf", "ALTER TABLE products ADD COLUMN terms_pdf VARCHAR(255) NULL"),
 ]
 for label, sql in UPGRADES:
     try:

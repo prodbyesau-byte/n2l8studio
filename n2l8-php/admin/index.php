@@ -572,7 +572,7 @@ try {
         }
     </style>
 </head>
-<body class="page-home <?= $site_theme === 'beige' ? 'theme-beige' : '' ?>">
+<body class="page-home <?= get_active_theme($pdo) === 'beige' ? 'theme-beige' : '' ?>">
 
 <div id="loadingOverlay">
     <div class="spinner"></div>
@@ -703,8 +703,9 @@ try {
                     <div class="form-group form-full"><label>Popup Description</label><textarea name="description" placeholder="Describe the contents..."></textarea></div>
                     <div class="form-group"><label style="color:var(--accent);">1. Cover Image (JPG/PNG)</label><input type="file" name="cover_image" accept=".jpg,.jpeg,.png,.webp"></div>
                     <div class="form-group"><label style="color:var(--accent);">2. Full Product ZIP</label><input type="file" name="zip_file" accept=".zip,.rar,.7z"></div>
+                    <div class="form-group"><label style="color:var(--accent);">3. Rules/Rights PDF</label><input type="file" name="terms_pdf" accept=".pdf"></div>
                     <div class="form-group form-full" style="background:rgba(57,255,20,0.03);padding:1rem;border:1px dashed var(--text-muted);">
-                        <label style="color:var(--text-main);font-size:1.1rem;">3. Preview Tracks (WAV / MP3)</label>
+                        <label style="color:var(--text-main);font-size:1.1rem;">4. Preview Tracks (WAV / MP3)</label>
                         <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:0.5rem;">Select one or more audio files for the media player preview.</p>
                         <input type="file" name="audio_files[]" accept=".mp3,.wav,.ogg,.flac" multiple style="border:none;padding:1rem 0;">
                     </div>

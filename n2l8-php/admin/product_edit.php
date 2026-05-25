@@ -36,12 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $new_cover = save_upload('cover_image', ALLOWED_IMAGES);
     $new_zip   = save_upload('zip_file', ALLOWED_FILES);
+    $new_pdf   = save_upload('terms_pdf', ['pdf']);
 
     $cover = $new_cover ?? $product['cover_image'];
     $zip   = $new_zip   ?? $product['zip_file'];
+    $pdf   = $new_pdf   ?? $product['terms_pdf'];
 
-    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,is_active=?,allow_download=? WHERE id=?')
-        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$is_active,$allow_download,$id]);
+    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,terms_pdf=?,is_active=?,allow_download=? WHERE id=?')
+        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$pdf,$is_active,$allow_download,$id]);
 
     log_action($pdo, "Edited product: '{$title}'");
     flash("Product '{$title}' updated.");
@@ -214,6 +216,15 @@ $flash_msgs = get_flash();
                 <label>Full Product ZIP</label>
                 <?php if ($product['zip_file']): ?><p style="color:var(--text-muted);font-size:0.9rem;"><?= h($product['zip_file']) ?></p><?php endif; ?>
                 <input type="file" name="zip_file" accept=".zip,.rar,.7z">
+            </div>
+            <div class="form-group">
+                <label>Rules/Rights PDF</label>
+                <?php if (!empty($product['terms_pdf'])): ?>
+                <p style="color:var(--text-muted);font-size:0.9rem;">
+                    <a href="/static/uploads/<?= h($product['terms_pdf']) ?>" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:700;">📄 View PDF (<?= h($product['terms_pdf']) ?>)</a>
+                </p>
+                <?php endif; ?>
+                <input type="file" name="terms_pdf" accept=".pdf">
             </div>
         </div>
         <div class="checkbox-row" style="margin-bottom:0.8rem;">

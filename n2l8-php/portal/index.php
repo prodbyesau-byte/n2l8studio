@@ -18,12 +18,13 @@ $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 $user_email = $_SESSION['email'] ?? '';
 
-// 1. Fetch user profile info (avatar picture and privacy preference)
-$user_stmt = $pdo->prepare('SELECT profile_picture, is_private FROM users WHERE id = ?');
+// 1. Fetch user profile info (avatar picture, privacy preference, and theme preference)
+$user_stmt = $pdo->prepare('SELECT profile_picture, is_private, theme FROM users WHERE id = ?');
 $user_stmt->execute([$user_id]);
 $user_info = $user_stmt->fetch();
 $profile_pic = $user_info['profile_picture'] ?? '';
 $is_private = (int)($user_info['is_private'] ?? 0);
+$user_theme = $user_info['theme'] ?? 'dark';
 
 // 2. Fetch inbox messages and unread count
 $msg_stmt = $pdo->prepare('SELECT * FROM messages WHERE recipient_id = ? ORDER BY id DESC');
@@ -172,6 +173,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_action($pdo, "User {$username} set their profile to " . ($new_is_private ? 'private' : 'public') . ".");
         } else {
             $error_msg = 'Failed to save visibility preference.';
+        }
+    }
+
+    // 5d. Update Profile Theme settings
+    if (isset($_POST['update_theme'])) {
+        $theme_val = $_POST['active_theme'] ?? 'dark';
+        if (!in_array($theme_val, ['dark', 'beige'])) $theme_val = 'dark';
+        
+        $upd_stmt = $pdo->prepare('UPDATE users SET theme = ? WHERE id = ?');
+        if ($upd_stmt->execute([$theme_val, $user_id])) {
+            $user_theme = $theme_val; // update display state
+            $_SESSION['theme'] = $theme_val; // update session state immediately
+            $success_msg = 'Appearance theme preference saved successfully.';
+            log_action($pdo, "User {$username} set their appearance theme to " . ucfirst($theme_val) . ".");
+        } else {
+            $error_msg = 'Failed to save appearance theme preference.';
         }
     }
 }
@@ -1802,7 +1819,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
     </style>
 </head>
-<body class="page-home <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
+<body class="page-home <?= get_active_theme($pdo) === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height: auto; padding-bottom: 0;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
@@ -2153,6 +2170,25 @@ $tab = $_GET['tab'] ?? 'library';
                     </div>
 
                     <button type="submit" class="cta-btn" style="width:100%;">SAVE PREFERENCE</button>
+                </form>
+            </div>
+
+            <div class="portal-card" style="margin-top: 2rem; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff; text-align:center;">SITE APPEARANCE</h3>
+                <p style="color:var(--text-muted); font-size:0.82rem; margin:0 0 1.5rem 0; font-family:'Montserrat',sans-serif; font-weight:500; text-align:center;">Customize your interface theme. Choose between dark and beige skins.</p>
+
+                <form method="POST">
+                    <input type="hidden" name="update_theme" value="1">
+                    
+                    <div class="form-group" style="text-align:left; margin-bottom:1.5rem;">
+                        <label style="display:block; font-family:'Montserrat', sans-serif; font-weight:700; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">Select active theme</label>
+                        <select name="active_theme" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--border-color); color:#fff; padding:0.6rem; border-radius:4px; font-family:'Montserrat', sans-serif; font-size:0.9rem;">
+                            <option value="dark" <?= ($user_theme === 'dark') ? 'selected' : '' ?>>Luxury Noir Red (Classic Dark)</option>
+                            <option value="beige" <?= ($user_theme === 'beige') ? 'selected' : '' ?>>Luxury Beige &amp; Copper (Premium Light)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="cta-btn" style="width:100%;">SAVE THEME</button>
                 </form>
             </div>
         </div>

@@ -9,7 +9,7 @@ $site = get_site_content($pdo);
 $shop_page_type = $shop_page_type ?? 'kits';
 $is_graphics_page = $shop_page_type === 'graphics';
 
-$user_id_for_query = is_customer_user() ? $_SESSION['user_id'] : 0;
+$user_id_for_query = is_logged_in() ? $_SESSION['user_id'] : 0;
 $query_base = "SELECT p.*, 
     (SELECT COUNT(*) FROM product_upvotes WHERE product_id = p.id) as upvotes,
     (SELECT 1 FROM product_upvotes WHERE product_id = p.id AND user_id = " . (int)$user_id_for_query . ") as user_upvoted
@@ -20,10 +20,15 @@ $stmt = $is_graphics_page
     : $pdo->query($query_base . "AND p.type IN ('loopkit', 'drumkit') ORDER BY p.id DESC");
 $products = $stmt->fetchAll();
 $saved_ids = [];
-if (is_customer_user()) {
+$playlist_product_ids = [];
+if (is_logged_in()) {
     $saved_stmt = $pdo->prepare('SELECT product_id FROM user_saved_products WHERE user_id = ?');
     $saved_stmt->execute([$_SESSION['user_id']]);
     $saved_ids = array_map('intval', array_column($saved_stmt->fetchAll(), 'product_id'));
+
+    $pl_stmt = $pdo->prepare('SELECT DISTINCT product_id FROM playlist_items pi JOIN playlists pl ON pi.playlist_id = pl.id WHERE pl.user_id = ?');
+    $pl_stmt->execute([$_SESSION['user_id']]);
+    $playlist_product_ids = array_map('intval', array_column($pl_stmt->fetchAll(), 'product_id'));
 }
 log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php');
 ?>
@@ -175,7 +180,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         }
     </style>
 </head>
-<body class="page-shop <?= ($site['site_theme'] ?? 'dark') === 'beige' ? 'theme-beige' : '' ?>">
+<body class="page-shop <?= get_active_theme($pdo) === 'beige' ? 'theme-beige' : '' ?>">
     <header class="hero" style="min-height:auto;padding-bottom:2rem;">
         <nav>
             <a href="/index.php" class="logo-text" style="text-decoration:none;">N<span>2</span>L8studios</a>
@@ -265,14 +270,12 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; gap:0.5rem;">
                             <button class="cta-btn kit-btn" style="flex:1; margin-top:0;" onclick="openModal(<?= (int)$p['id'] ?>)">Preview &amp; Buy</button>
-                            <?php if (!is_owner()): ?>
                             <button class="kit-save-btn <?= !empty($p['user_upvoted']) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); toggleUpvote(this, <?= (int)$p['id'] ?>)" title="Upvote" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">
                                 <?= !empty($p['user_upvoted']) ? '★' : '☆' ?>
                             </button>
-                            <button class="kit-save-btn <?= in_array((int)$p['id'], $saved_ids, true) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); togglePlaylist(this, <?= (int)$p['id'] ?>)" title="Add to Playlist" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+                            <button class="kit-save-btn playlist-btn-<?= $p['id'] ?> <?= in_array((int)$p['id'], $playlist_product_ids, true) ? 'saved' : '' ?>" type="button" onclick="event.stopPropagation(); event.preventDefault(); togglePlaylist(this, <?= (int)$p['id'] ?>)" title="Add to Playlist" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
                                 ➕
                             </button>
-                            <?php endif; ?>
                         </div>
                         <div style="text-align:right; font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"><span id="upvotes-<?= $p['id'] ?>"><?= (int)$p['upvotes'] ?></span> upvotes</div>
                     </div>
@@ -295,6 +298,14 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 <div id="modalCoverWrap"></div>
                 <div class="modal-price" id="modalPrice"></div>
                 <div class="modal-price-orig" id="modalPriceOrig"></div>
+                <!-- Terms of Agreement Checkbox -->
+                <div id="modalTermsSection" style="margin-top:1.5rem; text-align:left; font-family:'Montserrat',sans-serif; font-size:0.8rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1rem; width:100%; box-sizing:border-box;">
+                    <div id="modalPdfLinkWrap" style="margin-bottom:0.8rem;"></div>
+                    <label style="display:flex; align-items:flex-start; gap:0.5rem; color:var(--text-muted); cursor:pointer; line-height:1.3; font-weight:500;">
+                        <input type="checkbox" id="termsCheckbox" style="margin-top:2px; cursor:pointer; accent-color:var(--accent); width:15px; height:15px; flex-shrink:0;">
+                        <span>I agree to the terms of agreement and rights for this product.</span>
+                    </label>
+                </div>
                 <!-- PayPal button (paid) or direct download (free) -->
                 <div id="paypal-btn-wrap" style="width:100%;margin-top:1rem;"></div>
             </div>
@@ -341,7 +352,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         .then(r => r.json())
         .then(data => {
             if (!data.success) {
-                window.location.href = '/login.php';
+                window.location.href = '/login.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
                 return;
             }
             btn.classList.toggle('saved', data.is_active);
@@ -354,7 +365,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
 
     function togglePlaylist(btn, productId) {
         if (!IS_LOGGED_IN) {
-            window.location.href = '/login.php';
+            window.location.href = '/login.php?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
             return;
         }
         
@@ -382,6 +393,22 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         fetchPlaylistsForProduct(productId);
     }
 
+    function updatePlaylistButtonState(productId) {
+        const list = document.getElementById('playlistList');
+        if (!list) return;
+        const buttons = list.querySelectorAll('button');
+        let isInAny = false;
+        buttons.forEach(btn => {
+            if (btn.textContent.includes('(Added)')) {
+                isInAny = true;
+            }
+        });
+        const pageBtns = document.querySelectorAll('.playlist-btn-' + productId);
+        pageBtns.forEach(pBtn => {
+            pBtn.classList.toggle('saved', isInAny);
+        });
+    }
+
     function fetchPlaylistsForProduct(productId) {
         fetch('/api/product_actions.php', {
             method: 'POST',
@@ -395,6 +422,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             list.innerHTML = '';
             if (!data.playlists || data.playlists.length === 0) {
                 list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem;">No playlists found. Create one below!</div>';
+                updatePlaylistButtonState(productId);
                 return;
             }
             
@@ -432,6 +460,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                                 btn.style.color = 'var(--text-muted)';
                                 btn.textContent = pl.name;
                             }
+                            updatePlaylistButtonState(productId);
                         } else {
                             alert('Error: ' + (res.error || 'Could not toggle playlist item'));
                         }
@@ -443,6 +472,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 };
                 list.appendChild(btn);
             });
+            updatePlaylistButtonState(productId);
         });
     }
 
@@ -458,8 +488,18 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         .then(r => r.json())
         .then(data => {
             if (data.success) {
+                const playlistId = data.playlist.id;
                 nameInput.value = '';
-                fetchPlaylistsForProduct(productId);
+                // Auto-add product to the newly created playlist!
+                fetch('/api/product_actions.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `action=toggle_playlist_item&playlist_id=${playlistId}&product_id=${productId}`
+                })
+                .then(r => r.json())
+                .then(res => {
+                    fetchPlaylistsForProduct(productId);
+                });
             } else {
                 alert('Error creating playlist: ' + (data.error || 'Unknown error'));
             }
@@ -735,6 +775,30 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     }
                 }
 
+                // Reset terms checkbox state
+                const termsCheckbox = document.getElementById('termsCheckbox');
+                if (termsCheckbox) {
+                    termsCheckbox.checked = false;
+                }
+                
+                // Show PDF link if available
+                const pdfLinkWrap = document.getElementById('modalPdfLinkWrap');
+                if (pdfLinkWrap) {
+                    if (p.terms_pdf) {
+                        pdfLinkWrap.innerHTML = `
+                            <a href="${p.terms_pdf}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--accent); text-decoration:none; font-weight:700;">
+                                📄 READ TERMS &amp; RIGHTS (PDF)
+                            </a>
+                        `;
+                    } else {
+                        pdfLinkWrap.innerHTML = '';
+                    }
+                }
+
+                // Initially disable the checkout/download button block
+                wrap.style.pointerEvents = 'none';
+                wrap.style.opacity = '0.4';
+
                 tracks = p.tracks || [];
                 renderTrackList();
                 modal.classList.add('open');
@@ -758,6 +822,16 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     }
     modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    document.getElementById('termsCheckbox')?.addEventListener('change', function() {
+        const wrap = document.getElementById('paypal-btn-wrap');
+        if (this.checked) {
+            wrap.style.pointerEvents = 'auto';
+            wrap.style.opacity = '1';
+        } else {
+            wrap.style.pointerEvents = 'none';
+            wrap.style.opacity = '0.4';
+        }
+    });
     document.getElementById('btnPlayPause').addEventListener('click', () => {
         if (!tracks.length) return;
         if (currentIdx < 0) { loadTrack(0); return; }

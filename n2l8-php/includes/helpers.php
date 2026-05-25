@@ -82,6 +82,37 @@ function get_site_content(PDO $pdo): array {
     return $site;
 }
 
+function get_active_theme(PDO $pdo): string {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    
+    // If logged in, prioritize user's database/session theme setting
+    if (isset($_SESSION['user_id'])) {
+        if (!isset($_SESSION['theme'])) {
+            try {
+                $stmt = $pdo->prepare('SELECT theme FROM users WHERE id = ?');
+                $stmt->execute([$_SESSION['user_id']]);
+                $_SESSION['theme'] = $stmt->fetchColumn() ?: 'dark';
+            } catch (Throwable $e) {
+                $_SESSION['theme'] = 'dark';
+            }
+        }
+        return $_SESSION['theme'];
+    }
+    
+    // Fallback to global setting in content table
+    static $global_theme = null;
+    if ($global_theme === null) {
+        try {
+            $stmt = $pdo->prepare("SELECT text FROM content WHERE section_key = 'site_theme'");
+            $stmt->execute();
+            $global_theme = $stmt->fetchColumn() ?: 'dark';
+        } catch (Throwable $e) {
+            $global_theme = 'dark';
+        }
+    }
+    return $global_theme;
+}
+
 function log_action(PDO $pdo, string $action): void {
     $pdo->prepare('INSERT INTO audit_log (action) VALUES (?)')
         ->execute([$action]);

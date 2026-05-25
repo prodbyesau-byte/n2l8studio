@@ -24,9 +24,10 @@ $allow_download  = isset($_POST['allow_download']) ? 1 : 0;
 
 $cover_image = save_upload('cover_image', ALLOWED_IMAGES);
 $zip_file    = save_upload('zip_file', ALLOWED_FILES);
+$terms_pdf   = save_upload('terms_pdf', ['pdf']);
 
-$stmt = $pdo->prepare('INSERT INTO products (title,type,genre,price,price_premium,price_exclusive,original_price,author,description,bpm,`key`,cover_image,zip_file,is_active,allow_download) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-$stmt->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover_image,$zip_file,$is_active,$allow_download]);
+$stmt = $pdo->prepare('INSERT INTO products (title,type,genre,price,price_premium,price_exclusive,original_price,author,description,bpm,`key`,cover_image,zip_file,terms_pdf,is_active,allow_download) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+$stmt->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover_image,$zip_file,$terms_pdf,$is_active,$allow_download]);
 $product_id = $pdo->lastInsertId();
 
 // Handle multiple preview tracks
