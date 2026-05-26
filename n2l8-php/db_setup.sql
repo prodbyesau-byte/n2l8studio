@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS `products` (
   `key`            VARCHAR(20)     NULL,
   `cover_image`    VARCHAR(255)    NULL,
   `zip_file`       VARCHAR(255)    NULL,
-  `is_active`      TINYINT(1)      NOT NULL DEFAULT 1
+  `is_active`      TINYINT(1)      NOT NULL DEFAULT 1,
+  `position`       INT             NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Preview tracks (per product)

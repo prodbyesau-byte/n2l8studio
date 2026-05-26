@@ -16,9 +16,10 @@ $query_base = "SELECT p.*,
     FROM products p WHERE p.is_active = 1 ";
 
 $stmt = $is_graphics_page
-    ? $pdo->query($query_base . "AND p.type = 'graphics' ORDER BY p.id DESC")
-    : $pdo->query($query_base . "AND p.type IN ('loopkit', 'drumkit') ORDER BY p.id DESC");
+    ? $pdo->query($query_base . "AND p.type = 'graphics' ORDER BY p.position ASC, p.id DESC")
+    : $pdo->query($query_base . "AND p.type IN ('loopkit', 'drumkit') ORDER BY p.position ASC, p.id DESC");
 $products = $stmt->fetchAll();
+
 $saved_ids = [];
 $playlist_product_ids = [];
 if (is_logged_in()) {
@@ -39,7 +40,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $is_graphics_page ? 'Graphics' : 'Shop' ?> - N2L8 STUDIO</title>
     <meta name="description" content="<?= $is_graphics_page ? 'Graphic art from n2l8studio.' : 'Shop loopkits and drumkits from n2l8studio.' ?>">
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -70,7 +71,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         .modal-box {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            box-shadow: var(--purple-glow);
+            box-shadow: var(--pop-shadow), var(--accent-glow);
             width: 92%;
             max-width: 780px;
             margin: 3rem auto;
@@ -178,6 +179,20 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             .modal-info-col { padding:1.2rem; }
             .modal-title { font-size:1.2rem; }
         }
+        /* ── ADMIN DRAG & DROP ── */
+        .kit-card.admin-dragging {
+            opacity: 0.4;
+            border: 2px dashed var(--accent) !important;
+            box-shadow: var(--accent-glow) !important;
+            transform: scale(0.97);
+            cursor: grabbing !important;
+        }
+        .kit-card.admin-drag-over {
+            border: 2px solid var(--gold) !important;
+            box-shadow: 0 0 15px rgba(184, 155, 94, 0.4) !important;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
     </style>
 </head>
 <body class="page-shop <?= get_active_theme($pdo) === 'beige' ? 'theme-beige' : '' ?>">
@@ -196,17 +211,17 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                         <a href="/beats.php">Beats</a>
                     </div>
                 </li>
-                <li><a href="/pricing.php">Services</a></li>
+                <!-- <li><a href="/pricing.php">Services</a></li> -->
                 <li><a href="/forum.php">Forum</a></li>
                 <?php if (is_logged_in()): ?>
                     <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent); display: inline-flex; align-items: center; gap: 4px; padding-top: 4px; padding-bottom: 4px;">
                             <?= get_user_avatar_nav($pdo) ?>
-                            <span>Portal</span>
+                            <span>Profile</span>
                         </a>
                         <div class="dropdown-content">
                             <a href="/portal/index.php?tab=settings">Account Settings</a>
-                            <a href="/portal/index.php">Client Portal</a>
+                            <a href="/portal/index.php"><?= is_owner() ? 'Client Portal' : 'Profile' ?></a>
                             <?php if (is_owner()): ?>
                                 <a href="/admin/index.php">Admin Portal</a>
                             <?php endif; ?>
@@ -231,13 +246,43 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             <h2><?= $is_graphics_page ? 'Graphics' : h($site['shop_h2'] ?? 'Kits') ?></h2>
             <p class="section-desc"><?= $is_graphics_page ? 'Cover art, visual packs and design assets from N2L8studios.' : h($site['shop_desc'] ?? '') ?></p>
 
+            <?php if (is_owner()): ?>
+            <!-- ADMIN ORDER BAR -->
+            <div class="admin-order-bar" style="background:rgba(26,26,31,0.65); backdrop-filter:blur(10px); border:1px solid var(--border-color); padding:1.2rem; border-radius:6px; margin-bottom:2rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; box-shadow:var(--red-glow);">
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                    <span style="font-size:1.4rem;">⚙️</span>
+                    <div>
+                        <strong style="font-family:'Syncopate',sans-serif; font-size:0.75rem; color:#fff; display:block; letter-spacing:1px;" id="adminOrderNotice">ADMIN PORTAL: DRAG & DROP TO REORDER</strong>
+                        <span style="font-size:0.75rem; color:var(--text-muted); font-family:'Montserrat',sans-serif;">Drag any kit to customize its placement. Click Save Order to publish.</span>
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.8rem; margin-left:auto;">
+                    <button id="adminSaveOrderBtn" class="cta-btn" style="margin-top:0; font-size:0.8rem; padding:0.6rem 1.2rem; font-family:'Syncopate',sans-serif; font-weight:700; letter-spacing:1px; background:#A44A5E; display:none;" onclick="saveAdminOrder()">💾 SAVE ORDER</button>
+                    <button class="cta-btn" style="margin-top:0; font-size:0.8rem; padding:0.6rem 1.2rem; font-family:'Syncopate',sans-serif; font-weight:700; letter-spacing:1px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff;" onclick="window.location.reload()">Reset</button>
+                </div>
+            </div>
+            <?php endif; ?>
+
+
+
             <?php if (!$is_graphics_page): ?>
-            <div class="kits-filter">
+            <div class="kits-filter" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:2rem;">
                 <div class="filter-group">
                     <span class="filter-label">Type</span>
                     <button class="filter-tab active" data-value="all">All</button>
                     <button class="filter-tab" data-value="loopkit">Loop Kits</button>
                     <button class="filter-tab" data-value="drumkit">Drumkits</button>
+                </div>
+                <div class="search-group" style="position:relative; width:100%; max-width:300px;">
+                    <input type="text" id="shopSearchInput" placeholder="Search kits..." style="width:100%; padding:0.6rem 1rem 0.6rem 2.2rem; background:rgba(26,26,31,0.6); border:1px solid var(--border-color); border-radius:4px; color:var(--text-main); font-family:'Montserrat',sans-serif; font-size:0.85rem; outline:none; transition:all 0.3s ease; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);">
+                    <span style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.9rem; pointer-events:none;">🔍</span>
+                </div>
+            </div>
+            <?php else: ?>
+            <div class="kits-filter" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:2rem;">
+                <div class="search-group" style="position:relative; width:100%; max-width:300px;">
+                    <input type="text" id="shopSearchInput" placeholder="Search graphics..." style="width:100%; padding:0.6rem 1rem 0.6rem 2.2rem; background:rgba(26,26,31,0.6); border:1px solid var(--border-color); border-radius:4px; color:var(--text-main); font-family:'Montserrat',sans-serif; font-size:0.85rem; outline:none; transition:all 0.3s ease; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);">
+                    <span style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.9rem; pointer-events:none;">🔍</span>
                 </div>
             </div>
             <?php endif; ?>
@@ -247,7 +292,10 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 <p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:3rem 0;">No products available. Check back soon.</p>
                 <?php else: foreach ($products as $p): ?>
                 <div class="kit-card" data-type="<?= h($p['type']) ?>" data-genre="<?= h($p['genre']) ?>" data-id="<?= (int)$p['id'] ?>">
-                    <div class="kit-cover <?= $p['cover_image'] ? '' : 'placeholder-1' ?>">
+                    <div class="kit-cover <?= $p['cover_image'] ? '' : 'placeholder-1' ?>" style="position:relative;">
+                        <?php if (!empty($p['is_preorder']) && (!empty($p['release_date']) && strtotime($p['release_date']) > time())): ?>
+                        <div class="preorder-badge-overlay" style="position:absolute; top:12px; left:12px; background:rgba(168, 85, 247, 0.95); color:#fff; border:1px solid rgba(168,85,247,0.4); box-shadow:0 0 10px rgba(168,85,247,0.5); font-family:'Syncopate',sans-serif; font-size:0.62rem; font-weight:700; padding:4px 8px; border-radius:3px; z-index:10; letter-spacing:1.5px; text-transform:uppercase;">PRE-ORDER</div>
+                        <?php endif; ?>
                         <?php if ($p['cover_image']): ?>
                         <img src="/static/uploads/<?= h($p['cover_image']) ?>" alt="<?= h($p['title']) ?> Cover" class="kit-image">
                         <?php endif; ?>
@@ -306,6 +354,9 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                         <span>I agree to the terms of agreement and rights for this product.</span>
                     </label>
                 </div>
+                <!-- Pre-order Notice Banner -->
+                <div id="preorder-notice-wrap" style="width:100%;margin-top:1rem;display:none;"></div>
+                
                 <!-- PayPal button (paid) or direct download (free) -->
                 <div id="paypal-btn-wrap" style="width:100%;margin-top:1rem;"></div>
             </div>
@@ -510,28 +561,55 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         });
     }
 
-    /* ── FILTER ── */
+    /* ── FILTER & SEARCH ── */
     const typeTabs = document.querySelectorAll('.filter-tab');
     const cards = document.querySelectorAll('.kit-card');
+    const searchInput = document.getElementById('shopSearchInput');
     let currentType = '<?= $is_graphics_page ? 'graphics' : 'all' ?>';
+
     function filterKits() {
         let visibleCount = 0;
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
         cards.forEach(card => {
-            const match = currentType === 'all' || card.dataset.type === currentType;
+            const typeMatch = currentType === 'all' || card.dataset.type === currentType;
+
+            // Search match matches title, author, key, bpm
+            const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
+            const author = card.querySelector('.kit-author')?.textContent.toLowerCase() || '';
+            const meta = card.querySelector('.kit-meta')?.textContent.toLowerCase() || '';
+
+            const searchMatch = !query || 
+                                title.includes(query) || 
+                                author.includes(query) || 
+                                meta.includes(query);
+
+            const match = typeMatch && searchMatch;
+
             card.style.opacity = match ? '1' : '0';
             card.style.display = match ? 'flex' : 'none';
             if (match) visibleCount++;
         });
+
         const emptyState = document.getElementById('noFilterResults');
-        if (emptyState) emptyState.style.display = visibleCount ? 'none' : 'block';
+        if (emptyState) {
+            emptyState.style.display = visibleCount ? 'none' : 'block';
+            emptyState.textContent = query ? 'No matching products found.' : 'No products in this category yet.';
+        }
     }
+
     typeTabs.forEach(b => b.classList.toggle('active', b.dataset.value === currentType));
     filterKits();
+    
     typeTabs.forEach(t => t.addEventListener('click', () => {
         currentType = t.dataset.value;
         typeTabs.forEach(b => b.classList.toggle('active', b.dataset.value === currentType));
         filterKits();
     }));
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterKits);
+    }
 
     /* ── MODAL + PLAYER ── */
     const audio = document.getElementById('audioEl');
@@ -541,7 +619,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
     /* ── PAYPAL ── */
     let _ppButtons = null; // store rendered instance to destroy on reopen
 
-    function renderPayPalButtons(productId, price) {
+    function renderPayPalButtons(productId, price, isPreorderPending = false) {
         const wrap = document.getElementById('paypal-btn-wrap');
         wrap.innerHTML = '';
         if (price <= 0) return;
@@ -549,7 +627,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         // ── Stripe Credit Card Button ──
         const stripeBtn = document.createElement('button');
         stripeBtn.className = 'cta-btn modal-buy-btn';
-        stripeBtn.style.background = '#C0152A';
+        stripeBtn.style.background = '#A44A5E';
         stripeBtn.style.color = '#ffffff';
         stripeBtn.style.border = 'none';
         stripeBtn.style.padding = '0.85rem';
@@ -563,7 +641,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
         stripeBtn.style.width = '100%';
         stripeBtn.style.display = 'block';
         stripeBtn.style.transition = 'all 0.3s';
-        stripeBtn.innerHTML = '💳 PAY WITH CARD';
+        stripeBtn.innerHTML = isPreorderPending ? '💳 PRE-ORDER WITH CARD' : '💳 PAY WITH CARD';
         
         stripeBtn.addEventListener('click', () => {
             stripeBtn.textContent = 'SECURE REDIRECT...';
@@ -753,22 +831,40 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 document.getElementById('modalDesc').textContent = p.description || '';
                 document.getElementById('modalPrice').textContent = p.price > 0 ? `$${parseFloat(p.price).toFixed(2)}` : 'FREE';
                 document.getElementById('modalPriceOrig').textContent = p.original_price ? `$${parseFloat(p.original_price).toFixed(2)}` : '';
+                
+                // Reset preorder notice
+                const noticeWrap = document.getElementById('preorder-notice-wrap');
+                if (noticeWrap) {
+                    noticeWrap.style.display = 'none';
+                    noticeWrap.innerHTML = '';
+                }
 
                 // Payment / download area
                 const wrap = document.getElementById('paypal-btn-wrap');
                 wrap.innerHTML = '';
                 _currentProductId = productId;
 
+                const isPreorder = p.is_preorder === 1;
+                const releaseDate = p.release_date;
+                const isPreorderPending = isPreorder && releaseDate && (new Date(releaseDate + 'T00:00:00') > new Date());
+
+                if (isPreorderPending && noticeWrap) {
+                    noticeWrap.style.display = 'block';
+                    noticeWrap.innerHTML = `
+                        <div style="background:rgba(168, 85, 247, 0.12); border:1px solid rgba(168,85,247,0.35); border-radius:4px; padding:1.2rem; font-family:'Montserrat',sans-serif; text-align:left; color:#fff; box-shadow:0 0 15px rgba(168,85,247,0.15); margin-bottom:0.5rem; margin-top:0.5rem;">
+                            <strong style="color:#b57cff; font-family:'Syncopate',sans-serif; font-size:0.7rem; display:block; margin-bottom:0.4rem; letter-spacing:1.5px;">📅 PRE-ORDER ACTIVE</strong>
+                            <span style="font-size:0.8rem; line-height:1.6; color:rgba(255,255,255,0.92); font-weight:500;">
+                                This pack is a scheduled upcoming release out on <strong>${releaseDate}</strong>. Pre-ordering now secures your copy, and it will appear automatically for download in your Client Portal the second it is officially released!
+                            </span>
+                        </div>
+                    `;
+                }
+
                 if (parseFloat(p.price) > 0) {
-                    renderPayPalButtons(productId, p.price);
+                    renderPayPalButtons(productId, p.price, isPreorderPending);
                 } else {
-                    if (p.allow_download && p.zip_file) {
-                        if (IS_LOGGED_IN) {
-                            wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
-                        } else {
-                            const returnUrl = encodeURIComponent(window.location.pathname + '?preview=' + productId);
-                            wrap.innerHTML = `<a href="/login.php?redirect=${returnUrl}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;background:#C0152A;">🔒 LOGIN TO CLAIM KIT</a>`;
-                        }
+                    if (p.allow_download && p.zip_file && !isPreorderPending) {
+                        wrap.innerHTML = `<a href="${p.zip_file}" class="cta-btn modal-buy-btn" style="display:block;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;text-decoration:none;margin-top:1rem;" download>⬇ DOWNLOAD FREE KIT</a>`;
                     } else {
                         // Download disabled — greyed out placeholder
                         wrap.innerHTML = `<button disabled style="display:block;width:100%;text-align:center;font-size:1rem;padding:0.8rem 1.5rem;font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:1px;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);cursor:not-allowed;margin-top:1rem;">⬇ DOWNLOAD — COMING SOON</button>`;
@@ -780,7 +876,7 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                 if (termsCheckbox) {
                     termsCheckbox.checked = false;
                 }
-                
+
                 // Show PDF link if available
                 const pdfLinkWrap = document.getElementById('modalPdfLinkWrap');
                 if (pdfLinkWrap) {
@@ -918,6 +1014,109 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
             navLinks.classList.remove('open');
         }));
     }
+
+    // ── ADMIN DRAG AND DROP ORDERING ──
+    <?php if (is_owner()): ?>
+    document.addEventListener('DOMContentLoaded', () => {
+        const grid = document.querySelector('.kits-grid');
+        if (!grid) return;
+
+        let draggedItem = null;
+
+        // Fetch cards and make them draggable
+        const cards = grid.querySelectorAll('.kit-card');
+        cards.forEach(card => {
+            card.setAttribute('draggable', 'true');
+            card.style.cursor = 'grab';
+            
+            card.addEventListener('dragstart', (e) => {
+                draggedItem = card;
+                card.classList.add('admin-dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', card.dataset.id);
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('admin-dragging');
+                draggedItem = null;
+                // Reveal the save button and update status notice
+                const saveBtn = document.getElementById('adminSaveOrderBtn');
+                if (saveBtn) saveBtn.style.display = 'inline-block';
+                const notice = document.getElementById('adminOrderNotice');
+                if (notice) {
+                    notice.textContent = '⚠️ UNSAVED CHANGES: CLICK SAVE ORDER TO PUBLISH!';
+                    notice.style.color = '#B89B5E'; // soft gold
+                }
+            });
+
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            card.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                if (card !== draggedItem) {
+                    card.classList.add('admin-drag-over');
+                }
+            });
+
+            card.addEventListener('dragleave', () => {
+                card.classList.remove('admin-drag-over');
+            });
+
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('admin-drag-over');
+                
+                if (draggedItem && card !== draggedItem) {
+                    const allCards = Array.from(grid.querySelectorAll('.kit-card'));
+                    const draggedIdx = allCards.indexOf(draggedItem);
+                    const targetIdx = allCards.indexOf(card);
+                    
+                    if (draggedIdx < targetIdx) {
+                        card.after(draggedItem);
+                    } else {
+                        card.before(draggedItem);
+                    }
+                }
+            });
+        });
+    });
+
+    function saveAdminOrder() {
+        const btn = document.getElementById('adminSaveOrderBtn');
+        btn.disabled = true;
+        btn.textContent = '💾 SAVING...';
+        
+        const productIds = Array.from(document.querySelectorAll('.kit-card')).map(card => parseInt(card.dataset.id));
+        
+        fetch('/api/update_product_order.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_ids: productIds })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                btn.textContent = '✅ SAVED!';
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert(data.error || 'Failed to save order.');
+                btn.disabled = false;
+                btn.textContent = '💾 SAVE ORDER';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('An error occurred while saving.');
+            btn.disabled = false;
+            btn.textContent = '💾 SAVE ORDER';
+        });
+    }
+    <?php endif; ?>
     </script>
 </body>
 </html>

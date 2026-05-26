@@ -1,23 +1,25 @@
 /* 
-   N2L8 STUDIO — LUXURY NOIR RED THEME
+   N2L8 STUDIO — LUXURY WINE & GOLD THEME
    Primary Font: Montserrat (Sophisticated modern sans-serif)
    Header/Title Font: Syncopate (Wide, bold, blocky sans-serif)
-   Accent Color: Luxury Crimson Red (#C0152A)
+   Accent Colors: Deep Wine Red (#6E1F2A) · Muted Rose (#A44A5E) · Soft Gold (#B89B5E)
 */
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap');
 
 :root {
-    --bg-dark: #000000;
-    --bg-card: #050508;
-    --text-main: #ffffff;
+    --bg-dark: #0F0F11;
+    --bg-card: #1A1A1F;
+    --text-main: #F5F1EA;
     --text-muted: #8c8c9e;
-    --accent: #C0152A;
-    --accent-hover: #e0243b;
-    --accent-glow: 0 0 12px rgba(192, 21, 42, 0.4);
-    --red-glow: 0 0 20px rgba(192, 21, 42, 0.35);
+    --accent: #A44A5E;
+    --accent-hover: #B85A6E;
+    --accent-deep: #6E1F2A;
+    --gold: #B89B5E;
+    --accent-glow: 0 0 12px rgba(164, 74, 94, 0.4);
+    --red-glow: 0 0 20px rgba(110, 31, 42, 0.35);
     --pop-shadow: 0 8px 32px rgba(0, 0, 0, 0.9);
-    --border-color: rgba(192, 21, 42, 0.2);
+    --border-color: rgba(164, 74, 94, 0.2);
 }
 
 * {
@@ -39,12 +41,12 @@ body {
     background-color: var(--bg-dark);
 }
 
-/* Ambient Crimson Glow over background */
+/* Ambient Wine Glow over background */
 body::after {
     content: '';
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(192, 21, 42, 0.05) 0%, rgba(0, 0, 0, 1) 100%);
+    background: radial-gradient(circle at 50% 50%, rgba(110, 31, 42, 0.06) 0%, rgba(15, 15, 17, 1) 100%);
     z-index: -2;
     pointer-events: none;
 }
@@ -55,12 +57,12 @@ body::after {
 .page-pricing,
 .page-sub,
 .page-beats {
-    background-color: #070708;
+    background-color: #0F0F11;
     background-image:
-        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.025), transparent 24rem),
-        radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.018), transparent 20rem),
-        repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.042) 0 1px, transparent 1px 3px),
-        repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 5px);
+        radial-gradient(circle at 30% 20%, rgba(245, 241, 234, 0.018), transparent 24rem),
+        radial-gradient(circle at 70% 80%, rgba(245, 241, 234, 0.012), transparent 20rem),
+        repeating-radial-gradient(circle at 50% 50%, rgba(245, 241, 234, 0.025) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(115deg, rgba(245, 241, 234, 0.012) 0 1px, transparent 1px 5px);
     background-size: auto, auto, 3px 3px, 7px 7px;
     background-attachment: fixed;
     background-position: center;
@@ -102,23 +104,23 @@ nav {
 
 .logo-text {
     font-size: 1.15rem;
-    color: #ffffff;
+    color: #F5F1EA;
     letter-spacing: 0.15em;
     font-weight: 700;
     text-decoration: none;
     transition: all 0.3s ease;
-    text-shadow: 0 0 10px rgba(192, 21, 42, 0.2);
+    text-shadow: 0 0 10px rgba(184, 155, 94, 0.2);
 }
 
 .logo-text span,
 .hero-brand-wordmark span {
     color: var(--accent);
-    text-shadow: 0 0 12px rgba(192, 21, 42, 0.55);
+    text-shadow: var(--accent-glow);
 }
 
 .logo-text:hover {
-    color: #ffffff;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    color: #F5F1EA;
+    text-shadow: 0 0 15px rgba(184, 155, 94, 0.5);
 }
 
 .nav-links {
@@ -144,8 +146,8 @@ nav {
 }
 
 .nav-links a:hover {
-    color: #ffffff;
-    text-shadow: 0 0 8px rgba(192, 21, 42, 0.4);
+    color: #F5F1EA;
+    text-shadow: 0 0 8px rgba(164, 74, 94, 0.4);
 }
 
 /* ── NAVIGATION DROPDOWN ── */
@@ -153,7 +155,7 @@ nav {
 .dropdown-content {
     display: none;
     position: absolute;
-    background-color: rgba(5, 5, 8, 0.98);
+    background-color: rgba(26, 26, 31, 0.98);
     min-width: 200px;
     box-shadow: var(--pop-shadow);
     z-index: 1001;
@@ -178,8 +180,8 @@ nav {
     text-align: center;
 }
 .dropdown-content a:hover {
-    background-color: rgba(192, 21, 42, 0.08) !important;
-    color: #ffffff !important;
+    background-color: rgba(164, 74, 94, 0.1) !important;
+    color: #F5F1EA !important;
     text-shadow: none !important;
 }
 .dropdown-content.show { display: block; }
@@ -203,7 +205,7 @@ nav {
     width: 100%;
     height: auto;
     margin-bottom: 1.2rem;
-    filter: drop-shadow(0px 8px 24px rgba(192, 21, 42, 0.35));
+    filter: drop-shadow(0px 8px 24px rgba(110, 31, 42, 0.35));
     display: block; /* Centered Logo */
     margin-left: auto;
     margin-right: auto;
@@ -231,8 +233,8 @@ h1 {
 }
 
 h1 span.highlight {
-    color: var(--accent);
-    text-shadow: 0 0 15px rgba(192, 21, 42, 0.5);
+    color: var(--gold);
+    text-shadow: 0 0 15px rgba(184, 155, 94, 0.5);
 }
 
 .hero-content p {
@@ -273,7 +275,7 @@ h1 span.highlight {
 
 .cta-btn:hover {
     background: var(--accent-hover);
-    box-shadow: 0 0 25px rgba(192, 21, 42, 0.6);
+    box-shadow: 0 0 25px rgba(164, 74, 94, 0.5);
     transform: translateY(-2px);
 }
 
@@ -289,7 +291,7 @@ h1 span.highlight {
 .cta-btn.secondary:hover {
     color: var(--accent);
     background: transparent;
-    text-shadow: 0 0 10px rgba(192, 21, 42, 0.5);
+    text-shadow: 0 0 10px rgba(164, 74, 94, 0.5);
     transform: translateY(-2px);
 }
 
@@ -344,7 +346,7 @@ h1 span.highlight {
 }
 
 .pricing-card {
-    background: rgba(5, 5, 8, 0.8);
+    background: rgba(26, 26, 31, 0.8);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     padding: 3.5rem 2.5rem;
@@ -368,8 +370,8 @@ h1 span.highlight {
 
 .pricing-card:hover {
     transform: translateY(-8px);
-    border-color: rgba(192, 21, 42, 0.4);
-    box-shadow: 0 20px 45px rgba(192, 21, 42, 0.15), var(--accent-glow);
+    border-color: rgba(164, 74, 94, 0.4);
+    box-shadow: 0 20px 45px rgba(164, 74, 94, 0.12), var(--accent-glow);
 }
 
 .pricing-card:hover::before {
@@ -501,7 +503,7 @@ h1 span.highlight {
 }
 
 .kit-card {
-    background: rgba(5, 5, 8, 0.6);
+    background: rgba(26, 26, 31, 0.6);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 0.9rem;
@@ -511,9 +513,9 @@ h1 span.highlight {
 }
 
 .kit-card:hover {
-    border-color: rgba(192, 21, 42, 0.4);
+    border-color: rgba(164, 74, 94, 0.4);
     transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(192, 21, 42, 0.12), var(--accent-glow);
+    box-shadow: 0 12px 30px rgba(164, 74, 94, 0.12), var(--accent-glow);
 }
 
 .kit-cover {
@@ -523,7 +525,7 @@ h1 span.highlight {
     margin-bottom: 0.9rem;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     aspect-ratio: 1;
-    background-color: #020203;
+    background-color: #121215;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -595,8 +597,8 @@ h1 span.highlight {
 .kit-btn {
     width: 100%;
     padding: 0.7rem;
-    background: rgba(192, 21, 42, 0.05);
-    border: 1px solid rgba(192, 21, 42, 0.3);
+    background: rgba(164, 74, 94, 0.05);
+    border: 1px solid rgba(164, 74, 94, 0.3);
     color: #ffffff;
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
@@ -636,8 +638,8 @@ h1 span.highlight {
 .kit-save-btn:hover,
 .kit-save-btn.saved {
     color: #ffffff;
-    border-color: rgba(192, 21, 42, 0.55);
-    background: rgba(192, 21, 42, 0.12);
+    border-color: rgba(164, 74, 94, 0.55);
+    background: rgba(164, 74, 94, 0.12);
 }
 
 /* ── BEATS SECTION ── */
@@ -654,6 +656,12 @@ h1 span.highlight {
     letter-spacing: 0.05em;
 }
 
+/* ── SEARCH BAR STYLING ── */
+.search-group input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 10px rgba(164, 74, 94, 0.25), inset 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+
 .beats-list {
     display: flex;
     flex-direction: column;
@@ -665,7 +673,7 @@ h1 span.highlight {
     grid-template-columns: 60px 1fr 140px 150px 110px;
     align-items: center;
     padding: 1.2rem 1.5rem;
-    background: rgba(5, 5, 8, 0.55);
+    background: rgba(26, 26, 31, 0.55);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     transition: all 0.25s ease;
@@ -673,8 +681,8 @@ h1 span.highlight {
 }
 
 .beat-row:hover {
-    background: rgba(192, 21, 42, 0.03);
-    border-color: rgba(192, 21, 42, 0.3);
+    background: rgba(164, 74, 94, 0.04);
+    border-color: rgba(164, 74, 94, 0.3);
     transform: translateX(4px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
@@ -725,8 +733,8 @@ h1 span.highlight {
     font-size: 0.65rem;
     font-weight: 700;
     color: var(--accent);
-    border: 1px solid rgba(192, 21, 42, 0.3);
-    background: rgba(192, 21, 42, 0.05);
+    border: 1px solid rgba(164, 74, 94, 0.3);
+    background: rgba(164, 74, 94, 0.05);
     padding: 3px 8px;
     text-transform: uppercase;
     border-radius: 3px;
@@ -770,7 +778,7 @@ h1 span.highlight {
 }
 
 .testimonial-card {
-    background: rgba(5, 5, 8, 0.7);
+    background: rgba(26, 26, 31, 0.7);
     backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -782,8 +790,8 @@ h1 span.highlight {
 
 .testimonial-card:hover {
     transform: translateY(-5px);
-    border-color: rgba(192, 21, 42, 0.3);
-    box-shadow: 0 15px 35px rgba(192, 21, 42, 0.08);
+    border-color: rgba(164, 74, 94, 0.3);
+    box-shadow: 0 15px 35px rgba(164, 74, 94, 0.08);
 }
 
 .testimonial-avatar {
@@ -857,7 +865,7 @@ h1 span.highlight {
 footer {
     padding: 3rem 2rem;
     text-align: center;
-    background-color: #020203;
+    background-color: #0A0A0C;
     color: var(--text-muted);
     font-size: 0.8rem;
     font-weight: 500;
@@ -935,7 +943,7 @@ footer {
         position: absolute;
         top: 100%;
         left: 0; right: 0;
-        background: rgba(5, 5, 8, 0.98);
+        background: rgba(15, 15, 17, 0.98);
         border-bottom: 1.5px solid var(--accent);
         padding: 1rem 0;
         z-index: 199;

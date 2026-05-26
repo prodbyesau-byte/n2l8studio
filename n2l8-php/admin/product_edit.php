@@ -33,6 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price_exclusive = $_POST['price_exclusive'] !== '' ? (float)$_POST['price_exclusive'] : null;
     $is_active       = isset($_POST['is_active']) ? 1 : 0;
     $allow_download  = isset($_POST['allow_download']) ? 1 : 0;
+    $is_preorder     = isset($_POST['is_preorder']) ? 1 : 0;
+    $rd              = trim($_POST['release_date'] ?? '');
+    $release_date    = $rd !== '' ? $rd : null;
 
     $new_cover = save_upload('cover_image', ALLOWED_IMAGES);
     $new_zip   = save_upload('zip_file', ALLOWED_FILES);
@@ -42,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $zip   = $new_zip   ?? $product['zip_file'];
     $pdf   = $new_pdf   ?? $product['terms_pdf'];
 
-    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,terms_pdf=?,is_active=?,allow_download=? WHERE id=?')
-        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$pdf,$is_active,$allow_download,$id]);
+    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,terms_pdf=?,is_active=?,allow_download=?,is_preorder=?,release_date=? WHERE id=?')
+        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$pdf,$is_active,$allow_download,$is_preorder,$release_date,$id]);
 
     log_action($pdo, "Edited product: '{$title}'");
     flash("Product '{$title}' updated.");
@@ -58,7 +61,7 @@ $flash_msgs = get_flash();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Product - n2l8studio Admin</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <style>
         .edit-box {
@@ -74,13 +77,13 @@ $flash_msgs = get_flash();
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .edit-box:hover {
-            border-color: rgba(192, 21, 42, 0.2);
-            box-shadow: 0 12px 40px rgba(192, 21, 42, 0.08), inset 0 1px 0 0 rgba(255,255,255,0.06);
+            border-color: rgba(164, 74, 94, 0.2);
+            box-shadow: 0 12px 40px rgba(164, 74, 94, 0.08), inset 0 1px 0 0 rgba(255,255,255,0.06);
         }
         .form-group { display:flex; flex-direction:column; gap:0.4rem; margin-bottom:1rem; }
         .form-group label { color:var(--text-muted); font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; }
         .form-group input, .form-group select, .form-group textarea {
-            background: rgba(18, 18, 21, 0.8);
+            background: rgba(15, 15, 17, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.08);
             color: var(--text-main);
             font-family: 'Montserrat', sans-serif;
@@ -92,19 +95,19 @@ $flash_msgs = get_flash();
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 12px rgba(192, 21, 42, 0.4);
-            background: rgba(22, 22, 26, 0.95);
+            box-shadow: 0 0 12px rgba(164, 74, 94, 0.4);
+            background: rgba(26, 26, 31, 0.95);
         }
         .form-group textarea { resize:vertical; min-height:80px; }
         .checkbox-row { display:flex; align-items:center; gap:0.8rem; }
         .checkbox-row input { width:18px; height:18px; accent-color:var(--text-main); cursor:pointer; }
         .thumb { width:120px; height:120px; object-fit:cover; border:1px solid var(--text-muted); display:block; margin-bottom:0.5rem; border-radius:4px; }
         .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
-        .section-divider { border:none; border-top:1px dashed rgba(192,21,42,0.25); margin:2.5rem 0; }
+        .section-divider { border:none; border-top:1px dashed rgba(164, 74, 94, 0.25); margin:2.5rem 0; }
         .section-label { font-family:'Syncopate',sans-serif; font-weight:700; color:var(--accent); font-size:1.1rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:1.2rem; border-bottom:1px dashed var(--text-muted); padding-bottom:0.5rem; }
-        .top-actions { position:sticky; top:0; z-index:100; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); padding:1rem 0; border-bottom:1px solid rgba(192,21,42,0.25); margin-bottom:2rem; display:flex; gap:1rem; }
+        .top-actions { position:sticky; top:0; z-index:100; background:rgba(15, 15, 17, 0.85); backdrop-filter:blur(8px); padding:1rem 0; border-bottom:1px solid rgba(164, 74, 94, 0.25); margin-bottom:2rem; display:flex; gap:1rem; }
         .track-row {
-            background: rgba(22, 22, 26, 0.55);
+            background: rgba(26, 26, 31, 0.55);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -114,14 +117,14 @@ $flash_msgs = get_flash();
             transition: all 0.3s ease;
         }
         .track-row:hover {
-            border-color: rgba(192, 21, 42, 0.3);
-            box-shadow: 0 8px 30px rgba(192, 21, 42, 0.06);
+            border-color: rgba(164, 74, 94, 0.3);
+            box-shadow: 0 8px 30px rgba(164, 74, 94, 0.06);
         }
         .track-header { display:flex; align-items:center; gap:1rem; margin-bottom:0.7rem; }
         .track-num { color:var(--accent); font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.2rem; min-width:32px; }
         .track-title-display { flex:1; color:var(--text-main); font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.95rem; }
         .track-body { display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; }
-        .preview-range-form { display:grid; grid-template-columns:1fr 1fr auto; gap:0.8rem; align-items:end; margin-top:0.8rem; padding-top:0.8rem; border-top:1px dashed rgba(192,21,42,0.15); }
+        .preview-range-form { display:grid; grid-template-columns:1fr 1fr auto; gap:0.8rem; align-items:end; margin-top:0.8rem; padding-top:0.8rem; border-top:1px dashed rgba(164, 74, 94, 0.15); }
         .preview-range-form .form-group { margin-bottom:0; }
         .preview-range-hint { grid-column:1/-1; color:var(--text-muted); font-family:'Montserrat',sans-serif; font-size:0.8rem; }
         audio { flex:1; height:36px; min-width:200px; }
@@ -134,15 +137,15 @@ $flash_msgs = get_flash();
         .confirm-bar { display:none; background:rgba(255,92,92,0.15); border:1px solid #ff5c5c; padding:0.7rem 1rem; margin-top:0.6rem; align-items:center; gap:1rem; font-family:'Montserrat',sans-serif; font-size:0.9rem; color:#ff5c5c; border-radius:4px; }
         .confirm-bar.show { display:flex; }
         .upload-box {
-            background: rgba(192, 21, 42, 0.03);
-            border: 2px dashed rgba(192, 21, 42, 0.2);
+            background: rgba(164, 74, 94, 0.03);
+            border: 2px dashed rgba(164, 74, 94, 0.2);
             border-radius: 8px;
             padding: 1.5rem;
             margin-top: 1rem;
             transition: all 0.2s;
         }
         .upload-box:hover {
-            border-color: rgba(192, 21, 42, 0.5);
+            border-color: rgba(164, 74, 94, 0.5);
         }
         #loadingOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:3000; align-items:center; justify-content:center; flex-direction:column; color:var(--text-main); }
         #loadingOverlay.active { display:flex; }
@@ -231,9 +234,17 @@ $flash_msgs = get_flash();
             <input type="checkbox" name="is_active" id="edit_active" <?= $product['is_active'] ? 'checked' : '' ?>>
             <label for="edit_active" style="cursor:pointer;color:var(--text-main);">Visible on Public Shop</label>
         </div>
-        <div class="checkbox-row" style="margin-bottom:1.5rem;">
+        <div class="checkbox-row" style="margin-bottom:0.8rem;">
             <input type="checkbox" name="allow_download" id="edit_allow_download" <?= ($product['allow_download'] ?? 0) ? 'checked' : '' ?>>
             <label for="edit_allow_download" style="cursor:pointer;color:var(--text-main);">Enable Direct Download Button (for Free Kits)</label>
+        </div>
+        <div class="checkbox-row" style="margin-bottom:0.8rem;">
+            <input type="checkbox" name="is_preorder" id="edit_is_preorder" <?= ($product['is_preorder'] ?? 0) ? 'checked' : '' ?> onchange="document.getElementById('edit_release_date_group').style.display = this.checked ? 'block' : 'none';">
+            <label for="edit_is_preorder" style="cursor:pointer;color:var(--accent);font-weight:700;">Mark as Pre-order (Upcoming Pack)</label>
+        </div>
+        <div class="form-group" id="edit_release_date_group" style="display:<?= ($product['is_preorder'] ?? 0) ? 'block' : 'none' ?>;margin-bottom:1.5rem;">
+            <label style="color:var(--accent);">Release Date</label>
+            <input type="date" name="release_date" id="edit_release_date" value="<?= h($product['release_date'] ?? '') ?>" style="background:rgba(18,18,21,0.8);border:1px solid rgba(255,255,255,0.08);color:var(--text-main);padding:0.6rem 0.8rem;border-radius:4px;width:100%;box-sizing:border-box;">
         </div>
         <button type="submit" class="cta-btn" style="width:100%;padding:1rem;font-size:1.2rem;">💾 SAVE PRODUCT SETTINGS</button>
     </form>

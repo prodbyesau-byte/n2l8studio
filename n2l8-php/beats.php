@@ -43,7 +43,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beats - N2L8 STUDIO</title>
     <meta name="description" content="Premium beats from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
@@ -64,17 +64,17 @@ log_visitor($pdo, 'page_view', '/beats.php');
                         <a href="/beats.php">Beats</a>
                     </div>
                 </li>
-                <li><a href="/pricing.php">Services</a></li>
+                <!-- <li><a href="/pricing.php">Services</a></li> -->
                 <li><a href="/forum.php">Forum</a></li>
                 <?php if (is_logged_in()): ?>
                     <li class="dropdown">
                         <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent); display: inline-flex; align-items: center; gap: 4px; padding-top: 4px; padding-bottom: 4px;">
                             <?= get_user_avatar_nav($pdo) ?>
-                            <span>Portal</span>
+                            <span>Profile</span>
                         </a>
                         <div class="dropdown-content">
                             <a href="/portal/index.php?tab=settings">Account Settings</a>
-                            <a href="/portal/index.php">Client Portal</a>
+                            <a href="/portal/index.php"><?= is_owner() ? 'Client Portal' : 'Profile' ?></a>
                             <?php if (is_owner()): ?>
                                 <a href="/admin/index.php">Admin Portal</a>
                             <?php endif; ?>
@@ -95,7 +95,13 @@ log_visitor($pdo, 'page_view', '/beats.php');
     </header>
 
     <main class="beats-container">
-        <h2 class="section-title">Beats</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:2rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:1.5rem;">
+            <h2 class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0; width:auto;">Beats</h2>
+            <div class="search-group" style="position:relative; width:100%; max-width:300px;">
+                <input type="text" id="beatSearchInput" placeholder="Search beats..." style="width:100%; padding:0.6rem 1rem 0.6rem 2.2rem; background:rgba(26,26,31,0.6); border:1px solid var(--border-color); border-radius:4px; color:var(--text-main); font-family:'Montserrat',sans-serif; font-size:0.85rem; outline:none; transition:all 0.3s ease; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);">
+                <span style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.9rem; pointer-events:none;">🔍</span>
+            </div>
+        </div>
         
         <div class="beats-list">
             <?php foreach ($beats as $beat): ?>
@@ -128,6 +134,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
             <?php if (empty($beats)): ?>
             <p style="text-align:center; color:var(--text-muted); padding:3rem;">NO BEATS DETECTED IN THE PORTAL.</p>
             <?php endif; ?>
+            <p id="noBeatResults" style="display:none;color:var(--text-muted);text-align:center;padding:3rem 0;font-family:'Montserrat',sans-serif;">No matching beats found.</p>
         </div>
     </main>
 
@@ -585,14 +592,10 @@ log_visitor($pdo, 'page_view', '/beats.php');
     function renderPayPalButtons(productId, price, tierName, data) {
         const wrap = document.getElementById('paypal-btn-wrap');
         wrap.innerHTML = '';
+
         if (parseFloat(price) <= 0) {
             if (data.allow_download && data.zip_file) {
-                if (IS_LOGGED_IN) {
-                    wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;width:100%;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
-                } else {
-                    const returnUrl = encodeURIComponent(window.location.pathname + '?preview=' + productId);
-                    wrap.innerHTML = `<a href="/login.php?redirect=${returnUrl}" class="cta-btn" style="display:block;width:100%;text-align:center;text-decoration:none;background:#C0152A;">🔒 LOGIN TO CLAIM KIT</a>`;
-                }
+                wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;width:100%;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
             } else {
                 wrap.innerHTML = `<button disabled class="cta-btn" style="display:block;width:100%;text-align:center;opacity:0.4;cursor:not-allowed;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);">FREE DOWNLOAD — COMING SOON</button>`;
             }
@@ -602,7 +605,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
         // ── Stripe Credit Card Button ──
         const stripeBtn = document.createElement('button');
         stripeBtn.className = 'cta-btn modal-buy-btn';
-        stripeBtn.style.background = '#C0152A';
+        stripeBtn.style.background = '#A44A5E';
         stripeBtn.style.color = '#ffffff';
         stripeBtn.style.border = 'none';
         stripeBtn.style.padding = '0.85rem';
@@ -726,6 +729,42 @@ log_visitor($pdo, 'page_view', '/beats.php');
         const previewId = new URLSearchParams(window.location.search).get('preview');
         if (previewId) openModal(previewId);
     };
+
+    // ── INTERACTIVE REAL-TIME BEAT SEARCH ──
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('beatSearchInput');
+        const beatRows = document.querySelectorAll('.beat-row');
+        const emptyState = document.getElementById('noBeatResults');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                const query = searchInput.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                beatRows.forEach(row => {
+                    // Match beat title, author/producer, genre, BPM or Key
+                    const title = row.querySelector('h3')?.textContent.toLowerCase() || '';
+                    const author = row.querySelector('.beat-info p')?.textContent.toLowerCase() || '';
+                    const genre = row.querySelector('.beat-tag')?.textContent.toLowerCase() || '';
+                    const bpmKey = row.querySelector('.beat-bpm-key')?.textContent.toLowerCase() || '';
+
+                    const match = !query || 
+                                  title.includes(query) || 
+                                  author.includes(query) || 
+                                  genre.includes(query) || 
+                                  bpmKey.includes(query);
+
+                    row.style.opacity = match ? '1' : '0';
+                    row.style.display = match ? 'grid' : 'none';
+                    if (match) visibleCount++;
+                });
+
+                if (emptyState) {
+                    emptyState.style.display = visibleCount ? 'none' : 'block';
+                }
+            });
+        }
+    });
     </script>
 </body>
 </html>

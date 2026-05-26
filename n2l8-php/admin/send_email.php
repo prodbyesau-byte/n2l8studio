@@ -61,12 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($template_type === 'premium_dark') {
             $formatted_body = "
             <html>
-            <body style=\"background-color:#050508; color:#ffffff; font-family:'Montserrat',sans-serif; padding:40px 20px; margin:0;\">
-                <div style=\"max-width:600px; margin:0 auto; background:#0d0d12; border:1px solid #c0152a; padding:40px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); text-align:left;\">
+            <body style=\"background-color:#0F0F11; color:#F5F1EA; font-family:'Montserrat',sans-serif; padding:40px 20px; margin:0;\">
+                <div style=\"max-width:600px; margin:0 auto; background:#0F0F11; border:1px solid #A44A5E; padding:40px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); text-align:left;\">
                     <div style=\"font-size:28px; font-weight:700; font-family:'Syncopate',sans-serif; letter-spacing:3px; color:#ffffff; text-align:center; margin-bottom:30px;\">
-                        N<span style=\"color:#c0152a;\">2</span>L8studios
+                        N<span style=\"color:#B89B5E;\">2</span>L8studios
                     </div>
-                    <div style=\"border-left:4px solid #c0152a; padding-left:15px; margin-bottom:25px;\">
+                    <div style=\"border-left:4px solid #A44A5E; padding-left:15px; margin-bottom:25px;\">
                         <h2 style=\"font-family:'Syncopate',sans-serif; color:#ffffff; font-size:18px; text-transform:uppercase; letter-spacing:1px; margin:0;\">
                             " . htmlspecialchars($subject, ENT_QUOTES, 'UTF-8') . "
                         </h2>
@@ -78,13 +78,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         htmlspecialchars($message_body, ENT_QUOTES, 'UTF-8') . "
                     </div>
                     <div style=\"text-align:center; margin-top:40px;\">
-                        <a href=\"https://www.n2l8studios.com/login.php\" style=\"display:inline-block; background:#c0152a; color:#ffffff; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:2px; text-decoration:none; padding:15px 40px; border-radius:4px; transition:all 0.2s;\">
+                        <a href=\"https://www.n2l8studios.com/login.php\" style=\"display:inline-block; background:#A44A5E; color:#ffffff; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:2px; text-decoration:none; padding:15px 40px; border-radius:4px; transition:all 0.2s;\">
                             Enter Portal
                         </a>
                     </div>
                     <div style=\"margin-top:40px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px; text-align:center; color:#666666; font-size:12px;\">
                         &copy; " . date('Y') . " N2L8studios. All rights reserved.<br>
-                        You are receiving this email because you are registered at <a href=\"https://www.n2l8studios.com\" style=\"color:#c0152a; text-decoration:none;\">n2l8studios.com</a>.
+                        You are receiving this email because you are registered at <a href=\"https://www.n2l8studios.com\" style=\"color:#A44A5E; text-decoration:none;\">n2l8studios.com</a>.
                     </div>
                 </div>
             </body>

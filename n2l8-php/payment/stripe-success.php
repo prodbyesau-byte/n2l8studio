@@ -130,7 +130,7 @@ if (isset($session['error']) || empty($session['payment_status'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmed — N2L8 STUDIO</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -148,20 +148,20 @@ if (isset($session['error']) || empty($session['payment_status'])) {
             transition: all 0.3s ease;
         }
         .success-box:hover {
-            border-color: rgba(192, 21, 42, 0.4);
-            box-shadow: 0 25px 55px rgba(192, 21, 42, 0.2), var(--accent-glow);
+            border-color: rgba(164, 74, 94, 0.4);
+            box-shadow: 0 25px 55px rgba(164, 74, 94, 0.2), var(--accent-glow);
         }
         .success-icon {
             font-size: 3.5rem;
-            color: #C0152A;
+            color: #A44A5E;
             margin-bottom: 1.5rem;
-            text-shadow: 0 0 15px rgba(192, 21, 42, 0.6);
+            text-shadow: 0 0 15px rgba(164, 74, 94, 0.6);
             animation: pulse-glow 2s infinite;
         }
         @keyframes pulse-glow {
-            0% { transform: scale(1); text-shadow: 0 0 15px rgba(192, 21, 42, 0.6); }
-            50% { transform: scale(1.05); text-shadow: 0 0 25px rgba(192, 21, 42, 0.9); }
-            100% { transform: scale(1); text-shadow: 0 0 15px rgba(192, 21, 42, 0.6); }
+            0% { transform: scale(1); text-shadow: 0 0 15px rgba(164, 74, 94, 0.6); }
+            50% { transform: scale(1.05); text-shadow: 0 0 25px rgba(164, 74, 94, 0.9); }
+            100% { transform: scale(1); text-shadow: 0 0 15px rgba(164, 74, 94, 0.6); }
         }
         .success-box h2 {
             font-family: 'Syncopate', sans-serif;
@@ -210,7 +210,7 @@ if (isset($session['error']) || empty($session['payment_status'])) {
             font-weight: 500;
         }
         .success-val.premium-text {
-            color: #C0152A;
+            color: #A44A5E;
             font-weight: bold;
         }
         .cta-btn {
@@ -296,7 +296,7 @@ if (isset($session['error']) || empty($session['payment_status'])) {
                     <a href="/portal/index.php" class="cta-btn">LAUNCH CLIENT PORTAL &gt;</a>
                 <?php else: ?>
                     <?php if (!empty($product['zip_file'])): ?>
-                        <a href="<?= UPLOAD_URL . h($product['zip_file']) ?>" class="cta-btn" style="background:#C0152A; color:#ffffff;" download>DOWNLOAD PREMIUM VAULT</a>
+                        <a href="<?= UPLOAD_URL . h($product['zip_file']) ?>" class="cta-btn" style="background:#A44A5E; color:#F5F1EA;" download>DOWNLOAD PREMIUM VAULT</a>
                     <?php else: ?>
                         <button disabled class="cta-btn" style="border:1px solid rgba(123,225,168,0.2); background:rgba(123,225,168,0.04); color:rgba(123,225,168,0.3); cursor:not-allowed;">FILES PENDING — UPLOADING</button>
                     <?php endif; ?>

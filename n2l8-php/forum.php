@@ -42,7 +42,7 @@ function format_time_ago($datetime) {
 // Avatar HTML Helper
 function get_forum_avatar($profile_picture, $username, $size = 40) {
     if ($profile_picture) {
-        return '<img src="/static/uploads/' . htmlspecialchars($profile_picture, ENT_QUOTES, 'UTF-8') . '" style="width:' . $size . 'px; height:' . $size . 'px; border-radius:50%; object-fit:cover; border:1px solid var(--accent); box-shadow:0 0 8px rgba(192,21,42,0.4); cursor:pointer;" class="forum-avatar-img">';
+        return '<img src="/static/uploads/' . htmlspecialchars($profile_picture, ENT_QUOTES, 'UTF-8') . '" style="width:' . $size . 'px; height:' . $size . 'px; border-radius:50%; object-fit:cover; border:1px solid var(--accent); box-shadow:0 0 8px rgba(164,74,94,0.4); cursor:pointer;" class="forum-avatar-img">';
     } else {
         return '<div style="width:' . $size . 'px; height:' . $size . 'px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-family:\'Syncopate\',sans-serif; font-size:' . ($size * 0.4) . 'px; font-weight:700; color:#fff; text-shadow:0 0 5px rgba(255,255,255,0.2); cursor:pointer;" class="forum-avatar-placeholder">' . strtoupper(substr($username, 0, 1)) . '</div>';
     }
@@ -264,7 +264,7 @@ if ($view === 'dashboard') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Community Forum - N2L8 STUDIO</title>
     <meta name="description" content="N2L8 Studio premium discussion boards and producer circle.">
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -278,13 +278,13 @@ if ($view === 'dashboard') {
             padding: 3rem 0;
             text-align: center;
             border-bottom: 1px solid var(--border-color);
-            background: linear-gradient(180deg, rgba(192, 21, 42, 0.04) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(164, 74, 94, 0.04) 0%, transparent 100%);
             margin-bottom: 3rem;
         }
         .forum-hero h1 {
             font-size: 2.2rem;
             margin-bottom: 0.8rem;
-            text-shadow: 0 0 20px rgba(192, 21, 42, 0.35);
+            text-shadow: 0 0 20px rgba(164, 74, 94, 0.35);
         }
         .forum-hero p {
             color: var(--text-muted);
@@ -340,8 +340,8 @@ if ($view === 'dashboard') {
             transition: all 0.3s ease;
         }
         .forum-cat-card:hover {
-            border-color: rgba(192, 21, 42, 0.5);
-            box-shadow: 0 0 25px rgba(192, 21, 42, 0.08), 0 0 8px rgba(192, 21, 42, 0.15);
+            border-color: rgba(164, 74, 94, 0.5);
+            box-shadow: 0 0 25px rgba(164, 74, 94, 0.08), 0 0 8px rgba(164, 74, 94, 0.15);
             transform: translateY(-2px);
         }
         .forum-cat-info h3 {
@@ -456,12 +456,12 @@ if ($view === 'dashboard') {
             flex-wrap: wrap;
             gap: 1.5rem;
             margin-bottom: 2.5rem;
-            border-bottom: 1px dashed rgba(192, 21, 42, 0.15);
+            border-bottom: 1px dashed rgba(164, 74, 94, 0.15);
             padding-bottom: 1.5rem;
         }
         .forum-view-header h2 {
             font-size: 1.6rem;
-            text-shadow: 0 0 15px rgba(192, 21, 42, 0.25);
+            text-shadow: 0 0 15px rgba(164, 74, 94, 0.25);
             margin-bottom: 0.4rem;
         }
         .forum-view-header p {
@@ -528,7 +528,7 @@ if ($view === 'dashboard') {
         }
         .forum-replies-badge {
             display: inline-block;
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             border: 1px solid var(--border-color);
             color: #ffffff;
             font-size: 0.75rem;
@@ -605,7 +605,7 @@ if ($view === 'dashboard') {
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--accent);
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             border: 1px solid var(--border-color);
             padding: 2px 6px;
             border-radius: 2px;
@@ -621,12 +621,12 @@ if ($view === 'dashboard') {
         /* ── THREAD VIEW: MESSAGES ── */
         .forum-thread-title-area {
             margin-bottom: 2rem;
-            border-bottom: 1px dashed rgba(192, 21, 42, 0.15);
+            border-bottom: 1px dashed rgba(164, 74, 94, 0.15);
             padding-bottom: 1.5rem;
         }
         .forum-thread-title-area h2 {
             font-size: 1.7rem;
-            text-shadow: 0 0 20px rgba(192, 21, 42, 0.35);
+            text-shadow: 0 0 20px rgba(164, 74, 94, 0.35);
             margin-bottom: 0.3rem;
             text-transform: none;
             letter-spacing: 0;
@@ -705,12 +705,12 @@ if ($view === 'dashboard') {
             border-radius: 8px;
             padding: 2.2rem;
             margin-top: 3.5rem;
-            box-shadow: 0 0 25px rgba(192, 21, 42, 0.04);
+            box-shadow: 0 0 25px rgba(164, 74, 94, 0.04);
         }
         .forum-editor-card h3 {
             font-size: 1.1rem;
             margin-bottom: 1.5rem;
-            text-shadow: 0 0 10px rgba(192, 21, 42, 0.25);
+            text-shadow: 0 0 10px rgba(164, 74, 94, 0.25);
         }
         .forum-form-group {
             margin-bottom: 1.5rem;
@@ -726,7 +726,7 @@ if ($view === 'dashboard') {
         }
         .forum-form-input {
             width: 100%;
-            background: #000000;
+            background: #0F0F11;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             color: #ffffff;
@@ -748,7 +748,7 @@ if ($view === 'dashboard') {
         }
         
         .forum-error-banner {
-            background: rgba(192, 21, 42, 0.12);
+            background: rgba(164, 74, 94, 0.12);
             border: 1px solid var(--accent);
             color: #ff8c94;
             padding: 1rem;
@@ -778,13 +778,13 @@ if ($view === 'dashboard') {
             pointer-events: auto;
         }
         .profile-modal-card {
-            background: #050508;
+            background: #1A1A1F;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 2.5rem;
             max-width: 460px;
             width: 90%;
-            box-shadow: 0 0 35px rgba(192, 21, 42, 0.2), var(--accent-glow);
+            box-shadow: 0 0 35px rgba(164, 74, 94, 0.2), var(--accent-glow);
             text-align: center;
             position: relative;
             transform: scale(0.92);
@@ -847,7 +847,7 @@ if ($view === 'dashboard') {
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--accent);
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             border: 1px solid var(--border-color);
             padding: 3px 8px;
             border-radius: 2px;
@@ -934,7 +934,7 @@ if ($view === 'dashboard') {
         }
         .profile-modal-dm-field textarea {
             width: 100%;
-            background: #000000;
+            background: #0F0F11;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 0.7rem 0.8rem;
@@ -1018,8 +1018,8 @@ if ($view === 'dashboard') {
                         <a href="/beats.php">Beats</a>
                     </div>
                 </li>
-                <li><a href="/pricing.php">Services</a></li>
-                <li><a href="/forum.php" class="active" style="color: #fff; text-shadow: var(--accent-glow);">Forum</a></li>
+                <!-- <li><a href="/pricing.php">Services</a></li> -->
+                <li><a href="/forum.php" class="active" style="color: #fff; text-shadow: var(--accent-glow);"><?= h($site['nav_forum'] ?? 'Forum') ?></a></li>
                 
                 <li class="dropdown">
                     <a href="javascript:void(0)" class="dropbtn" style="color: var(--accent); display: inline-flex; align-items: center; gap: 4px; padding-top: 4px; padding-bottom: 4px;">
@@ -1027,7 +1027,7 @@ if ($view === 'dashboard') {
                         <span>Profile</span>
                     </a>
                     <div class="dropdown-content">
-                        <a href="/portal/index.php">Client Profile</a>
+                        <a href="/portal/index.php"><?= is_owner() ? 'Client Portal' : 'Profile' ?></a>
                         <?php if (is_owner()): ?>
                             <a href="/admin/index.php">Admin Portal</a>
                         <?php endif; ?>
@@ -1041,8 +1041,8 @@ if ($view === 'dashboard') {
     <!-- FORUM HERO HEADER -->
     <div class="forum-hero">
         <div class="forum-container">
-            <h1>COMMUNITY DISCUSSION BOARDS</h1>
-            <p>Connect, share knowledge, download drumkits, collaborate on beats, and show off your final mixes with members worldwide.</p>
+            <h1><?= h($site['forum_h1'] ?? 'COMMUNITY DISCUSSION BOARDS') ?></h1>
+            <p><?= h($site['forum_desc'] ?? 'Connect, share knowledge, download drumkits, collaborate on beats, and show off your final mixes with members worldwide.') ?></p>
         </div>
     </div>
 

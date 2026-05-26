@@ -64,17 +64,52 @@ try {
     $vs_total   = (int)$pdo->query('SELECT COUNT(*) FROM visitor_log')->fetchColumn();
     $vs_unique  = (int)$pdo->query('SELECT COUNT(DISTINCT ip) FROM visitor_log')->fetchColumn();
     $vs_today   = (int)$pdo->query("SELECT COUNT(DISTINCT ip) FROM visitor_log WHERE DATE(created_at)=CURDATE()")->fetchColumn();
+
+    // Pagination for visitors
+    $vpage = isset($_GET['vpage']) ? max(1, (int)$_GET['vpage']) : 1;
+    $vlimit = 10;
+    $voffset = ($vpage - 1) * $vlimit;
+    $vtotal_pages = (int)ceil($vs_unique / $vlimit);
+    if ($vtotal_pages < 1) $vtotal_pages = 1;
+
     $vs_countries = $pdo->query('SELECT country, country_code, COUNT(*) as hits FROM visitor_log WHERE country != "" GROUP BY country,country_code ORDER BY hits DESC LIMIT 20')->fetchAll();
     $vs_actions   = $pdo->query('SELECT action, COUNT(*) as hits FROM visitor_log GROUP BY action ORDER BY hits DESC LIMIT 20')->fetchAll();
-    $vs_visitors  = $pdo->query('SELECT ip, MAX(country) as country, MAX(country_code) as country_code, MAX(city) as city, COUNT(*) as hits, MIN(created_at) as first_at, MAX(created_at) as last_at FROM visitor_log GROUP BY ip ORDER BY last_at DESC LIMIT 200')->fetchAll();
+    $vs_visitors  = $pdo->query("SELECT ip, MAX(country) as country, MAX(country_code) as country_code, MAX(city) as city, COUNT(*) as hits, MIN(created_at) as first_at, MAX(created_at) as last_at FROM visitor_log GROUP BY ip ORDER BY last_at DESC LIMIT " . (int)$vlimit . " OFFSET " . (int)$voffset)->fetchAll();
 
     // Popularity metrics
-    $vs_top_kits = $pdo->query("SELECT SUBSTRING_INDEX(action, ':', -1) as name, COUNT(*) as hits FROM visitor_log WHERE action LIKE 'modal_open:%' OR action LIKE 'click_buy_kit:%' GROUP BY name ORDER BY hits DESC LIMIT 10")->fetchAll();
-    $vs_top_beats = $pdo->query("SELECT SUBSTRING_INDEX(action, ':', -1) as name, COUNT(*) as hits FROM visitor_log WHERE action LIKE 'play_beat:%' OR action LIKE 'click_buy_beat:%' GROUP BY name ORDER BY hits DESC LIMIT 10")->fetchAll();
-    $vs_recent = $pdo->query("SELECT * FROM visitor_log ORDER BY created_at DESC LIMIT 50")->fetchAll();
+    $vs_top_kits = $pdo->query("
+        SELECT p.title AS name, COUNT(v.id) AS hits
+        FROM products p
+        JOIN visitor_log v ON (
+            v.action = CONCAT('view_product:', p.title) OR
+            v.action = CONCAT('modal_open:', p.title) OR
+            v.action = CONCAT('click_buy_kit:', p.title)
+        )
+        WHERE p.type IN ('loopkit', 'drumkit')
+        GROUP BY p.id
+        ORDER BY hits DESC
+        LIMIT 10
+    ")->fetchAll();
+
+    $vs_top_beats = $pdo->query("
+        SELECT p.title AS name, COUNT(v.id) AS hits
+        FROM products p
+        JOIN visitor_log v ON (
+            v.action = CONCAT('play_beat:', p.title) OR
+            v.action = CONCAT('modal_open_beat:', p.title) OR
+            v.action = CONCAT('click_buy_beat:', p.title) OR
+            v.action LIKE CONCAT('select_license:', p.title, ' - %')
+        )
+        WHERE p.type = 'beat'
+        GROUP BY p.id
+        ORDER BY hits DESC
+        LIMIT 10
+    ")->fetchAll();
 } catch (\Throwable $e) {
     $vs_total = $vs_unique = $vs_today = 0;
-    $vs_countries = $vs_actions = $vs_visitors = $vs_top_kits = $vs_top_beats = $vs_recent = [];
+    $vpage = 1;
+    $vtotal_pages = 1;
+    $vs_countries = $vs_actions = $vs_visitors = $vs_top_kits = $vs_top_beats = [];
 }
 ?>
 <!DOCTYPE html>
@@ -83,19 +118,19 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Terminal - n2l8studio</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { background-attachment:fixed; }
-        .admin-topbar { background:rgba(10,10,12,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom:1px solid rgba(192,21,42,0.3); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
-        .admin-topbar .logo-text { font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.1rem; letter-spacing:3px; text-shadow: 0 0 10px rgba(192,21,42,0.6); }
+        .admin-topbar { background:rgba(26,26,31,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom:1px solid rgba(164,74,94,0.3); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        .admin-topbar .logo-text { font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.1rem; letter-spacing:3px; text-shadow: 0 0 10px rgba(184,155,94,0.6); }
         /* ── TABS: sliding indicator ── */
         .admin-tabs-wrap { position:relative; margin:2rem 0 0 0; border-bottom:2px solid var(--text-muted); }
         .admin-tabs { display:flex; gap:0; position:relative; }
         .tab-slider {
             position:absolute; bottom:-2px; left:0;
             height:2px; background:var(--accent);
-            box-shadow:0 0 8px rgba(192,21,42,0.6);
+            box-shadow:0 0 8px rgba(164,74,94,0.6);
             transition:left 0.28s cubic-bezier(.4,0,.2,1), width 0.28s cubic-bezier(.4,0,.2,1);
             pointer-events:none;
         }
@@ -126,18 +161,18 @@ try {
         .admin-tab-toggle.open::after { transform:rotate(180deg); }
         .admin-tab-menu {
             display:none; flex-direction:column;
-            background:rgba(18,18,21,0.98);
+            background:rgba(26,26,31,0.98);
             border:1px solid var(--text-muted); border-top:none;
         }
         .admin-tab-menu.open { display:flex; }
         .admin-tab-menu-item {
-            padding:0.9rem 1.2rem; border-bottom:1px dashed rgba(192,21,42,0.1);
+            padding:0.9rem 1.2rem; border-bottom:1px dashed rgba(164,74,94,0.15);
             color:var(--text-muted); font-family:'Montserrat',sans-serif; font-weight:600;
             font-size:0.95rem; text-transform:uppercase; cursor:pointer;
             background:transparent; border-left:none; border-right:none; border-top:none; text-align:left;
         }
         .admin-tab-menu-item.active { color:var(--accent); border-left:3px solid var(--accent); padding-left:0.9rem; }
-        .admin-tab-menu-item:hover { color:var(--text-main); background:rgba(192,21,42,0.06); }
+        .admin-tab-menu-item:hover { color:var(--text-main); background:rgba(164,74,94,0.06); }
         .admin-panel { display:none; padding:2rem 0; }
         .admin-panel.active { display:block; }
         @media(max-width:768px){
@@ -161,7 +196,7 @@ try {
         }
         .section-title { font-family:'Syncopate',sans-serif; font-weight:700; color:var(--accent); font-size:1.3rem; margin-bottom:1.5rem; letter-spacing:2px; text-transform:uppercase; border-bottom:1px dashed var(--text-muted); padding-bottom:0.5rem; }
         .form-card {
-            background: rgba(22, 22, 26, 0.65);
+            background: rgba(26, 26, 31, 0.65);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -172,8 +207,8 @@ try {
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .form-card:hover {
-            border-color: rgba(192, 21, 42, 0.35);
-            box-shadow: 0 12px 40px rgba(192, 21, 42, 0.12), inset 0 1px 0 0 rgba(255,255,255,0.08);
+            border-color: rgba(164, 74, 94, 0.35);
+            box-shadow: 0 12px 40px rgba(164, 74, 94, 0.12), inset 0 1px 0 0 rgba(255,255,255,0.08);
             transform: translateY(-2px);
         }
         .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
@@ -181,7 +216,7 @@ try {
         .form-group { display:flex; flex-direction:column; gap:0.4rem; }
         .form-group label { color:var(--text-muted); font-size:0.8rem; font-family:'Montserrat',sans-serif; font-weight:600; letter-spacing:1px; text-transform:uppercase; }
         .form-group input, .form-group select, .form-group textarea {
-            background: rgba(18, 18, 21, 0.8);
+            background: rgba(15, 15, 17, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.08);
             color: var(--text-main);
             font-family: 'Montserrat', sans-serif;
@@ -193,8 +228,8 @@ try {
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 12px rgba(192, 21, 42, 0.4);
-            background: rgba(22, 22, 26, 0.95);
+            box-shadow: 0 0 12px rgba(164, 74, 94, 0.4);
+            background: rgba(26, 26, 31, 0.95);
         }
         .form-group input[type="file"] { cursor:pointer; }
         .form-group textarea { resize:vertical; min-height:80px; }
@@ -202,10 +237,10 @@ try {
         .checkbox-row input[type="checkbox"] { width:18px; height:18px; cursor:pointer; accent-color:var(--text-main); }
         .admin-table { width:100%; border-collapse:collapse; font-size:1.05rem; }
         .admin-table th { font-family:'Montserrat',sans-serif; font-weight:700; color:var(--accent); text-align:left; padding:0.7rem 1rem; border-bottom:2px solid var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-size:0.8rem; }
-        .admin-table td { padding:0.7rem 1rem; border-bottom:1px dashed rgba(192,21,42,0.15); color:var(--text-main); vertical-align:middle; font-family:'Montserrat',sans-serif; font-size:0.9rem; }
-        .admin-table tr:hover td { background:rgba(192,21,42,0.04); }
+        .admin-table td { padding:0.7rem 1rem; border-bottom:1px dashed rgba(164,74,94,0.15); color:var(--text-main); vertical-align:middle; font-family:'Montserrat',sans-serif; font-size:0.9rem; }
+        .admin-table tr:hover td { background:rgba(164,74,94,0.04); }
         .pill { display:inline-block; padding:0.2rem 0.6rem; font-size:0.75rem; font-family:'Montserrat',sans-serif; font-weight:700; border-radius:2px; text-transform:uppercase; letter-spacing:1px; }
-        .pill-active { background:rgba(192,21,42,0.12); color:var(--text-main); border:1px solid var(--accent); }
+        .pill-active { background:rgba(164,74,94,0.12); color:var(--text-main); border:1px solid var(--accent); }
         .pill-inactive { background:rgba(255,92,92,0.1); color:#ff5c5c; border:1px solid #ff5c5c; }
         .action-btns { display:flex; gap:0.4rem; flex-wrap:wrap; }
         .btn { padding:0.4rem 0.8rem; font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.8rem; cursor:pointer; border:1px solid; background:transparent; transition:all 0.2s; text-decoration:none; display:inline-block; text-transform:uppercase; letter-spacing:1px; border-radius:4px; }
@@ -219,7 +254,7 @@ try {
         .btn-muted:hover { background:var(--text-muted); color:var(--bg-dark); }
         .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem; margin-bottom:2rem; }
         .stat-card {
-            background: rgba(22, 22, 26, 0.65);
+            background: rgba(26, 26, 31, 0.65);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -230,15 +265,15 @@ try {
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .stat-card:hover {
-            border-color: rgba(192, 21, 42, 0.35);
-            box-shadow: 0 12px 40px rgba(192, 21, 42, 0.12), inset 0 1px 0 0 rgba(255,255,255,0.08);
+            border-color: rgba(164, 74, 94, 0.35);
+            box-shadow: 0 12px 40px rgba(164, 74, 94, 0.12), inset 0 1px 0 0 rgba(255,255,255,0.08);
             transform: translateY(-4px);
         }
         .stat-num { font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.8rem; color:var(--accent); line-height:1; }
         .stat-label { color:var(--text-muted); font-size:1rem; margin-top:0.3rem; }
-        .flash-box { background:rgba(192,21,42,0.1); border:1px solid var(--accent); color:var(--text-main); padding:0.8rem 1.2rem; margin-bottom:1.5rem; font-size:1.1rem; }
+        .flash-box { background:rgba(164,74,94,0.1); border:1px solid var(--accent); color:var(--text-main); padding:0.8rem 1.2rem; margin-bottom:1.5rem; font-size:1.1rem; }
         .log-list { list-style:none; padding:0; }
-        .log-list li { padding:0.5rem 0; border-bottom:1px dashed rgba(192,21,42,0.1); font-size:0.95rem; line-height:1.4; }
+        .log-list li { padding:0.5rem 0; border-bottom:1px dashed rgba(164,74,94,0.1); font-size:0.95rem; line-height:1.4; }
         .log-ts { color:var(--text-muted); font-size:0.85rem; display:block; }
         .thumb { width:48px; height:48px; object-fit:cover; border:1px solid var(--text-muted); }
         #loadingOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; flex-direction:column; color:var(--text-main); }
@@ -246,7 +281,7 @@ try {
         .spinner { width:60px; height:60px; border:4px solid var(--text-muted); border-top-color:var(--text-main); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:1.5rem; }
         @keyframes spin { to { transform:rotate(360deg); } }
         .content-page-label { font-family:'Syncopate',sans-serif; font-weight:700; color:var(--text-muted); font-size:0.95rem; text-transform:uppercase; letter-spacing:2px; margin:1.5rem 0 0.8rem 0; border-left:3px solid var(--text-muted); padding-left:0.8rem; }
-        .content-row { display:grid; grid-template-columns:200px 1fr auto; gap:0.8rem; align-items:center; padding:0.6rem 0; border-bottom:1px dashed rgba(192,21,42,0.1); }
+        .content-row { display:grid; grid-template-columns:200px 1fr auto; gap:0.8rem; align-items:center; padding:0.6rem 0; border-bottom:1px dashed rgba(164,74,94,0.1); }
         .content-key-label { color:var(--text-muted); font-size:0.8rem; font-family:'Montserrat',sans-serif; font-weight:600; text-transform:uppercase; }
         .content-row input, .content-row textarea { background:var(--bg-dark); border:1px solid var(--text-muted); color:var(--text-main); font-family:'Montserrat',sans-serif; font-size:0.9rem; padding:0.4rem 0.6rem; outline:none; width:100%; border-radius:4px; }
         .content-row textarea { resize:vertical; min-height:60px; }
@@ -257,16 +292,16 @@ try {
             display: grid; 
             grid-template-columns: 240px 1fr; 
             min-height: 650px; 
-            border: 1px solid rgba(192, 21, 42, 0.15); 
+            border: 1px solid rgba(164, 74, 94, 0.15); 
             border-radius: 12px; 
             overflow: hidden; 
-            background: rgba(10, 10, 14, 0.65); 
+            background: rgba(26, 26, 31, 0.65); 
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 10px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(192, 21, 42, 0.05);
+            box-shadow: 0 10px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(164, 74, 94, 0.05);
         }
         .email-sidebar { 
-            background: rgba(14, 14, 18, 0.75); 
+            background: rgba(15, 15, 17, 0.75); 
             border-right: 1px solid rgba(255, 255, 255, 0.05); 
             display: flex; 
             flex-direction: column; 
@@ -275,7 +310,7 @@ try {
         .email-compose-btn { 
             margin: 0 1.2rem 1.5rem; 
             padding: 0.95rem 1.5rem; 
-            background: linear-gradient(135deg, var(--accent), #df1f37); 
+            background: linear-gradient(135deg, var(--accent), var(--accent-deep)); 
             color: #fff; 
             border: none; 
             border-radius: 8px; 
@@ -290,12 +325,12 @@ try {
             align-items: center; 
             gap: 0.6rem; 
             justify-content: center; 
-            box-shadow: 0 4px 15px rgba(192, 21, 42, 0.35); 
+            box-shadow: 0 4px 15px rgba(164, 74, 94, 0.35); 
         }
         .email-compose-btn:hover { 
-            background: linear-gradient(135deg, #df1f37, #ff334b); 
+            background: linear-gradient(135deg, var(--accent-deep), var(--accent-hover)); 
             transform: translateY(-2px); 
-            box-shadow: 0 8px 25px rgba(192, 21, 42, 0.55); 
+            box-shadow: 0 8px 25px rgba(164, 74, 94, 0.55); 
         }
         .email-folder-list { list-style: none; padding: 0; margin: 0; flex: 1; }
         .email-folder-item { 
@@ -317,11 +352,11 @@ try {
             padding-left: 1.7rem; 
         }
         .email-folder-item.active { 
-            background: linear-gradient(90deg, rgba(192, 21, 42, 0.12) 0%, rgba(192, 21, 42, 0.02) 100%); 
+            background: linear-gradient(90deg, rgba(164, 74, 94, 0.12) 0%, rgba(164, 74, 94, 0.02) 100%); 
             color: var(--text-main); 
             border-left-color: var(--accent); 
             font-weight: 700; 
-            text-shadow: 0 0 10px rgba(192, 21, 42, 0.3);
+            text-shadow: 0 0 10px rgba(164, 74, 94, 0.3);
         }
         .email-folder-item .folder-icon { font-size: 1.1rem; width: 22px; text-align: center; }
         .email-folder-item .folder-label { flex: 1; }
@@ -334,16 +369,16 @@ try {
             border-radius: 10px; 
             min-width: 22px; 
             text-align: center; 
-            box-shadow: 0 0 8px rgba(192, 21, 42, 0.4);
+            box-shadow: 0 0 8px rgba(164, 74, 94, 0.4);
         }
-        .email-main { display: flex; flex-direction: column; background: rgba(6, 6, 8, 0.2); }
+        .email-main { display: flex; flex-direction: column; background: rgba(26, 26, 31, 0.2); }
         .email-toolbar { 
             display: flex; 
             align-items: center; 
             gap: 0.8rem; 
             padding: 1rem 1.5rem; 
             border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
-            background: rgba(14, 14, 18, 0.4); 
+            background: rgba(15, 15, 17, 0.4); 
             flex-shrink: 0; 
         }
         .email-toolbar-btn { 
@@ -364,10 +399,10 @@ try {
             gap: 0.4rem;
         }
         .email-toolbar-btn:hover { 
-            background: rgba(192, 21, 42, 0.08); 
+            background: rgba(164, 74, 94, 0.08); 
             color: var(--text-main); 
-            border-color: rgba(192, 21, 42, 0.3); 
-            box-shadow: 0 0 10px rgba(192, 21, 42, 0.15);
+            border-color: rgba(164, 74, 94, 0.3); 
+            box-shadow: 0 0 10px rgba(164, 74, 94, 0.15);
         }
         .email-search { 
             flex: 1; 
@@ -384,7 +419,7 @@ try {
         .email-search:focus { 
             border-color: var(--accent); 
             background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 15px rgba(192, 21, 42, 0.25); 
+            box-shadow: 0 0 15px rgba(164, 74, 94, 0.25); 
         }
         .email-search::placeholder { color: var(--text-muted); opacity: 0.6; }
         .email-content-area { display: grid; grid-template-columns: 400px 1fr; flex: 1; min-height: 0; }
@@ -392,7 +427,7 @@ try {
             border-right: 1px solid rgba(255, 255, 255, 0.05); 
             overflow-y: auto; 
             max-height: 560px; 
-            background: rgba(8, 8, 10, 0.2);
+            background: rgba(15, 15, 17, 0.2);
         }
         /* Custom sleek scrollbar for email components */
         .email-list::-webkit-scrollbar, .email-reading-pane::-webkit-scrollbar, .compose-body::-webkit-scrollbar {
@@ -402,11 +437,11 @@ try {
             background: rgba(0, 0, 0, 0.15);
         }
         .email-list::-webkit-scrollbar-thumb, .email-reading-pane::-webkit-scrollbar-thumb, .compose-body::-webkit-scrollbar-thumb {
-            background: rgba(192, 21, 42, 0.3);
+            background: rgba(164, 74, 94, 0.3);
             border-radius: 3px;
         }
         .email-list::-webkit-scrollbar-thumb:hover, .email-reading-pane::-webkit-scrollbar-thumb:hover, .compose-body::-webkit-scrollbar-thumb:hover {
-            background: rgba(192, 21, 42, 0.6);
+            background: rgba(164, 74, 94, 0.6);
         }
         .email-list-item { 
             display: flex; 
@@ -423,22 +458,22 @@ try {
             transform: translateX(4px);
         }
         .email-list-item.active { 
-            background: rgba(192, 21, 42, 0.06); 
+            background: rgba(164, 74, 94, 0.06); 
             border-left: 4px solid var(--accent); 
             box-shadow: inset 4px 0 0 var(--accent);
         }
         .email-list-item.unread { 
-            background: rgba(192, 21, 42, 0.02); 
+            background: rgba(164, 74, 94, 0.02); 
         }
         .email-list-item.unread::before {
             content: '●';
-            color: #ff4060;
+            color: var(--accent-hover);
             position: absolute;
             left: 6px;
             top: 50%;
             transform: translateY(-50%);
             font-size: 8px;
-            text-shadow: 0 0 8px #ff4060;
+            text-shadow: 0 0 8px var(--accent-hover);
         }
         .email-list-item.unread .email-item-from { font-weight: 700; color: var(--text-main); }
         .email-list-item.unread .email-item-subject { font-weight: 600; color: var(--text-main); }
@@ -446,7 +481,7 @@ try {
             width: 40px; 
             height: 40px; 
             border-radius: 50%; 
-            background: linear-gradient(135deg, var(--accent), #ff4060); 
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover)); 
             display: flex; 
             align-items: center; 
             justify-content: center; 
@@ -475,14 +510,14 @@ try {
             font-family: 'Montserrat', sans-serif; 
             font-size: 0.86rem; 
             font-weight: 500; 
-            color: rgba(255, 255, 255, 0.8); 
+            color: rgba(245, 241, 234, 0.8); 
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
             margin-bottom: 4px; 
         }
         .email-item-snippet { font-family: 'Montserrat', sans-serif; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .email-reading-pane { overflow-y: auto; max-height: 560px; display: flex; flex-direction: column; background: rgba(6, 6, 8, 0.1); }
+        .email-reading-pane { overflow-y: auto; max-height: 560px; display: flex; flex-direction: column; background: rgba(26, 26, 31, 0.1); }
         .email-read-header { padding: 1.8rem 1.8rem 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); flex-shrink: 0; }
         .email-read-subject { font-family: 'Montserrat', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; line-height: 1.35; text-shadow: 0 0 15px rgba(255,255,255,0.05); }
         .email-read-meta { display: flex; gap: 1.2rem; align-items: center; }
@@ -490,7 +525,7 @@ try {
             width: 44px; 
             height: 44px; 
             border-radius: 50%; 
-            background: linear-gradient(135deg, var(--accent), #ff4060); 
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover)); 
             display: flex; 
             align-items: center; 
             justify-content: center; 
@@ -505,17 +540,17 @@ try {
         .email-read-from { font-family: 'Montserrat', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
         .email-read-email { font-family: 'Montserrat', sans-serif; font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
         .email-read-date { font-family: 'Montserrat', sans-serif; font-size: 0.8rem; color: var(--text-muted); text-align: right; }
-        .email-read-body { padding: 1.8rem; flex: 1; font-family: 'Montserrat', sans-serif; font-size: 0.92rem; color: rgba(255, 255, 255, 0.9); line-height: 1.75; }
+        .email-read-body { padding: 1.8rem; flex: 1; font-family: 'Montserrat', sans-serif; font-size: 0.92rem; color: rgba(245, 241, 234, 0.9); line-height: 1.75; }
         .email-read-body img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .email-read-actions { padding: 1.2rem 1.8rem; border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 0.6rem; flex-shrink: 0; flex-wrap: wrap; background: rgba(14, 14, 18, 0.3); }
+        .email-read-actions { padding: 1.2rem 1.8rem; border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 0.6rem; flex-shrink: 0; flex-wrap: wrap; background: rgba(26, 26, 31, 0.3); }
         .email-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-family: 'Montserrat', sans-serif; gap: 0.5rem; padding: 4rem; text-align: center; }
         .email-empty-state .empty-icon { font-size: 3.5rem; opacity: 0.25; margin-bottom: 0.5rem; }
         .email-empty-state .empty-text { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
         .email-empty-state .sync-badge {
             font-size: 0.78rem;
-            color: rgba(255, 255, 255, 0.4);
-            background: rgba(192, 21, 42, 0.1);
-            border: 1px solid rgba(192, 21, 42, 0.2);
+            color: rgba(245, 241, 234, 0.4);
+            background: rgba(164, 74, 94, 0.1);
+            border: 1px solid rgba(164, 74, 94, 0.2);
             padding: 0.4rem 0.8rem;
             border-radius: 20px;
             margin-top: 0.6rem;
@@ -530,18 +565,18 @@ try {
         .compose-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); z-index: 2000; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); align-items: center; justify-content: center; }
         .compose-overlay.open { display: flex; }
         .compose-modal { 
-            background: rgba(16, 16, 20, 0.95); 
-            border: 1px solid rgba(192, 21, 42, 0.25); 
+            background: rgba(26, 26, 31, 0.95); 
+            border: 1px solid rgba(164, 74, 94, 0.25); 
             border-radius: 14px; 
             width: 95%; 
             max-width: 680px; 
             max-height: 85vh; 
             display: flex; 
             flex-direction: column; 
-            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.95), 0 0 40px rgba(192, 21, 42, 0.15); 
+            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.95), 0 0 40px rgba(164, 74, 94, 0.15); 
             overflow: hidden;
         }
-        .compose-header { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(10, 10, 13, 0.65); }
+        .compose-header { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(15, 15, 17, 0.65); }
         .compose-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 1.5px; }
         .compose-close { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0.2rem; transition: color 0.15s; line-height: 1; }
         .compose-close:hover { color: var(--accent); }
@@ -549,12 +584,12 @@ try {
         .compose-field { display: flex; align-items: center; gap: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.8rem; }
         .compose-field label { font-family: 'Montserrat', sans-serif; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; width: 60px; flex-shrink: 0; }
         .compose-field input, .compose-field select { flex: 1; background: transparent; border: none; color: var(--text-main); font-family: 'Montserrat', sans-serif; font-size: 0.92rem; outline: none; padding: 0.4rem 0; }
-        .compose-field input::placeholder { color: rgba(255, 255, 255, 0.25); }
+        .compose-field input::placeholder { color: rgba(245, 241, 234, 0.25); }
         .compose-textarea { flex: 1; min-height: 240px; background: transparent; border: none; color: var(--text-main); font-family: 'Montserrat', sans-serif; font-size: 0.92rem; line-height: 1.7; resize: none; outline: none; padding: 0.5rem 0; }
-        .compose-textarea::placeholder { color: rgba(255, 255, 255, 0.25); }
-        .compose-footer { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.8rem; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(10, 10, 13, 0.45); }
-        .compose-send-btn { padding: 0.8rem 2.5rem; background: linear-gradient(135deg, var(--accent), #df1f37); color: #fff; border: none; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(192, 21, 42, 0.3); }
-        .compose-send-btn:hover { background: linear-gradient(135deg, #df1f37, #ff334b); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(192, 21, 42, 0.5); }
+        .compose-textarea::placeholder { color: rgba(245, 241, 234, 0.25); }
+        .compose-footer { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.8rem; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(15, 15, 17, 0.45); }
+        .compose-send-btn { padding: 0.8rem 2.5rem; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; border: none; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(164, 74, 94, 0.3); }
+        .compose-send-btn:hover { background: linear-gradient(135deg, var(--accent-deep), var(--accent-hover)); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(164, 74, 94, 0.5); }
         .compose-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
         .compose-template-select { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); padding: 0.5rem 0.8rem; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.2s ease; }
         .compose-template-select:hover { border-color: rgba(255, 255, 255, 0.2); color: var(--text-main); }
@@ -636,6 +671,7 @@ try {
             <div class="stat-card"><div class="stat-num"><?= count($contents) ?></div><div class="stat-label">Content Blocks</div></div>
         </div>
 
+        <!--
         <div class="section-title">Site Appearance &amp; Custom Skins</div>
         <div class="form-card" style="margin-bottom: 2rem;">
             <form action="" method="POST" style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; width: 100%;">
@@ -650,6 +686,7 @@ try {
                 <button class="cta-btn" type="submit" style="margin-top:1.5rem; padding:0.6rem 2rem;">APPLY THEME</button>
             </form>
         </div>
+        -->
 
         <div class="section-title">Recent System Activity</div>
         <div class="form-card">
@@ -714,9 +751,17 @@ try {
                             <input type="checkbox" name="is_active" id="new_active" checked>
                             <label for="new_active" style="cursor:pointer;margin-bottom:0;">Active (visible on shop)</label>
                         </div>
-                        <div class="checkbox-row">
+                        <div class="checkbox-row" style="margin-bottom:0.5rem;">
                             <input type="checkbox" name="allow_download" id="new_allow_download">
                             <label for="new_allow_download" style="cursor:pointer;margin-bottom:0;">Enable Direct Download Button (for Free Kits)</label>
+                        </div>
+                        <div class="checkbox-row" style="margin-bottom:0.5rem;">
+                            <input type="checkbox" name="is_preorder" id="new_is_preorder" onchange="document.getElementById('new_release_date_group').style.display = this.checked ? 'block' : 'none';">
+                            <label for="new_is_preorder" style="cursor:pointer;margin-bottom:0;color:var(--accent);font-weight:700;">Mark as Pre-order (Upcoming Pack)</label>
+                        </div>
+                        <div class="form-group" id="new_release_date_group" style="display:none;margin-top:0.8rem;width:100%;">
+                            <label style="color:var(--accent);">Release Date</label>
+                            <input type="date" name="release_date" id="new_release_date" style="width:100%;background:rgba(18,18,21,0.8);border:1px solid rgba(255,255,255,0.08);color:var(--text-main);padding:0.6rem 0.8rem;border-radius:4px;">
                         </div>
                     </div>
                 </div>
@@ -751,6 +796,13 @@ try {
                             <span class="pill pill-active">Active</span>
                             <?php else: ?>
                             <span class="pill pill-inactive">Disabled</span>
+                            <?php endif; ?>
+                            <?php if (!empty($p['is_preorder'])): ?>
+                            <br>
+                            <span class="pill" style="background:rgba(168, 85, 247, 0.15); color:#a855f7; border: 1px solid rgba(168, 85, 247, 0.3); margin-top: 0.3rem; display: inline-block;">Pre-order</span>
+                            <?php if (!empty($p['release_date'])): ?>
+                            <br><span style="font-size:0.75rem; color:var(--text-muted); font-weight: 500;">Releases: <?= h($p['release_date']) ?></span>
+                            <?php endif; ?>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -949,20 +1001,6 @@ try {
             </div>
         </div>
 
-        <div class="section-title">Live Action Feed <span style="font-size:0.75rem;color:var(--text-muted);font-family:'Montserrat',sans-serif;font-weight:500;letter-spacing:0px;">— Last 50 events</span></div>
-        <div class="form-card" style="max-height:400px;overflow-y:auto;padding:0.5rem;">
-            <ul class="log-list" style="font-size:0.9rem;">
-                <?php foreach ($vs_recent as $r): ?>
-                <li style="border-bottom:1px solid rgba(123,225,168,0.05);padding:4px 0;">
-                    <span class="log-ts" style="width:140px;"><?= substr($r['created_at'],11) ?></span>
-                    <span style="color:var(--accent);width:100px;display:inline-block;"><?= h($r['ip']) ?></span>
-                    <span style="color:var(--text-main);"><?= h($r['action']) ?></span>
-                    <span style="color:var(--text-muted);font-size:0.8rem;float:right;"><?= h($r['page']) ?></span>
-                </li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-
         <!-- Visitors table (click to drill down) -->
         <div class="section-title">All Visitors <span style="font-size:0.75rem;color:var(--text-muted);font-family:'Montserrat',sans-serif;font-weight:500;letter-spacing:0px;">— click a row to view their full timeline</span></div>
         <div class="form-card" style="padding:0;overflow-x:auto;">
@@ -1002,6 +1040,27 @@ try {
             </table>
         </div>
 
+        <!-- Pagination controls -->
+        <?php if ($vtotal_pages > 1): ?>
+        <div style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:1.5rem;">
+            <?php if ($vpage > 1): ?>
+            <a href="?tab=stats&vpage=<?= $vpage - 1 ?>" class="btn" style="padding:0.4rem 0.8rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-main);font-family:'Montserrat',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;">&lt; Prev</a>
+            <?php else: ?>
+            <span class="btn" style="padding:0.4rem 0.8rem;background:transparent;border:1px solid rgba(255,255,255,0.02);color:var(--text-muted);font-family:'Montserrat',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:not-allowed;opacity:0.5;">&lt; Prev</span>
+            <?php endif; ?>
+
+            <span style="color:var(--text-muted);font-family:'Montserrat',sans-serif;font-size:0.85rem;font-weight:500;margin:0 0.5rem;">
+                Page <strong style="color:var(--accent);"><?= $vpage ?></strong> of <?= $vtotal_pages ?>
+            </span>
+
+            <?php if ($vpage < $vtotal_pages): ?>
+            <a href="?tab=stats&vpage=<?= $vpage + 1 ?>" class="btn" style="padding:0.4rem 0.8rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-main);font-family:'Montserrat',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;">Next &gt;</a>
+            <?php else: ?>
+            <span class="btn" style="padding:0.4rem 0.8rem;background:transparent;border:1px solid rgba(255,255,255,0.02);color:var(--text-muted);font-family:'Montserrat',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:not-allowed;opacity:0.5;">Next &gt;</span>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
         <div class="section-title" style="margin-top:2rem;">Full Audit Log</div>
         <div class="form-card">
             <ul class="log-list">
@@ -1018,7 +1077,7 @@ try {
 
     <!-- ── USERS (APPROVAL & MANAGEMENT) ── -->
     <div id="tab-users" class="admin-panel">
-        <div class="section-title">Pending User Approvals (<?= count($pending_users) ?>)</div>
+        <div class="section-title">Unverified Accounts (Pending Email) (<?= count($pending_users) ?>)</div>
         <div class="form-card" style="margin-bottom: 2rem;">
             <table class="admin-table">
                 <thead>
@@ -1034,17 +1093,17 @@ try {
                     <tr>
                         <td style="font-family:'Montserrat',sans-serif;font-weight:700;color:var(--text-main);font-size:0.9rem;"><?= h($u['username']) ?></td>
                         <td><?= h($u['email'] ?? '—') ?></td>
-                        <td><span class="pill pill-inactive">Pending</span></td>
+                        <td><span class="pill pill-inactive" style="background:rgba(255,194,92,0.1);color:#ffc25c;border-color:#ffc25c;">Pending Email</span></td>
                         <td>
                             <div class="action-btns">
-                                <a href="/admin/user_action.php?action=approve&id=<?= $u['id'] ?>" class="btn btn-green">Approve</a>
-                                <a href="/admin/user_action.php?action=reject&id=<?= $u['id'] ?>" class="btn btn-red" onclick="return confirm('Er du sikker på, at du vil afvise og slette denne bruger registrering?');">Reject</a>
+                                <a href="/admin/user_action.php?action=approve&id=<?= $u['id'] ?>" class="btn btn-green">Verify Manually</a>
+                                <a href="/admin/user_action.php?action=reject&id=<?= $u['id'] ?>" class="btn btn-red" onclick="return confirm('Er du sikker på, at du vil slette denne uverificerede bruger?');">Delete</a>
                             </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                     <?php if (empty($pending_users)): ?>
-                    <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">No pending approvals at the moment. All clear!</td></tr>
+                    <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">No unverified users at the moment. All clear!</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

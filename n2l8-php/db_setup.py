@@ -73,7 +73,8 @@ SCHEMA = [
       `role`     VARCHAR(20)  NOT NULL DEFAULT 'admin',
       `profile_picture` VARCHAR(255) NULL,
       `is_approved` TINYINT(1) NOT NULL DEFAULT 0,
-      `is_private` TINYINT(1) NOT NULL DEFAULT 0
+      `is_private` TINYINT(1) NOT NULL DEFAULT 0,
+      `verification_token` VARCHAR(255) NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
     ("products", """
@@ -92,7 +93,9 @@ SCHEMA = [
       `zip_file`       VARCHAR(255)  NULL,
       `is_active`      TINYINT(1)    NOT NULL DEFAULT 1,
       `allow_download` TINYINT(1)    NOT NULL DEFAULT 0,
-      `terms_pdf`      VARCHAR(255)  NULL
+      `terms_pdf`      VARCHAR(255)  NULL,
+      `is_preorder`    TINYINT(1)    NOT NULL DEFAULT 0,
+      `release_date`   DATE          NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
     ("product_tracks", """
@@ -289,6 +292,10 @@ UPGRADES = [
     ("users.is_private", "ALTER TABLE users ADD COLUMN is_private TINYINT(1) NOT NULL DEFAULT 0"),
     ("users.theme", "ALTER TABLE users ADD COLUMN theme VARCHAR(20) NOT NULL DEFAULT 'dark'"),
     ("products.terms_pdf", "ALTER TABLE products ADD COLUMN terms_pdf VARCHAR(255) NULL"),
+    ("users.verification_token", "ALTER TABLE users ADD COLUMN verification_token VARCHAR(255) NULL AFTER is_approved"),
+    ("products.is_preorder", "ALTER TABLE products ADD COLUMN is_preorder TINYINT(1) NOT NULL DEFAULT 0"),
+    ("products.release_date", "ALTER TABLE products ADD COLUMN release_date DATE NULL"),
+    ("products.position", "ALTER TABLE products ADD COLUMN position INT NOT NULL DEFAULT 0"),
 ]
 for label, sql in UPGRADES:
     try:
@@ -370,7 +377,10 @@ CONTENT = [
     ('nav_shop',            'Global',       'Nav: Shop Link',            'Shop'),
     ('nav_pricing',         'Global',       'Nav: Pricing Link',         'Mixing & Mastering'),
     ('nav_sub',             'Global',       'Nav: Subscription Link',    'Subscription Plan'),
+    ('nav_forum',           'Global',       'Nav: Forum Link',           'Forum'),
     ('footer_text',         'Global',       'Footer Copyright Text',     '© 2026 n2l8studio. All rights reserved.'),
+    ('forum_h1',            'Forum',        'Forum Main Heading',        'COMMUNITY DISCUSSION BOARDS'),
+    ('forum_desc',          'Forum',        'Forum Main Description',    'Connect, share knowledge, collaborate on beats, and show off your final mixes with members worldwide.'),
 ]
 
 seeded = 0

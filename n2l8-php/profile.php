@@ -46,7 +46,7 @@ log_visitor($pdo, 'page_view', '/profile.php');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - n2l8studio</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -61,15 +61,15 @@ log_visitor($pdo, 'page_view', '/profile.php');
         .profile-section { margin-bottom:3rem; }
         .profile-section-title { font-family:'Syncopate',sans-serif; font-size:1rem; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:1rem; }
         .profile-products { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1.2rem; }
-        .profile-product { border:1px solid var(--border-color); background:rgba(5,5,8,0.65); border-radius:6px; padding:0.9rem; text-decoration:none; color:#fff; transition:all 0.2s ease; }
-        .profile-product:hover { border-color:rgba(192,21,42,0.55); transform:translateY(-3px); }
-        .profile-cover { width:100%; aspect-ratio:1; object-fit:cover; background:#020203; border-radius:4px; margin-bottom:0.8rem; }
+        .profile-product { border:1px solid var(--border-color); background:rgba(26,26,31,0.65); border-radius:6px; padding:0.9rem; text-decoration:none; color:#F5F1EA; transition:all 0.2s ease; }
+        .profile-product:hover { border-color:rgba(164,74,94,0.55); transform:translateY(-3px); }
+        .profile-cover { width:100%; aspect-ratio:1; object-fit:cover; background:#121215; border-radius:4px; margin-bottom:0.8rem; }
         .profile-product h2 { font-size:0.78rem; letter-spacing:0.08em; margin-bottom:0.35rem; }
         .profile-meta { color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; }
         .history-list { border:1px solid var(--border-color); border-radius:6px; overflow:hidden; }
         .history-row { display:grid; grid-template-columns:70px 1fr auto; align-items:center; gap:1rem; padding:0.85rem 1rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#fff; text-decoration:none; }
         .history-row:last-child { border-bottom:none; }
-        .history-thumb { width:54px; height:54px; object-fit:cover; border-radius:4px; background:#020203; }
+        .history-thumb { width:54px; height:54px; object-fit:cover; border-radius:4px; background:#121215; }
         .history-action { color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em; }
         .history-title { font-weight:700; }
         .history-time { color:var(--text-muted); font-size:0.74rem; white-space:nowrap; }
@@ -94,7 +94,7 @@ log_visitor($pdo, 'page_view', '/profile.php');
                         <a href="/beats.php">Beats</a>
                     </div>
                 </li>
-                <li><a href="/pricing.php">Services</a></li>
+                <!-- <li><a href="/pricing.php">Services</a></li> -->
                 <li><a href="/forum.php">Forum</a></li>
                 <li><a href="/profile.php">Profile</a></li>
             </ul>

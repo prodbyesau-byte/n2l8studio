@@ -21,13 +21,16 @@ $price_premium   = $_POST['price_premium'] !== '' ? (float)$_POST['price_premium
 $price_exclusive = $_POST['price_exclusive'] !== '' ? (float)$_POST['price_exclusive'] : null;
 $is_active       = isset($_POST['is_active']) ? 1 : 0;
 $allow_download  = isset($_POST['allow_download']) ? 1 : 0;
+$is_preorder     = isset($_POST['is_preorder']) ? 1 : 0;
+$rd              = trim($_POST['release_date'] ?? '');
+$release_date    = $rd !== '' ? $rd : null;
 
 $cover_image = save_upload('cover_image', ALLOWED_IMAGES);
 $zip_file    = save_upload('zip_file', ALLOWED_FILES);
 $terms_pdf   = save_upload('terms_pdf', ['pdf']);
 
-$stmt = $pdo->prepare('INSERT INTO products (title,type,genre,price,price_premium,price_exclusive,original_price,author,description,bpm,`key`,cover_image,zip_file,terms_pdf,is_active,allow_download) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-$stmt->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover_image,$zip_file,$terms_pdf,$is_active,$allow_download]);
+$stmt = $pdo->prepare('INSERT INTO products (title,type,genre,price,price_premium,price_exclusive,original_price,author,description,bpm,`key`,cover_image,zip_file,terms_pdf,is_active,allow_download,is_preorder,release_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+$stmt->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover_image,$zip_file,$terms_pdf,$is_active,$allow_download,$is_preorder,$release_date]);
 $product_id = $pdo->lastInsertId();
 
 // Handle multiple preview tracks

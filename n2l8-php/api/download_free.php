@@ -14,12 +14,6 @@ if (!$id) {
     exit;
 }
 
-if (!is_logged_in()) {
-    $redirect_url = '/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']);
-    header('Location: ' . $redirect_url);
-    exit;
-}
-
 $pdo = get_pdo();
 $stmt = $pdo->prepare('SELECT * FROM products WHERE id = ?');
 $stmt->execute([$id]);
@@ -28,6 +22,14 @@ $product = $stmt->fetch();
 if (!$product) {
     http_response_code(404);
     echo "Product not found.";
+    exit;
+}
+
+$is_preorder  = (int)($product['is_preorder'] ?? 0);
+$release_time = !empty($product['release_date']) ? strtotime($product['release_date']) : 0;
+if ($is_preorder && $release_time > time()) {
+    http_response_code(403);
+    echo "This product is a pre-order and has not been released yet.";
     exit;
 }
 
@@ -44,24 +46,28 @@ if (empty($product['allow_download']) || empty($product['zip_file'])) {
     exit;
 }
 
-// Record the free purchase inside orders if it doesn't already exist
-$user_email = $_SESSION['email'] ?? '';
-$user_id = $_SESSION['user_id'];
-
-if ($user_email) {
-    $check_stmt = $pdo->prepare('SELECT id FROM orders WHERE customer_email = ? AND product_id = ?');
-    $check_stmt->execute([$user_email, $id]);
-    if (!$check_stmt->fetch()) {
-        // Insert as completed order
-        $pdo->prepare('INSERT INTO orders (customer_email, product_id, status) VALUES (?, ?, "completed")')
-            ->execute([$user_email, $id]);
-            
-        // Also insert into user_saved_products (just in case)
-        $pdo->prepare('INSERT IGNORE INTO user_saved_products (user_id, product_id) VALUES (?, ?)')
-            ->execute([$user_id, $id]);
-            
-        log_action($pdo, "User {$_SESSION['username']} downloaded free kit/beat '{$product['title']}' and added it to library.");
+// Record the free purchase inside orders if they are logged in
+if (is_logged_in()) {
+    $user_email = $_SESSION['email'] ?? '';
+    $user_id = $_SESSION['user_id'];
+    
+    if ($user_email) {
+        $check_stmt = $pdo->prepare('SELECT id FROM orders WHERE customer_email = ? AND product_id = ?');
+        $check_stmt->execute([$user_email, $id]);
+        if (!$check_stmt->fetch()) {
+            // Insert as completed order
+            $pdo->prepare('INSERT INTO orders (customer_email, product_id, status) VALUES (?, ?, "completed")')
+                ->execute([$user_email, $id]);
+                
+            // Also insert into user_saved_products (just in case)
+            $pdo->prepare('INSERT IGNORE INTO user_saved_products (user_id, product_id) VALUES (?, ?)')
+                ->execute([$user_id, $id]);
+                
+            log_action($pdo, "User {$_SESSION['username']} downloaded free kit/beat '{$product['title']}' and added it to library.");
+        }
     }
+} else {
+    log_action($pdo, "Anonymous visitor downloaded free kit/beat '{$product['title']}'");
 }
 
 // Redirect the browser to the actual direct ZIP file

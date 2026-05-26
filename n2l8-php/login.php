@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 log_action($pdo, "Administrator logged in: {$user['username']}");
                 redirect('/admin/index.php');
             } else if (empty($user['is_approved'])) {
-                $error = 'Your account is pending administrative approval. You will be able to log in once your profile has been verified.';
+                $error = 'Your account is pending email verification. Please check your inbox and click the link in the email to activate your account.';
             } else {
                 $_SESSION['user_id']   = $user['id'];
                 $_SESSION['username']  = $user['username'];
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - N2L8 STUDIO</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -97,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: all 0.3s ease;
         }
         .login-box:hover {
-            border-color: rgba(192, 21, 42, 0.4);
-            box-shadow: 0 20px 45px rgba(192, 21, 42, 0.15), var(--accent-glow);
+            border-color: rgba(164, 74, 94, 0.4);
+            box-shadow: 0 20px 45px rgba(164, 74, 94, 0.15), var(--accent-glow);
         }
         .login-box h2 {
             font-family: 'Syncopate', sans-serif;
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .login-box input { 
             width: 100%; 
             padding: 0.85rem 1rem; 
-            background: #000000; 
+            background: #0F0F11; 
             border: 1px solid var(--border-color); 
             border-radius: 4px;
             color: var(--text-main); 
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .flash-msg { 
             color: var(--accent); 
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             border: 1px solid var(--border-color);
             padding: 0.8rem;
             border-radius: 4px;

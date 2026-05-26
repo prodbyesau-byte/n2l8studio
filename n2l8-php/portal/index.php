@@ -202,7 +202,7 @@ $tab = $_GET['tab'] ?? 'library';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Profile - N2L8 STUDIO</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -232,9 +232,9 @@ $tab = $_GET['tab'] ?? 'library';
             font-family: 'Montserrat', sans-serif;
             font-weight: 500;
         }
-        .portal-welcome span {
+         .portal-welcome span {
             color: var(--accent);
-            text-shadow: 0 0 10px rgba(192, 21, 42, 0.4);
+            text-shadow: 0 0 10px rgba(164, 74, 94, 0.4);
             font-weight: 700;
         }
 
@@ -283,7 +283,7 @@ $tab = $_GET['tab'] ?? 'library';
             gap: 2rem;
         }
         .library-card {
-            background: rgba(5, 5, 8, 0.8);
+            background: rgba(26, 26, 31, 0.8);
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 1.2rem;
@@ -295,9 +295,9 @@ $tab = $_GET['tab'] ?? 'library';
             -webkit-backdrop-filter: blur(12px);
         }
         .library-card:hover {
-            border-color: rgba(192, 21, 42, 0.4);
+            border-color: rgba(164, 74, 94, 0.4);
             transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(192, 21, 42, 0.1), var(--accent-glow);
+            box-shadow: 0 15px 35px rgba(164, 74, 94, 0.1), var(--accent-glow);
         }
         .library-cover {
             width: 100%;
@@ -305,7 +305,7 @@ $tab = $_GET['tab'] ?? 'library';
             border-radius: 4px;
             overflow: hidden;
             margin-bottom: 1.2rem;
-            background: #000000;
+            background: #0F0F11;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
         .library-cover img {
@@ -344,7 +344,7 @@ $tab = $_GET['tab'] ?? 'library';
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--accent);
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             border: 1px solid var(--border-color);
             padding: 2px 6px;
             border-radius: 2px;
@@ -418,7 +418,7 @@ $tab = $_GET['tab'] ?? 'library';
         .premium-folder:hover .folder-body {
             border-color: rgba(255, 255, 255, 0.4);
             transform: scale(1.02);
-            box-shadow: inset 0 1px 3px rgba(255,255,255,0.1), var(--accent-glow), 0 0 12px rgba(192, 21, 42, 0.2);
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.1), var(--accent-glow), 0 0 12px rgba(164, 74, 94, 0.2);
         }
         .premium-folder:hover .folder-tab {
             background: var(--accent-hover);
@@ -430,7 +430,7 @@ $tab = $_GET['tab'] ?? 'library';
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(5,5,8,0.92);
+            background: rgba(15,15,17,0.92);
             z-index: 1000;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -439,7 +439,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
         .modal-overlay.open { display: block; }
         .modal-box {
-            background: rgba(5, 5, 8, 0.95);
+            background: rgba(26, 26, 31, 0.95);
             border: 1px solid var(--border-color);
             box-shadow: var(--purple-glow);
             width: 92%;
@@ -471,7 +471,7 @@ $tab = $_GET['tab'] ?? 'library';
 
         /* Forms */
         .portal-card {
-            background: rgba(5, 5, 8, 0.8);
+            background: rgba(26, 26, 31, 0.8);
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 3rem 2.5rem;
@@ -492,7 +492,7 @@ $tab = $_GET['tab'] ?? 'library';
         .portal-card p {
             color: var(--text-muted);
             font-size: 0.8rem;
-            margin-bottom: 2rem;
+            margin-bottom: 2.2rem;
             text-align: center;
         }
         .form-group {
@@ -512,7 +512,7 @@ $tab = $_GET['tab'] ?? 'library';
         .portal-card input {
             width: 100%;
             padding: 0.85rem 1rem;
-            background: #000000;
+            background: #0F0F11;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             color: var(--text-main);
@@ -545,7 +545,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
         .flash-error {
             color: var(--accent);
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             border-color: var(--border-color);
         }
         .flash-success {
@@ -565,7 +565,7 @@ $tab = $_GET['tab'] ?? 'library';
         .dm-client-grid {
             display: grid;
             grid-template-columns: 240px 320px 1fr;
-            background: rgba(5, 5, 8, 0.85);
+            background: rgba(26, 26, 31, 0.85);
             border: 1px solid var(--border-color);
             border-radius: 6px;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), var(--accent-glow);
@@ -602,7 +602,7 @@ $tab = $_GET['tab'] ?? 'library';
         .dm-compose-btn:hover {
             background: var(--accent-hover);
             transform: translateY(-2px);
-            box-shadow: 0 0 15px rgba(192, 21, 42, 0.6);
+            box-shadow: 0 0 15px rgba(164, 74, 94, 0.6);
         }
         .dm-folder-list {
             display: flex;
@@ -627,7 +627,7 @@ $tab = $_GET['tab'] ?? 'library';
             text-align: left;
         }
         .dm-folder-item:hover, .dm-folder-item.active {
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             color: #ffffff;
         }
         .dm-folder-item.active {
@@ -664,7 +664,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
         .dm-member-search-container input {
             width: 100%;
-            background: #000000;
+            background: #0F0F11;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 0.55rem 0.75rem;
@@ -703,7 +703,7 @@ $tab = $_GET['tab'] ?? 'library';
             transition: all 0.2s ease;
         }
         .dm-search-result-item:hover {
-            background: rgba(192, 21, 42, 0.12);
+            background: rgba(164, 74, 94, 0.12);
         }
         .dm-search-result-item:last-child {
             border-bottom: none;
@@ -794,7 +794,7 @@ $tab = $_GET['tab'] ?? 'library';
         .dm-friend-item:hover .dm-friend-name {
             color: #ffffff;
         }
-
+ 
         .dm-conversations-col {
             background: rgba(0, 0, 0, 0.15);
             border-right: 1px solid rgba(255, 255, 255, 0.05);
@@ -808,7 +808,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
         .dm-search-bar input {
             width: 100%;
-            background: #000000;
+            background: #0F0F11;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 0.65rem 0.8rem;
@@ -840,7 +840,7 @@ $tab = $_GET['tab'] ?? 'library';
             background: rgba(255, 255, 255, 0.02);
         }
         .dm-convo-item.active {
-            background: rgba(192, 21, 42, 0.05);
+            background: rgba(164, 74, 94, 0.05);
             border-left: 3px solid var(--accent);
             padding-left: calc(1rem - 3px);
         }
@@ -1050,11 +1050,11 @@ $tab = $_GET['tab'] ?? 'library';
             border-left: 3px solid rgba(255, 255, 255, 0.2);
         }
         .dm-msg-bubble.sent {
-            background: rgba(192, 21, 42, 0.12);
+            background: rgba(164, 74, 94, 0.12);
             color: #ffffff;
             align-self: flex-end;
             border-right: 3px solid var(--accent);
-            box-shadow: 0 4px 15px rgba(192, 21, 42, 0.05);
+            box-shadow: 0 4px 15px rgba(164, 74, 94, 0.05);
         }
         .dm-msg-info {
             font-size: 0.62rem;
@@ -1075,7 +1075,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
         .dm-input-area textarea {
             flex-grow: 1;
-            background: #000000;
+            background: #0F0F11;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             color: #ffffff;
@@ -1107,7 +1107,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
         .dm-input-area button:hover {
             background: var(--accent-hover);
-            box-shadow: 0 0 12px rgba(192, 21, 42, 0.6);
+            box-shadow: 0 0 12px rgba(164, 74, 94, 0.6);
         }
 
         /* ── GLOBAL SOCIAL MODALS ── */
@@ -1130,13 +1130,13 @@ $tab = $_GET['tab'] ?? 'library';
             pointer-events: auto;
         }
         .profile-modal-card, .compose-modal-card {
-            background: #050508;
+            background: #1A1A1F;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 2.5rem;
             max-width: 460px;
             width: 90%;
-            box-shadow: 0 0 35px rgba(192, 21, 42, 0.2), var(--accent-glow);
+            box-shadow: 0 0 35px rgba(164, 74, 94, 0.2), var(--accent-glow);
             text-align: center;
             position: relative;
             transform: scale(0.92);
@@ -1199,7 +1199,7 @@ $tab = $_GET['tab'] ?? 'library';
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--accent);
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             border: 1px solid var(--border-color);
             padding: 3px 8px;
             border-radius: 2px;
@@ -1286,7 +1286,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
         .profile-modal-dm-field textarea {
             width: 100%;
-            background: #000000;
+            background: #0F0F11;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 0.7rem 0.8rem;
@@ -1317,7 +1317,7 @@ $tab = $_GET['tab'] ?? 'library';
         }
         .compose-select-friend {
             width: 100%;
-            background: #000000;
+            background: #0F0F11;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             color: #ffffff;
@@ -1524,7 +1524,7 @@ $tab = $_GET['tab'] ?? 'library';
             width: 10px;
             height: 10px;
             background: #7be1a8;
-            border: 2px solid #050508;
+            border: 2px solid #1A1A1F;
             border-radius: 50%;
             position: absolute;
             bottom: 2px;
@@ -1775,7 +1775,7 @@ $tab = $_GET['tab'] ?? 'library';
                 transition: all 0.25s ease;
             }
             .dm-mobile-back-btn:hover {
-                background: rgba(192, 21, 42, 0.2);
+                background: rgba(164, 74, 94, 0.2);
                 border-color: var(--accent);
             }
             
@@ -1829,7 +1829,7 @@ $tab = $_GET['tab'] ?? 'library';
             <ul class="nav-links" id="navLinks">
                 <li><a href="/index.php">Home</a></li>
                 <li><a href="/shop.php">Shop</a></li>
-                <li><a href="/pricing.php">Services</a></li>
+                <!-- <li><a href="/pricing.php">Services</a></li> -->
                 <li><a href="/forum.php">Forum</a></li>
                 <li><a href="/logout.php" style="color: var(--accent);">Disconnect</a></li>
             </ul>
@@ -1885,7 +1885,14 @@ $tab = $_GET['tab'] ?? 'library';
                                 <h3><?= h($p['title']) ?></h3>
                                 <div class="author">By <?= h($p['author'] ?: 'N2L8 STUDIO') ?></div>
                                 <span class="tag"><?= h($p['type']) ?></span>
-                                                         <?php if ($p['zip_file']): ?>
+                            <?php 
+                            $is_preorder = (int)($p['is_preorder'] ?? 0);
+                            $release_time = !empty($p['release_date']) ? strtotime($p['release_date'] . ' 00:00:00') : 0;
+                            $is_released = !$is_preorder || ($release_time && $release_time <= time());
+                            ?>
+                            <?php if (!$is_released): ?>
+                                <button class="cta-btn secondary" style="cursor: not-allowed; opacity: 0.65; border-color: rgba(168, 85, 247, 0.4); color: #b57cff; width: 100%; text-align: center; font-size: 0.72rem; letter-spacing: 0.5px; font-family: 'Syncopate', sans-serif;" disabled>🔒 PRE-ORDERED (Releases <?= date('M j, Y', $release_time) ?>)</button>
+                            <?php elseif ($p['zip_file']): ?>
                                 <a href="/static/uploads/<?= h($p['zip_file']) ?>" class="cta-btn" download>DOWNLOAD KIT</a>
                             <?php else: ?>
                                 <button class="cta-btn secondary" style="cursor: not-allowed; opacity: 0.6;" disabled>NO FILE LOADED</button>
@@ -2173,6 +2180,7 @@ $tab = $_GET['tab'] ?? 'library';
                 </form>
             </div>
 
+            <!--
             <div class="portal-card" style="margin-top: 2rem; background: rgba(5, 5, 8, 0.8); border: 1px solid var(--border-color); border-radius: 6px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                 <h3 style="font-family:'Syncopate',sans-serif; font-size:1.1rem; letter-spacing:2px; margin:0 0 0.4rem 0; color:#fff; text-align:center;">SITE APPEARANCE</h3>
                 <p style="color:var(--text-muted); font-size:0.82rem; margin:0 0 1.5rem 0; font-family:'Montserrat',sans-serif; font-weight:500; text-align:center;">Customize your interface theme. Choose between dark and beige skins.</p>
@@ -2191,6 +2199,7 @@ $tab = $_GET['tab'] ?? 'library';
                     <button type="submit" class="cta-btn" style="width:100%;">SAVE THEME</button>
                 </form>
             </div>
+            -->
         </div>
 
         <!-- ── TAB: FRIENDS ── -->
@@ -2206,7 +2215,7 @@ $tab = $_GET['tab'] ?? 'library';
                     
                     <!-- Search Input -->
                     <div class="friends-search-container" style="position:relative; width:100%; max-width:320px;">
-                        <input type="text" id="friends-tab-search-input" placeholder="Search members..." oninput="searchTabMembers()" style="width:100%; background:#000000; border:1px solid var(--border-color); border-radius:4px; padding:0.65rem 1rem 0.65rem 2.3rem; color:#ffffff; font-family:'Montserrat',sans-serif; font-size:0.82rem; outline:none; transition:all 0.25s ease;">
+                        <input type="text" id="friends-tab-search-input" placeholder="Search members..." oninput="searchTabMembers()" style="width:100%; background:#0F0F11; border:1px solid var(--border-color); border-radius:4px; padding:0.65rem 1rem 0.65rem 2.3rem; color:#ffffff; font-family:'Montserrat',sans-serif; font-size:0.82rem; outline:none; transition:all 0.25s ease;">
                         <svg style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); width:12px; height:12px; fill:var(--text-muted); pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
                         
                         <div id="friends-tab-search-results" style="display:none; position:absolute; top:110%; left:0; right:0; background:#0c0c0f; border:1px solid var(--border-color); border-radius:4px; z-index:100; max-height:280px; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.95); padding:0.5rem 0;"></div>
@@ -2276,7 +2285,7 @@ $tab = $_GET['tab'] ?? 'library';
                         
                         <!-- Search Box for Discover -->
                         <div style="position:relative; width:100%; max-width:320px;">
-                            <input type="text" id="discover-search-input" placeholder="Search community members..." oninput="filterDiscoverMembers()" style="width:100%; background:#000000; border:1px solid var(--border-color); border-radius:4px; padding:0.65rem 1rem 0.65rem 2.3rem; color:#ffffff; font-family:'Montserrat',sans-serif; font-size:0.82rem; outline:none; transition:all 0.25s ease;">
+                            <input type="text" id="discover-search-input" placeholder="Search community members..." oninput="filterDiscoverMembers()" style="width:100%; background:#0F0F11; border:1px solid var(--border-color); border-radius:4px; padding:0.65rem 1rem 0.65rem 2.3rem; color:#ffffff; font-family:'Montserrat',sans-serif; font-size:0.82rem; outline:none; transition:all 0.25s ease;">
                             <svg style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); width:12px; height:12px; fill:var(--text-muted); pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
                         </div>
                     </div>

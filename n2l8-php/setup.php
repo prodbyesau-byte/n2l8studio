@@ -69,7 +69,11 @@ $content_rows = [
     ['nav_shop',            'Global',       'Nav: Shop Link',            'Shop'],
     ['nav_pricing',         'Global',       'Nav: Pricing Link',         'Mixing & Mastering'],
     ['nav_sub',             'Global',       'Nav: Subscription Link',    'Subscription Plan'],
+    ['nav_forum',           'Global',       'Nav: Forum Link',           'Forum'],
     ['footer_text',         'Global',       'Footer Copyright Text',     '© 2026 n2l8studio. All rights reserved.'],
+    // FORUM
+    ['forum_h1',            'Forum',        'Forum Main Heading',        'COMMUNITY DISCUSSION BOARDS'],
+    ['forum_desc',          'Forum',        'Forum Main Description',    'Connect, share knowledge, collaborate on beats, and show off your final mixes with members worldwide.'],
 ];
 
 $stmt = $pdo->prepare(

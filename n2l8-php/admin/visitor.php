@@ -39,15 +39,15 @@ arsort($action_counts);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visitor: <?= h($ip) ?> — Admin</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { background-attachment:fixed; }
-        .admin-topbar { background:rgba(10,10,12,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom:1px solid rgba(192,21,42,0.3); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
-        .admin-topbar .logo-text { font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.1rem; letter-spacing:3px; text-shadow: 0 0 10px rgba(192,21,42,0.6); }
+        .admin-topbar { background:rgba(26,26,31,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom:1px solid rgba(164,74,94,0.3); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        .admin-topbar .logo-text { font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.1rem; letter-spacing:3px; text-shadow: 0 0 10px rgba(184,155,94,0.6); }
         .section-title { font-family:'Syncopate',sans-serif; font-weight:700; color:var(--accent); font-size:1.2rem; margin-bottom:1.5rem; letter-spacing:2px; text-transform:uppercase; border-bottom:1px dashed var(--text-muted); padding-bottom:0.5rem; }
         .form-card {
-            background: rgba(22, 22, 26, 0.65);
+            background: rgba(26, 26, 31, 0.65);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -58,8 +58,8 @@ arsort($action_counts);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .form-card:hover {
-            border-color: rgba(192, 21, 42, 0.35);
-            box-shadow: 0 12px 40px rgba(192, 21, 42, 0.12), inset 0 1px 0 0 rgba(255,255,255,0.08);
+            border-color: rgba(164, 74, 94, 0.35);
+            box-shadow: 0 12px 40px rgba(164, 74, 94, 0.12), inset 0 1px 0 0 rgba(255,255,255,0.08);
             transform: translateY(-2px);
         }
         .btn { padding:0.4rem 0.8rem; font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.8rem; cursor:pointer; border:1px solid; background:transparent; transition:all 0.2s; text-decoration:none; display:inline-block; text-transform:uppercase; letter-spacing:1px; border-radius:4px; }
@@ -67,7 +67,7 @@ arsort($action_counts);
         .btn-muted:hover { background:var(--text-muted); color:var(--bg-dark); }
         .visitor-hero { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
         .stat-card {
-            background: rgba(22, 22, 26, 0.65);
+            background: rgba(26, 26, 31, 0.65);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -78,18 +78,18 @@ arsort($action_counts);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .stat-card:hover {
-            border-color: rgba(192, 21, 42, 0.35);
-            box-shadow: 0 12px 40px rgba(192, 21, 42, 0.12), inset 0 1px 0 0 rgba(255,255,255,0.08);
+            border-color: rgba(164, 74, 94, 0.35);
+            box-shadow: 0 12px 40px rgba(164, 74, 94, 0.12), inset 0 1px 0 0 rgba(255,255,255,0.08);
             transform: translateY(-4px);
         }
         .stat-num { font-family:'Syncopate',sans-serif; font-weight:700; font-size:1.6rem; color:var(--accent); line-height:1; }
         .stat-label { color:var(--text-muted); font-size:0.9rem; margin-top:0.3rem; }
         .admin-table { width:100%; border-collapse:collapse; font-size:1.05rem; }
         .admin-table th { font-family:'Montserrat',sans-serif; font-weight:700; color:var(--accent); text-align:left; padding:0.7rem 1rem; border-bottom:2px solid var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-size:0.8rem; }
-        .admin-table td { padding:0.7rem 1rem; border-bottom:1px dashed rgba(192,21,42,0.15); color:var(--text-main); vertical-align:middle; font-family:'Montserrat',sans-serif; font-size:0.9rem; }
-        .admin-table tr:hover td { background:rgba(192,21,42,0.04); }
-        .action-badge { display:inline-block; padding:0.2rem 0.6rem; background:rgba(192,21,42,0.1); border:1px solid rgba(192,21,42,0.3); font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.8rem; color:var(--text-main); border-radius:2px; text-transform:uppercase; letter-spacing:0.5px; }
-        .action-modal { background:rgba(192,21,42,0.15); border-color:rgba(192,21,42,0.4); color:var(--accent); }
+        .admin-table td { padding:0.7rem 1rem; border-bottom:1px dashed rgba(164,74,94,0.15); color:var(--text-main); vertical-align:middle; font-family:'Montserrat',sans-serif; font-size:0.9rem; }
+        .admin-table tr:hover td { background:rgba(164,74,94,0.04); }
+        .action-badge { display:inline-block; padding:0.2rem 0.6rem; background:rgba(164,74,94,0.1); border:1px solid rgba(164,74,94,0.3); font-family:'Montserrat',sans-serif; font-weight:600; font-size:0.8rem; color:var(--text-main); border-radius:2px; text-transform:uppercase; letter-spacing:0.5px; }
+        .action-modal { background:rgba(164,74,94,0.15); border-color:rgba(164,74,94,0.4); color:var(--accent); }
         .action-checkout { background:rgba(46,204,113,0.15); border-color:rgba(46,204,113,0.5); color:#2ecc71; }
         .ua-cell { color:var(--text-muted); font-size:0.8rem; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .action-bar-row { display:flex; align-items:center; gap:0.6rem; margin-bottom:0.5rem; }

@@ -40,12 +40,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->fetch()) {
             $error = 'Username or Email is already registered.';
         } else {
-            // Hash password and insert as 'user' (is_approved = 0 by default)
+            // Hash password and insert as 'user' (is_approved = 0 by default) with verification token
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare('INSERT INTO users (username, email, password, role, is_approved) VALUES (?, ?, ?, "user", 0)');
-            if ($stmt->execute([$username, $email, $hash])) {
-                log_action($pdo, "New user registered (pending approval): {$username} ({$email})");
-                flash('Account created! Your account is now pending administrative approval. You will be able to log in as soon as your account has been verified.');
+            $token = bin2hex(random_bytes(32));
+            $stmt = $pdo->prepare('INSERT INTO users (username, email, password, role, is_approved, verification_token) VALUES (?, ?, ?, "user", 0, ?)');
+            if ($stmt->execute([$username, $email, $hash, $token])) {
+                // Build dynamic verification link
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+                $domain = $_SERVER['HTTP_HOST'];
+                $verification_link = "{$protocol}://{$domain}/verify.php?token={$token}";
+
+                // Send verification email
+                $subject = "Verify Your N2L8 STUDIO Account";
+                $body = "
+                <html>
+                <body style=\"background-color:#0F0F11; color:#F5F1EA; font-family:'Montserrat',sans-serif; padding:40px 20px; margin:0;\">
+                    <div style=\"max-width:600px; margin:0 auto; background:#0F0F11; border:1px solid #A44A5E; padding:40px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); text-align:center;\">
+                        <div style=\"font-size:28px; font-weight:700; font-family:'Syncopate',sans-serif; letter-spacing:3px; color:#ffffff; margin-bottom:30px;\">
+                            N<span style=\"color:#B89B5E;\">2</span>L8studios
+                        </div>
+                        <h2 style=\"font-family:'Syncopate',sans-serif; color:#ffffff; font-size:22px; text-transform:uppercase; letter-spacing:1px; margin-bottom:20px;\">
+                            Verify Your Email
+                        </h2>
+                        <p style=\"color:#b3b3b3; font-size:15px; line-height:1.7; margin-bottom:35px;\">
+                            Hello " . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . ",<br><br>
+                            Thank you for registering at N2L8 STUDIO! Please click the button below to verify your email address and activate your account.
+                        </p>
+                        <a href=\"" . htmlspecialchars($verification_link, ENT_QUOTES, 'UTF-8') . "\" style=\"display:inline-block; background:#A44A5E; color:#ffffff; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:2px; text-decoration:none; padding:15px 40px; border-radius:4px; transition:all 0.2s;\">
+                            Verify Account
+                        </a>
+                        <p style=\"color:#666666; font-size:12px; margin-top:30px; line-height:1.5;\">
+                            If the button above does not work, copy and paste the following link into your browser:<br>
+                            <a href=\"" . htmlspecialchars($verification_link, ENT_QUOTES, 'UTF-8') . "\" style=\"color:#A44A5E; text-decoration:none;\">" . htmlspecialchars($verification_link, ENT_QUOTES, 'UTF-8') . "</a>
+                        </p>
+                        <div style=\"margin-top:40px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px; color:#666666; font-size:12px;\">
+                            &copy; " . date('Y') . " N2L8studios. All rights reserved.
+                        </div>
+                    </div>
+                </body>
+                </html>
+                ";
+
+                send_platform_email($email, $subject, $body);
+
+                log_action($pdo, "New user registered (pending email verification): {$username} ({$email})");
+                flash('Account created! A verification email has been sent to ' . htmlspecialchars($email) . '. Please click the link in the email to verify and activate your account.');
                 redirect('/login.php');
             } else {
                 $error = 'Registration failed. Please try again.';
@@ -60,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - N2L8 STUDIO</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=21">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
@@ -79,8 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: all 0.3s ease;
         }
         .login-box:hover {
-            border-color: rgba(192, 21, 42, 0.4);
-            box-shadow: 0 20px 45px rgba(192, 21, 42, 0.15), var(--accent-glow);
+            border-color: rgba(164, 74, 94, 0.4);
+            box-shadow: 0 20px 45px rgba(164, 74, 94, 0.15), var(--accent-glow);
         }
         .login-box h2 {
             font-family: 'Syncopate', sans-serif;
@@ -115,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .login-box input { 
             width: 100%; 
             padding: 0.85rem 1rem; 
-            background: #000000; 
+            background: #0F0F11; 
             border: 1px solid var(--border-color); 
             border-radius: 4px;
             color: var(--text-main); 
@@ -130,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .flash-msg { 
             color: var(--accent); 
-            background: rgba(192, 21, 42, 0.08);
+            background: rgba(164, 74, 94, 0.08);
             border: 1px solid var(--border-color);
             padding: 0.8rem;
             border-radius: 4px;
