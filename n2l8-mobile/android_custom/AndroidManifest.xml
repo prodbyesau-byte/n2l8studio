@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.n2l8studio.app">
+    package="com.n2l8studio.n2l8_mobile">
 
     <!-- Permissions for standard operations -->
     <uses-permission android:name="android.permission.INTERNET"/>
