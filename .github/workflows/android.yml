@@ -5,16 +5,20 @@ on:
     branches:
       - main
       - master
-  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
     name: Build Flutter Android APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Crucial permission to allow pushing the generated boilerplate back to git
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for push capabilities
 
       - name: Set up Java Development Kit (JDK 17)
         uses: actions/setup-java@v4
@@ -30,27 +34,77 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
+      - name: Back up custom Flutter files
         run: |
-          cd n2l8-mobile
-          flutter pub get
+          mkdir temp_custom
+          cp -r n2l8-mobile/lib temp_custom/
+          cp -r n2l8-mobile/assets temp_custom/
+          cp n2l8-mobile/pubspec.yaml temp_custom/
+          cp n2l8-mobile/.gitignore temp_custom/
+          cp -r n2l8-mobile/android_custom temp_custom/
+          cp -r n2l8-mobile/ios_custom temp_custom/
 
-      - name: Create fallback .env file
+      - name: Wipe manual structure
+        run: |
+          rm -rf n2l8-mobile
+
+      - name: Cloud Generate Pristine Flutter Project
+        run: |
+          flutter create --org com.n2l8studio --project-name n2l8_mobile n2l8-mobile
+
+      - name: Restore custom N2L8 Studio files
+        run: |
+          rm -rf n2l8-mobile/lib
+          cp -r temp_custom/lib n2l8-mobile/lib
+          cp -r temp_custom/assets n2l8-mobile/assets
+          cp temp_custom/pubspec.yaml n2l8-mobile/pubspec.yaml
+          cp temp_custom/.gitignore n2l8-mobile/.gitignore
+          cp -r temp_custom/android_custom n2l8-mobile/android_custom
+          cp -r temp_custom/ios_custom n2l8-mobile/ios_custom
+
+      - name: Overwrite Native Manifests with Custom Permissions
+        run: |
+          cp temp_custom/android_custom/AndroidManifest.xml n2l8-mobile/android/app/src/main/AndroidManifest.xml
+          cp temp_custom/ios_custom/Info.plist n2l8-mobile/ios/Runner/Info.plist
+
+      - name: Ensure AndroidX properties exist
+        run: |
+          echo "android.useAndroidX=true" >> n2l8-mobile/android/gradle.properties
+          echo "android.enableJetifier=true" >> n2l8-mobile/android/gradle.properties
+
+      - name: Create local .env file
         run: |
           echo 'APP_NAME="N2L8 STUDIO"' > n2l8-mobile/.env
           echo 'BASE_URL="https://n2l8studio.dk"' >> n2l8-mobile/.env
           echo 'USER_AGENT_SUFFIX="N2L8StudioMobileApp"' >> n2l8-mobile/.env
           echo 'ONESIGNAL_APP_ID=""' >> n2l8-mobile/.env
 
-      - name: Build Debug APK
+      - name: Install dependencies
+        run: |
+          cd n2l8-mobile
+          flutter pub get
+
+      - name: Compile Debug APK
         run: |
           cd n2l8-mobile
           flutter build apk --debug
 
-      - name: Build Release APK
+      - name: Compile Release APK
         run: |
           cd n2l8-mobile
           flutter build apk --release
+
+      - name: Push Pristine Native Wrappers back to GitHub Repo
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Stage the newly created, pristine, compiled-and-tested native folders
+          git add n2l8-mobile/android/
+          git add n2l8-mobile/ios/
+          
+          # Only commit and push if there are changes
+          git diff-index --quiet HEAD || (git commit -m "chore: Cloud-generate and populate pristine native Flutter directories [skip ci]" && git push origin main)
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
