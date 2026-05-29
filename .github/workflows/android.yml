@@ -1,0 +1,67 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+
+jobs:
+  build:
+    name: Build Flutter Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java Development Kit (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          cd n2l8-mobile
+          flutter pub get
+
+      - name: Create fallback .env file
+        run: |
+          echo 'APP_NAME="N2L8 STUDIO"' > n2l8-mobile/.env
+          echo 'BASE_URL="https://n2l8studio.dk"' >> n2l8-mobile/.env
+          echo 'USER_AGENT_SUFFIX="N2L8StudioMobileApp"' >> n2l8-mobile/.env
+          echo 'ONESIGNAL_APP_ID=""' >> n2l8-mobile/.env
+
+      - name: Build Debug APK
+        run: |
+          cd n2l8-mobile
+          flutter build apk --debug
+
+      - name: Build Release APK
+        run: |
+          cd n2l8-mobile
+          flutter build apk --release
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: n2l8-studio-debug-apk
+          path: n2l8-mobile/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: n2l8-studio-release-apk
+          path: n2l8-mobile/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
