@@ -749,6 +749,40 @@ try {
                         <div class="form-group"><label style="color:var(--accent);">2e. Delivery WAV (Unmastered)</label><input type="file" name="wav_unmastered" accept=".wav,.mp3"></div>
                         <div class="form-group"><label style="color:var(--accent);">2f. Delivery Stems ZIP</label><input type="file" name="stems_file" accept=".zip,.rar,.7z"></div>
                     </div>
+
+                    <!-- Beat Lease Uploads (Hidden for Loopkits) -->
+                    <div class="form-full" id="beat_files_group" style="display:none; background:rgba(0,0,0,0.2); padding:1.5rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05); margin-bottom:1.5rem;">
+                        <label style="color:var(--text-main);font-size:1.1rem;margin-bottom:0.5rem;display:block;">2. Beat Lease Packages</label>
+                        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1.5rem;">Drag and drop files here to immediately assign them to lease tiers upon deployment.</p>
+                        
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
+                            <!-- Basic -->
+                            <div class="upload-box" id="new-box-Basic" style="border:2px dashed rgba(164,74,94,0.2); border-radius:8px; padding:1.5rem; text-align:center; transition:all 0.3s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';" ondragleave="this.style.borderColor='rgba(164,74,94,0.2)';" ondrop="handleNewDrop(event, 'Basic')">
+                                <h4 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:0.85rem; margin-bottom:0.5rem;">BASIC LEASE</h4>
+                                <p style="color:var(--text-muted); font-size:0.75rem; margin:1rem 0;">Drag &amp; drop MP3s or WAVs here</p>
+                                <input type="file" id="input-Basic" name="beat_files_Basic[]" multiple style="display:none;" onchange="handleNewInput(event, 'Basic')">
+                                <button type="button" class="btn btn-muted btn-small" onclick="document.getElementById('input-Basic').click()">Browse Files</button>
+                                <div id="list-Basic" style="margin-top:1rem; text-align:left; font-size:0.8rem; display:flex; flex-direction:column; gap:0.4rem;"></div>
+                            </div>
+                            <!-- Premium -->
+                            <div class="upload-box" id="new-box-Premium" style="border:2px dashed rgba(164,74,94,0.2); border-radius:8px; padding:1.5rem; text-align:center; transition:all 0.3s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';" ondragleave="this.style.borderColor='rgba(164,74,94,0.2)';" ondrop="handleNewDrop(event, 'Premium')">
+                                <h4 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:0.85rem; margin-bottom:0.5rem;">PREMIUM LEASE</h4>
+                                <p style="color:var(--text-muted); font-size:0.75rem; margin:1rem 0;">Drag &amp; drop MP3s, WAVs, STEMS</p>
+                                <input type="file" id="input-Premium" name="beat_files_Premium[]" multiple style="display:none;" onchange="handleNewInput(event, 'Premium')">
+                                <button type="button" class="btn btn-muted btn-small" onclick="document.getElementById('input-Premium').click()">Browse Files</button>
+                                <div id="list-Premium" style="margin-top:1rem; text-align:left; font-size:0.8rem; display:flex; flex-direction:column; gap:0.4rem;"></div>
+                            </div>
+                            <!-- Exclusive -->
+                            <div class="upload-box" id="new-box-Exclusive" style="border:2px dashed rgba(164,74,94,0.2); border-radius:8px; padding:1.5rem; text-align:center; transition:all 0.3s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';" ondragleave="this.style.borderColor='rgba(164,74,94,0.2)';" ondrop="handleNewDrop(event, 'Exclusive')">
+                                <h4 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:0.85rem; margin-bottom:0.5rem;">EXCLUSIVE LEASE</h4>
+                                <p style="color:var(--text-muted); font-size:0.75rem; margin:1rem 0;">Drag &amp; drop everything here</p>
+                                <input type="file" id="input-Exclusive" name="beat_files_Exclusive[]" multiple style="display:none;" onchange="handleNewInput(event, 'Exclusive')">
+                                <button type="button" class="btn btn-muted btn-small" onclick="document.getElementById('input-Exclusive').click()">Browse Files</button>
+                                <div id="list-Exclusive" style="margin-top:1rem; text-align:left; font-size:0.8rem; display:flex; flex-direction:column; gap:0.4rem;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="form-group"><label style="color:var(--accent);">3. Rules/Rights PDF</label><input type="file" name="terms_pdf" accept=".pdf"></div>
                     <div class="form-group form-full" style="background:rgba(57,255,20,0.03);padding:1rem;border:1px dashed var(--text-muted);">
                         <label style="color:var(--text-main);font-size:1.1rem;">4. Preview Tracks (WAV / MP3)</label>
@@ -1573,6 +1607,66 @@ setInterval(() => {
     }
 }, 60000);
 
+const newBeatFiles = {
+    'Basic': new DataTransfer(),
+    'Premium': new DataTransfer(),
+    'Exclusive': new DataTransfer()
+};
+
+function updateNewFileList(tier) {
+    const listDiv = document.getElementById('list-' + tier);
+    listDiv.innerHTML = '';
+    const files = newBeatFiles[tier].files;
+    for (let i=0; i<files.length; i++) {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.justifyContent = 'space-between';
+        item.style.background = 'rgba(255,255,255,0.05)';
+        item.style.padding = '0.4rem 0.6rem';
+        item.style.borderRadius = '4px';
+        item.innerHTML = `
+            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80%;">${escHtml(files[i].name)}</span>
+            <span style="color:#ff5c5c; cursor:pointer; font-weight:bold; padding:0 0.5rem;" onclick="removeNewFile('${tier}', ${i})">&times;</span>
+        `;
+        listDiv.appendChild(item);
+    }
+    // Update the actual hidden input
+    document.getElementById('input-' + tier).files = newBeatFiles[tier].files;
+}
+
+function handleNewInput(e, tier) {
+    const files = e.target.files;
+    for (let i=0; i<files.length; i++) {
+        newBeatFiles[tier].items.add(files[i]);
+    }
+    updateNewFileList(tier);
+}
+
+function handleNewDrop(e, tier) {
+    e.preventDefault();
+    const box = document.getElementById('new-box-' + tier);
+    if(box) box.style.borderColor = 'rgba(164,74,94,0.2)';
+    
+    if (e.dataTransfer.files) {
+        for (let i=0; i<e.dataTransfer.files.length; i++) {
+            newBeatFiles[tier].items.add(e.dataTransfer.files[i]);
+        }
+        updateNewFileList(tier);
+    }
+}
+
+function removeNewFile(tier, index) {
+    // DataTransfer doesn't support splice, we must rebuild it
+    const dt = new DataTransfer();
+    const files = newBeatFiles[tier].files;
+    for (let i=0; i<files.length; i++) {
+        if (i !== index) dt.items.add(files[i]);
+    }
+    newBeatFiles[tier] = dt;
+    updateNewFileList(tier);
+}
+
 // Init — wait for layout so slider can measure button positions
 window.addEventListener('load', () => {
     showTab(INITIAL_TAB);
@@ -1583,15 +1677,18 @@ window.addEventListener('load', () => {
         if (!typeSelect) return;
         const type = typeSelect.value;
         const legacyFiles = document.getElementById('legacy_files_group');
+        const beatFiles = document.getElementById('beat_files_group');
         const premiumPrice = document.getElementById('premium_price_group');
         const exclusivePrice = document.getElementById('exclusive_price_group');
         
         if (type === 'beat') {
             if (legacyFiles) legacyFiles.style.display = 'none';
+            if (beatFiles) beatFiles.style.display = 'block';
             if (premiumPrice) premiumPrice.style.display = 'block';
             if (exclusivePrice) exclusivePrice.style.display = 'block';
         } else {
             if (legacyFiles) legacyFiles.style.display = 'contents';
+            if (beatFiles) beatFiles.style.display = 'none';
             if (premiumPrice) premiumPrice.style.display = 'none';
             if (exclusivePrice) exclusivePrice.style.display = 'none';
         }

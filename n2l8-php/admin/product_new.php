@@ -64,6 +64,20 @@ if (isset($_FILES['audio_files'])) {
     }
 }
 
+// Handle Beat Lease Files (Basic, Premium, Exclusive)
+if ($type === 'beat') {
+    $tiers = ['Basic', 'Premium', 'Exclusive'];
+    foreach ($tiers as $tier) {
+        $saved_files = save_upload_multiple('beat_files_' . $tier, ALLOWED_FILES);
+        if (!empty($saved_files)) {
+            foreach ($saved_files as $f) {
+                $pdo->prepare("INSERT INTO product_files (product_id, license_tier, filename, original_name) VALUES (?, ?, ?, ?)")
+                    ->execute([$product_id, $tier, $f['filename'], $f['original']]);
+            }
+        }
+    }
+}
+
 log_action($pdo, "Created product: '{$title}' with {$track_count} tracks");
 flash("Product '{$title}' created with {$track_count} preview tracks.");
 redirect('/admin/index.php?tab=products');
