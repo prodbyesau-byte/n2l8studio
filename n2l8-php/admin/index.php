@@ -899,18 +899,25 @@ try {
         <div class="section-title">Customer Orders</div>
         <div class="form-card" style="padding:0;overflow-x:auto;">
             <table class="admin-table">
-                <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Status</th></tr></thead>
+                <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>License/Tier</th><th>Status</th></tr></thead>
                 <tbody>
                     <?php foreach ($orders as $o): ?>
                     <tr>
                         <td>#<?= (int)$o['id'] ?></td>
                         <td><?= h($o['customer_email']) ?></td>
                         <td><?= h($o['product_title'] ?? '(deleted)') ?></td>
+                        <td>
+                            <?php if ($o['license_tier'] === 'FREE DOWNLOAD'): ?>
+                                <span class="pill" style="background:rgba(57,255,20,0.15); color:#39ff14; border: 1px solid rgba(57,255,20,0.3);">FREE</span>
+                            <?php else: ?>
+                                <?= h($o['license_tier'] ?: 'Standard') ?>
+                            <?php endif; ?>
+                        </td>
                         <td><span class="pill pill-active"><?= h($o['status']) ?></span></td>
                     </tr>
                     <?php endforeach; ?>
                     <?php if (empty($orders)): ?>
-                    <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:2rem;">No orders yet.</td></tr>
+                    <tr><td colspan="5" style="color:var(--text-muted);text-align:center;padding:2rem;">No orders yet.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

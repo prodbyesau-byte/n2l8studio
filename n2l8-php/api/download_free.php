@@ -61,7 +61,8 @@ if (empty($product['allow_download']) || empty($product[$file_column])) {
     exit;
 }
 
-// Record the free purchase inside orders if they are logged in
+// Record the free purchase inside orders
+$user_email = 'Anonymous';
 if (is_logged_in()) {
     $user_id = $_SESSION['user_id'];
     $user_email = $_SESSION['email'] ?? '';
@@ -69,30 +70,28 @@ if (is_logged_in()) {
     if (empty($user_email)) {
         $u_stmt = $pdo->prepare('SELECT email FROM users WHERE id = ?');
         $u_stmt->execute([$user_id]);
-        $user_email = $u_stmt->fetchColumn();
-        if ($user_email) {
+        $user_email = $u_stmt->fetchColumn() ?: 'Unknown User';
+        if ($user_email !== 'Unknown User') {
             $_SESSION['email'] = $user_email;
         }
     }
     
-    if ($user_email) {
-        $check_stmt = $pdo->prepare('SELECT id FROM orders WHERE customer_email = ? AND product_id = ?');
-        $check_stmt->execute([$user_email, $id]);
-        if (!$check_stmt->fetch()) {
-            // Insert as completed order with WAV/STEMS license tier so they can download all files in their library
-            $pdo->prepare('INSERT INTO orders (customer_email, product_id, license_tier, status) VALUES (?, ?, ?, "completed")')
-                ->execute([$user_email, $id, 'WAV/STEMS']);
-                
-            // Also insert into user_saved_products (just in case)
-            $pdo->prepare('INSERT IGNORE INTO user_saved_products (user_id, product_id) VALUES (?, ?)')
-                ->execute([$user_id, $id]);
-                
-            log_action($pdo, "User {$_SESSION['username']} downloaded free kit/beat '{$product['title']}' ({$format}) and added it to library.");
-        }
-    }
-} else {
-    log_action($pdo, "Anonymous visitor downloaded free kit/beat '{$product['title']}' ({$format})");
+    // Auto-sync library for logged-in user
+    $pdo->prepare('INSERT IGNORE INTO user_saved_products (user_id, product_id) VALUES (?, ?)')
+        ->execute([$user_id, $id]);
 }
+
+// Log order (limit spam by checking if same email downloaded same product recently, or just rely on the fact it's an order table)
+// For free downloads we will just log it every time or at least once per session
+$check_stmt = $pdo->prepare('SELECT id FROM orders WHERE customer_email = ? AND product_id = ? AND license_tier = "FREE DOWNLOAD"');
+$check_stmt->execute([$user_email, $id]);
+if (!$check_stmt->fetch()) {
+    // Insert as completed order with FREE DOWNLOAD license tier
+    $pdo->prepare('INSERT INTO orders (customer_email, product_id, license_tier, status) VALUES (?, ?, ?, "completed")')
+        ->execute([$user_email, $id, 'FREE DOWNLOAD']);
+}
+
+log_action($pdo, "User {$user_email} downloaded free kit/beat '{$product['title']}' ({$format})");
 
 // Redirect the browser to the actual direct file
 $download_path = UPLOAD_URL . $product[$file_column];
