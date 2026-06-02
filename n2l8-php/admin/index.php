@@ -738,22 +738,28 @@ try {
                     <div class="form-group"><label>BPM</label><input type="text" name="bpm" placeholder="140"></div>
                     <div class="form-group"><label>Key</label><input type="text" name="key" placeholder="F Minor"></div>
                     <div class="form-group form-full"><label>Popup Description</label><textarea name="description" placeholder="Describe the contents..."></textarea></div>
-                    <div class="form-group"><label style="color:var(--accent);">1. Cover Image (JPG/PNG)</label><input type="file" name="cover_image" accept=".jpg,.jpeg,.png,.webp"></div>
+                    <!-- Cover Image -->
+                    <div class="form-group">
+                        <label class="upload-box" style="display:block; border:2px dashed rgba(255,255,255,0.2); padding:2rem; text-align:center; cursor:pointer; border-radius:8px; transition:0.3s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">
+                            <h4 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:0.85rem; margin-bottom:0.5rem;">1. COVER IMAGE</h4>
+                            <p style="color:var(--text-muted); font-size:0.8rem; margin:0;">Drag &amp; drop JPG/PNG here or click</p>
+                            <input type="file" name="cover_image" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="this.parentElement.querySelector('p').innerText = this.files[0] ? this.files[0].name : 'Drag & drop JPG/PNG here or click'">
+                        </label>
+                    </div>
                     
-                    <!-- Legacy Uploads (Hidden for Beats) -->
-                    <div class="form-full" id="legacy_files_group" style="display:contents;">
-                        <div class="form-group"><label style="color:var(--accent);">2. Full Product ZIP (Legacy/Kits)</label><input type="file" name="zip_file" accept=".zip,.rar,.7z"></div>
-                        <div class="form-group"><label style="color:var(--accent);">2b. Delivery MP3 (Mastered)</label><input type="file" name="mp3_mastered" accept=".mp3,.wav"></div>
-                        <div class="form-group"><label style="color:var(--accent);">2c. Delivery MP3 (Unmastered)</label><input type="file" name="mp3_unmastered" accept=".mp3,.wav"></div>
-                        <div class="form-group"><label style="color:var(--accent);">2d. Delivery WAV (Mastered)</label><input type="file" name="wav_mastered" accept=".wav,.mp3"></div>
-                        <div class="form-group"><label style="color:var(--accent);">2e. Delivery WAV (Unmastered)</label><input type="file" name="wav_unmastered" accept=".wav,.mp3"></div>
-                        <div class="form-group"><label style="color:var(--accent);">2f. Delivery Stems ZIP</label><input type="file" name="stems_file" accept=".zip,.rar,.7z"></div>
+                    <!-- Loopkit/Drumkit ZIP (Hidden for Beats) -->
+                    <div class="form-group" id="legacy_files_group" style="display:contents;">
+                        <label class="upload-box" style="display:block; border:2px dashed rgba(255,255,255,0.2); padding:2rem; text-align:center; cursor:pointer; border-radius:8px; transition:0.3s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">
+                            <h4 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:0.85rem; margin-bottom:0.5rem;">2. PRODUCT ZIP FILE</h4>
+                            <p style="color:var(--text-muted); font-size:0.8rem; margin:0;">Drag &amp; drop your .ZIP loopkit/drumkit here or click</p>
+                            <input type="file" name="zip_file" accept=".zip,.rar,.7z" style="display:none;" onchange="this.parentElement.querySelector('p').innerText = this.files[0] ? this.files[0].name : 'Drag & drop your .ZIP loopkit/drumkit here or click'">
+                        </label>
                     </div>
 
                     <!-- Beat Lease Uploads (Hidden for Loopkits) -->
                     <div class="form-full" id="beat_files_group" style="display:none; background:rgba(0,0,0,0.2); padding:1.5rem; border-radius:8px; border:1px solid rgba(255,255,255,0.05); margin-bottom:1.5rem;">
-                        <label style="color:var(--text-main);font-size:1.1rem;margin-bottom:0.5rem;display:block;">2. Beat Lease Packages</label>
-                        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1.5rem;">Drag and drop files here to immediately assign them to lease tiers upon deployment.</p>
+                        <label style="color:var(--text-main);font-size:1.1rem;margin-bottom:0.5rem;display:block; font-family:'Syncopate',sans-serif;">2. BEAT LEASE PACKAGES</label>
+                        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1.5rem;">Assign your MP3s, WAVs, and Stems directly to their lease options.</p>
                         
                         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
                             <!-- Basic -->
@@ -783,11 +789,27 @@ try {
                         </div>
                     </div>
                     
-                    <div class="form-group"><label style="color:var(--accent);">3. Rules/Rights PDF</label><input type="file" name="terms_pdf" accept=".pdf"></div>
-                    <div class="form-group form-full" style="background:rgba(57,255,20,0.03);padding:1rem;border:1px dashed var(--text-muted);">
-                        <label style="color:var(--text-main);font-size:1.1rem;">4. Preview Tracks (WAV / MP3)</label>
-                        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:0.5rem;">Select one or more audio files for the media player preview.</p>
-                        <input type="file" name="audio_files[]" accept=".mp3,.wav,.ogg,.flac" multiple style="border:none;padding:1rem 0;">
+                    <div class="form-group">
+                        <label class="upload-box" style="display:block; border:2px dashed rgba(255,255,255,0.2); padding:2rem; text-align:center; cursor:pointer; border-radius:8px; transition:0.3s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">
+                            <h4 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:0.85rem; margin-bottom:0.5rem;">3. TERMS / RIGHTS PDF</h4>
+                            <p style="color:var(--text-muted); font-size:0.8rem; margin:0;">Drag &amp; drop PDF agreement here or click</p>
+                            <input type="file" name="terms_pdf" accept=".pdf" style="display:none;" onchange="this.parentElement.querySelector('p').innerText = this.files[0] ? this.files[0].name : 'Drag & drop PDF agreement here or click'">
+                        </label>
+                    </div>
+
+                    <div class="form-group form-full">
+                        <label class="upload-box" style="display:block; border:2px dashed rgba(57,255,20,0.4); background:rgba(57,255,20,0.02); padding:2rem; text-align:center; cursor:pointer; border-radius:8px; transition:0.3s;" onmouseover="this.style.borderColor='#39ff14'" onmouseout="this.style.borderColor='rgba(57,255,20,0.4)'">
+                            <h4 style="color:#39ff14; font-family:'Syncopate',sans-serif; font-size:0.95rem; margin-bottom:0.5rem;">4. PREVIEW TRACKS</h4>
+                            <p style="color:var(--text-muted); font-size:0.8rem; margin:0;">Drag &amp; drop MP3/WAV files for the media player preview</p>
+                            <input type="file" name="audio_files[]" accept=".mp3,.wav,.ogg,.flac" multiple style="display:none;" onchange="
+                                const p = this.parentElement.querySelector('p');
+                                if (this.files.length > 0) {
+                                    p.innerText = Array.from(this.files).map(f => f.name).join(', ');
+                                } else {
+                                    p.innerText = 'Drag & drop MP3/WAV files for the media player preview';
+                                }
+                            ">
+                        </label>
                     </div>
                     <div class="form-group form-full">
                         <div class="checkbox-row" style="margin-bottom:0.5rem;">
