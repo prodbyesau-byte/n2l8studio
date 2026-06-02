@@ -45,7 +45,7 @@ $pending_friends_count = (int)$friend_req_stmt->fetchColumn();
 
 // 3. Fetch purchased products
 $stmt = $pdo->prepare('
-    SELECT o.id as order_id, p.* 
+    SELECT o.id as order_id, o.license_tier, p.* 
     FROM orders o 
     JOIN products p ON o.product_id = p.id 
     WHERE o.customer_email = ? AND o.status = "completed" 
@@ -1892,10 +1892,42 @@ $tab = $_GET['tab'] ?? 'library';
                             ?>
                             <?php if (!$is_released): ?>
                                 <button class="cta-btn secondary" style="cursor: not-allowed; opacity: 0.65; border-color: rgba(168, 85, 247, 0.4); color: #b57cff; width: 100%; text-align: center; font-size: 0.72rem; letter-spacing: 0.5px; font-family: 'Syncopate', sans-serif;" disabled>🔒 PRE-ORDERED (Releases <?= date('M j, Y', $release_time) ?>)</button>
-                            <?php elseif ($p['zip_file']): ?>
-                                <a href="/static/uploads/<?= h($p['zip_file']) ?>" class="cta-btn" download>DOWNLOAD KIT</a>
                             <?php else: ?>
-                                <button class="cta-btn secondary" style="cursor: not-allowed; opacity: 0.6;" disabled>NO FILE LOADED</button>
+                                <?php 
+                                $is_beat = ($p['type'] === 'beat');
+                                $has_custom_files = ($is_beat && (!empty($p['mp3_mastered']) || !empty($p['mp3_unmastered']) || !empty($p['wav_mastered']) || !empty($p['wav_unmastered']) || !empty($p['stems_file'])));
+                                ?>
+                                <?php if ($has_custom_files): ?>
+                                    <div style="display:flex; flex-direction:column; gap:0.4rem; width:100%; margin-top:0.8rem;">
+                                        <?php 
+                                        $tier = strtoupper($p['license_tier'] ?? '');
+                                        $has_stems_access = ($tier === 'EXCLUSIVE' || $tier === 'WAV/STEMS' || $tier === 'PREMIUM' || $tier === 'STEMS');
+                                        ?>
+                                        <?php if (!empty($p['mp3_mastered'])): ?>
+                                            <a href="/static/uploads/<?= h($p['mp3_mastered']) ?>" class="cta-btn" style="font-size:0.75rem; padding:0.4rem; text-align:center;" download>⬇ MP3 (MASTERED)</a>
+                                        <?php endif; ?>
+                                        <?php if (!empty($p['mp3_unmastered'])): ?>
+                                            <a href="/static/uploads/<?= h($p['mp3_unmastered']) ?>" class="cta-btn" style="font-size:0.75rem; padding:0.4rem; text-align:center;" download>⬇ MP3 (UNMASTERED)</a>
+                                        <?php endif; ?>
+                                        <?php if (!empty($p['wav_mastered'])): ?>
+                                            <a href="/static/uploads/<?= h($p['wav_mastered']) ?>" class="cta-btn" style="font-size:0.75rem; padding:0.4rem; text-align:center;" download>⬇ WAV (MASTERED)</a>
+                                        <?php endif; ?>
+                                        <?php if (!empty($p['wav_unmastered'])): ?>
+                                            <a href="/static/uploads/<?= h($p['wav_unmastered']) ?>" class="cta-btn" style="font-size:0.75rem; padding:0.4rem; text-align:center;" download>⬇ WAV (UNMASTERED)</a>
+                                        <?php endif; ?>
+                                        <?php if ($has_stems_access && !empty($p['stems_file'])): ?>
+                                            <a href="/static/uploads/<?= h($p['stems_file']) ?>" class="cta-btn" style="font-size:0.75rem; padding:0.4rem; text-align:center; background:#d97706;" download>⬇ STEMS (.ZIP)</a>
+                                        <?php elseif (!empty($p['stems_file'])): ?>
+                                            <button class="cta-btn secondary" style="font-size:0.75rem; padding:0.4rem; cursor:not-allowed; opacity:0.5;" disabled title="Upgrade license to access stems">🔒 STEMS (UPGRADE REQUIRED)</button>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <?php if ($p['zip_file']): ?>
+                                        <a href="/static/uploads/<?= h($p['zip_file']) ?>" class="cta-btn" download>DOWNLOAD KIT</a>
+                                    <?php else: ?>
+                                        <button class="cta-btn secondary" style="cursor: not-allowed; opacity: 0.6;" disabled>NO FILE LOADED</button>
+                                    <?php endif; ?>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>

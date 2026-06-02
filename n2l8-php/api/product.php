@@ -23,7 +23,12 @@ $tracks_stmt->execute([$id]);
 $tracks = $tracks_stmt->fetchAll();
 
 $is_free = (float)($p['price'] ?? 0) <= 0;
-$zip_url = ($p['zip_file'] && $is_free) ? '/api/download_free.php?id=' . (int)$p['id'] : null;
+$zip_url = ($p['zip_file'] && $is_free) ? '/api/download_free.php?id=' . (int)$p['id'] . '&format=zip' : null;
+$mp3_m_url = ($p['mp3_mastered'] && $is_free) ? '/api/download_free.php?id=' . (int)$p['id'] . '&format=mp3_mastered' : null;
+$mp3_u_url = ($p['mp3_unmastered'] && $is_free) ? '/api/download_free.php?id=' . (int)$p['id'] . '&format=mp3_unmastered' : null;
+$wav_m_url = ($p['wav_mastered'] && $is_free) ? '/api/download_free.php?id=' . (int)$p['id'] . '&format=wav_mastered' : null;
+$wav_u_url = ($p['wav_unmastered'] && $is_free) ? '/api/download_free.php?id=' . (int)$p['id'] . '&format=wav_unmastered' : null;
+$stems_url = ($p['stems_file'] && $is_free) ? '/api/download_free.php?id=' . (int)$p['id'] . '&format=stems_file' : null;
 
 echo json_encode([
     'id'             => (int)$p['id'],
@@ -41,6 +46,11 @@ echo json_encode([
     'cover_image'    => $p['cover_image'] ? UPLOAD_URL . $p['cover_image'] : null,
     'terms_pdf'      => $p['terms_pdf'] ? UPLOAD_URL . $p['terms_pdf'] : null,
     'zip_file'       => $zip_url,
+    'mp3_mastered'   => $mp3_m_url,
+    'mp3_unmastered' => $mp3_u_url,
+    'wav_mastered'   => $wav_m_url,
+    'wav_unmastered' => $wav_u_url,
+    'stems_file'     => $stems_url,
     'allow_download' => (int)($p['allow_download'] ?? 0),
     'is_preorder'    => (int)($p['is_preorder'] ?? 0),
     'release_date'   => $p['release_date'],

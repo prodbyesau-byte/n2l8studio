@@ -87,8 +87,8 @@ if (isset($session['error']) || empty($session['payment_status'])) {
                     
                     if ($product) {
                         // Insert order record
-                        $order_stmt = $pdo->prepare("INSERT INTO orders (customer_email, product_id, status) VALUES (?, ?, 'completed')");
-                        $order_stmt->execute([$customer_email, $product_id]);
+                        $order_stmt = $pdo->prepare("INSERT INTO orders (customer_email, product_id, license_tier, status) VALUES (?, ?, ?, 'completed')");
+                        $order_stmt->execute([$customer_email, $product_id, $license_tier ?: null]);
                         
                         // Log to audit log
                         $amount_cents = $session['amount_total'] ?? 0;
@@ -295,10 +295,36 @@ if (isset($session['error']) || empty($session['payment_status'])) {
                 <?php if ($fulfillment_type === 'subscription'): ?>
                     <a href="/portal/index.php" class="cta-btn">LAUNCH CLIENT PORTAL &gt;</a>
                 <?php else: ?>
-                    <?php if (!empty($product['zip_file'])): ?>
-                        <a href="<?= UPLOAD_URL . h($product['zip_file']) ?>" class="cta-btn" style="background:#A44A5E; color:#F5F1EA;" download>DOWNLOAD PREMIUM VAULT</a>
+                    <?php 
+                    $is_beat = ($product['type'] === 'beat');
+                    $tier = strtoupper($license_tier ?? '');
+                    $has_stems_access = ($tier === 'EXCLUSIVE' || $tier === 'WAV/STEMS' || $tier === 'PREMIUM' || $tier === 'STEMS');
+                    $has_custom_files = ($is_beat && (!empty($product['mp3_mastered']) || !empty($product['mp3_unmastered']) || !empty($product['wav_mastered']) || !empty($product['wav_unmastered']) || !empty($product['stems_file'])));
+                    ?>
+                    <?php if ($has_custom_files): ?>
+                        <div style="display:flex; flex-direction:column; gap:0.5rem; width:100%;">
+                            <?php if (!empty($product['mp3_mastered'])): ?>
+                                <a href="<?= UPLOAD_URL . h($product['mp3_mastered']) ?>" class="cta-btn" style="background:#A44A5E; color:#F5F1EA; text-align:center; padding:0.75rem;" download>⬇ DOWNLOAD MP3 (MASTERED)</a>
+                            <?php endif; ?>
+                            <?php if (!empty($product['mp3_unmastered'])): ?>
+                                <a href="<?= UPLOAD_URL . h($product['mp3_unmastered']) ?>" class="cta-btn" style="background:#A44A5E; color:#F5F1EA; text-align:center; padding:0.75rem;" download>⬇ DOWNLOAD MP3 (UNMASTERED)</a>
+                            <?php endif; ?>
+                            <?php if (!empty($product['wav_mastered'])): ?>
+                                <a href="<?= UPLOAD_URL . h($product['wav_mastered']) ?>" class="cta-btn" style="background:#A44A5E; color:#F5F1EA; text-align:center; padding:0.75rem;" download>⬇ DOWNLOAD WAV (MASTERED)</a>
+                            <?php endif; ?>
+                            <?php if (!empty($product['wav_unmastered'])): ?>
+                                <a href="<?= UPLOAD_URL . h($product['wav_unmastered']) ?>" class="cta-btn" style="background:#A44A5E; color:#F5F1EA; text-align:center; padding:0.75rem;" download>⬇ DOWNLOAD WAV (UNMASTERED)</a>
+                            <?php endif; ?>
+                            <?php if ($has_stems_access && !empty($product['stems_file'])): ?>
+                                <a href="<?= UPLOAD_URL . h($product['stems_file']) ?>" class="cta-btn" style="background:#d97706; color:#ffffff; text-align:center; padding:0.75rem;" download>⬇ DOWNLOAD STEMS (.ZIP)</a>
+                            <?php endif; ?>
+                        </div>
                     <?php else: ?>
-                        <button disabled class="cta-btn" style="border:1px solid rgba(123,225,168,0.2); background:rgba(123,225,168,0.04); color:rgba(123,225,168,0.3); cursor:not-allowed;">FILES PENDING — UPLOADING</button>
+                        <?php if (!empty($product['zip_file'])): ?>
+                            <a href="<?= UPLOAD_URL . h($product['zip_file']) ?>" class="cta-btn" style="background:#A44A5E; color:#F5F1EA;" download>DOWNLOAD PREMIUM VAULT</a>
+                        <?php else: ?>
+                            <button disabled class="cta-btn" style="border:1px solid rgba(123,225,168,0.2); background:rgba(123,225,168,0.04); color:rgba(123,225,168,0.3); cursor:not-allowed;">FILES PENDING — UPLOADING</button>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <div style="margin-top: 1.5rem; border-top: 1px dashed var(--border-color); padding-top: 1rem;">
                         <a href="/portal/index.php" class="box-footer-link" style="color:var(--text-muted); font-size:0.75rem; text-decoration:none;">Or view saved kits in your account portal &gt;</a>

@@ -61,23 +61,48 @@ if ($status !== 'COMPLETED') {
 // Extract buyer email from PayPal response
 $payer_email = $capture['payer']['email_address'] ?? 'unknown@paypal.com';
 $amount      = $capture['purchase_units'][0]['payments']['captures'][0]['amount']['value'] ?? $product['price'];
+$license_tier = isset($_POST['license_tier']) ? trim($_POST['license_tier']) : '';
 
 // Record order in database
 $pdo->prepare(
-    'INSERT INTO orders (customer_email, product_id, status) VALUES (?, ?, ?)'
-)->execute([$payer_email, $product_id, 'completed']);
+    'INSERT INTO orders (customer_email, product_id, license_tier, status) VALUES (?, ?, ?, ?)'
+)->execute([$payer_email, $product_id, $license_tier ?: null, 'completed']);
 
-log_action($pdo, "PayPal purchase: {$product['title']} by {$payer_email} (\${$amount})");
+// Auto-sync library for logged-in user matching their session
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (isset($_SESSION['user_id'])) {
+    $user_id = (int)$_SESSION['user_id'];
+    $pdo->prepare("INSERT IGNORE INTO user_saved_products (user_id, product_id) VALUES (?, ?)")
+        ->execute([$user_id, $product_id]);
+}
 
-// Return download URL
-$download_url = $product['zip_file']
-    ? UPLOAD_URL . $product['zip_file']
-    : null;
+$tier_log = $license_tier ? " ({$license_tier})" : "";
+log_action($pdo, "PayPal purchase: {$product['title']}{$tier_log} by {$payer_email} (\${$amount})");
+
+// Generate authorized format URLs
+$download_urls = [];
+$is_beat = ($product['type'] === 'beat');
+$tier = strtoupper($license_tier);
+$has_stems_access = ($tier === 'EXCLUSIVE' || $tier === 'WAV/STEMS' || $tier === 'PREMIUM' || $tier === 'STEMS');
+
+if ($is_beat) {
+    if (!empty($product['mp3_mastered']))   { $download_urls['mp3_mastered']   = UPLOAD_URL . $product['mp3_mastered']; }
+    if (!empty($product['mp3_unmastered'])) { $download_urls['mp3_unmastered'] = UPLOAD_URL . $product['mp3_unmastered']; }
+    if (!empty($product['wav_mastered']))   { $download_urls['wav_mastered']   = UPLOAD_URL . $product['wav_mastered']; }
+    if (!empty($product['wav_unmastered'])) { $download_urls['wav_unmastered'] = UPLOAD_URL . $product['wav_unmastered']; }
+    if ($has_stems_access && !empty($product['stems_file'])) {
+        $download_urls['stems_file'] = UPLOAD_URL . $product['stems_file'];
+    }
+}
+
+// Keep standard zip_file as legacy/fallback
+$download_url = $product['zip_file'] ? UPLOAD_URL . $product['zip_file'] : null;
 
 echo json_encode([
-    'success'      => true,
-    'title'        => $product['title'],
-    'download_url' => $download_url,
-    'order_id'     => $order_id,
-    'email'        => $payer_email,
+    'success'       => true,
+    'title'         => $product['title'],
+    'download_url'  => $download_url,
+    'download_urls' => !empty($download_urls) ? $download_urls : null,
+    'order_id'      => $order_id,
+    'email'         => $payer_email,
 ]);

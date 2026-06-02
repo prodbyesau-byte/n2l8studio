@@ -91,6 +91,13 @@ SCHEMA = [
       `key`            VARCHAR(20)   NULL,
       `cover_image`    VARCHAR(255)  NULL,
       `zip_file`       VARCHAR(255)  NULL,
+      `wav_file`       VARCHAR(255)  NULL,
+      `mp3_file`       VARCHAR(255)  NULL,
+      `stems_file`     VARCHAR(255)  NULL,
+      `mp3_mastered`   VARCHAR(255)  NULL,
+      `mp3_unmastered` VARCHAR(255)  NULL,
+      `wav_mastered`   VARCHAR(255)  NULL,
+      `wav_unmastered` VARCHAR(255)  NULL,
       `is_active`      TINYINT(1)    NOT NULL DEFAULT 1,
       `allow_download` TINYINT(1)    NOT NULL DEFAULT 0,
       `terms_pdf`      VARCHAR(255)  NULL,
@@ -115,6 +122,7 @@ SCHEMA = [
       `id`             INT AUTO_INCREMENT PRIMARY KEY,
       `customer_email` VARCHAR(100) NOT NULL,
       `product_id`     INT          NULL,
+      `license_tier`   VARCHAR(50)  NULL,
       `status`         VARCHAR(50)  NOT NULL DEFAULT 'completed',
       FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -296,6 +304,14 @@ UPGRADES = [
     ("products.is_preorder", "ALTER TABLE products ADD COLUMN is_preorder TINYINT(1) NOT NULL DEFAULT 0"),
     ("products.release_date", "ALTER TABLE products ADD COLUMN release_date DATE NULL"),
     ("products.position", "ALTER TABLE products ADD COLUMN position INT NOT NULL DEFAULT 0"),
+    ("products.wav_file", "ALTER TABLE products ADD COLUMN wav_file VARCHAR(255) NULL AFTER zip_file"),
+    ("products.mp3_file", "ALTER TABLE products ADD COLUMN mp3_file VARCHAR(255) NULL AFTER wav_file"),
+    ("products.stems_file", "ALTER TABLE products ADD COLUMN stems_file VARCHAR(255) NULL AFTER mp3_file"),
+    ("products.mp3_mastered", "ALTER TABLE products ADD COLUMN mp3_mastered VARCHAR(255) NULL AFTER stems_file"),
+    ("products.mp3_unmastered", "ALTER TABLE products ADD COLUMN mp3_unmastered VARCHAR(255) NULL AFTER mp3_mastered"),
+    ("products.wav_mastered", "ALTER TABLE products ADD COLUMN wav_mastered VARCHAR(255) NULL AFTER mp3_unmastered"),
+    ("products.wav_unmastered", "ALTER TABLE products ADD COLUMN wav_unmastered VARCHAR(255) NULL AFTER wav_mastered"),
+    ("orders.license_tier", "ALTER TABLE orders ADD COLUMN license_tier VARCHAR(50) NULL AFTER product_id"),
 ]
 for label, sql in UPGRADES:
     try:

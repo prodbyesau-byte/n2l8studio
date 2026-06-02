@@ -17,6 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $product_id = (int)($_POST['product_id'] ?? 0);
+$license_tier = isset($_POST['license_tier']) ? trim($_POST['license_tier']) : '';
+
 if (!$product_id) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing product_id']);
@@ -35,7 +37,25 @@ if (!$product) {
     exit;
 }
 
-if ((float)$product['price'] <= 0) {
+$base_price = (float)$product['price'];
+$price = $base_price;
+$tier_display = '';
+
+// Handle licensing tiers for beats if specified
+if ($product['type'] === 'beat' && !empty($license_tier)) {
+    $tier = strtoupper($license_tier);
+    if ($tier === 'WAV/STEMS' || $tier === 'STEMS' || $tier === 'PREMIUM') {
+        $price = $product['price_premium'] !== null ? (float)$product['price_premium'] : $base_price * 2;
+        $tier_display = ' [WAV & STEMS License]';
+    } elseif ($tier === 'EXCLUSIVE') {
+        $price = $product['price_exclusive'] !== null ? (float)$product['price_exclusive'] : $base_price * 10;
+        $tier_display = ' [EXCLUSIVE License]';
+    } else {
+        $tier_display = ' [MP3 & WAV License]';
+    }
+}
+
+if ($price <= 0) {
     http_response_code(400);
     echo json_encode(['error' => 'Product is free — no payment needed']);
     exit;
@@ -46,10 +66,10 @@ $order = paypal_request('POST', '/v2/checkout/orders', [
     'intent' => 'CAPTURE',
     'purchase_units' => [[
         'reference_id' => 'product_' . $product['id'],
-        'description'  => $product['title'] . ' — n2l8studio',
+        'description'  => $product['title'] . $tier_display . ' — n2l8studio',
         'amount'       => [
             'currency_code' => 'USD',
-            'value'         => number_format((float)$product['price'], 2, '.', ''),
+            'value'         => number_format($price, 2, '.', ''),
         ],
     ]],
     'application_context' => [

@@ -40,9 +40,24 @@ if (!$is_free) {
     exit;
 }
 
-if (empty($product['allow_download']) || empty($product['zip_file'])) {
+$format = trim($_GET['format'] ?? 'zip');
+$allowed_formats = ['zip', 'mp3_mastered', 'mp3_unmastered', 'wav_mastered', 'wav_unmastered', 'stems_file'];
+if (!in_array($format, $allowed_formats)) {
+    http_response_code(400);
+    echo "Invalid format requested.";
+    exit;
+}
+
+$file_column = 'zip_file';
+if ($format === 'mp3_mastered')   $file_column = 'mp3_mastered';
+if ($format === 'mp3_unmastered') $file_column = 'mp3_unmastered';
+if ($format === 'wav_mastered')   $file_column = 'wav_mastered';
+if ($format === 'wav_unmastered') $file_column = 'wav_unmastered';
+if ($format === 'stems_file')     $file_column = 'stems_file';
+
+if (empty($product['allow_download']) || empty($product[$file_column])) {
     http_response_code(403);
-    echo "Download is not enabled for this product.";
+    echo "Requested download format is not available or enabled for this product.";
     exit;
 }
 
@@ -55,22 +70,22 @@ if (is_logged_in()) {
         $check_stmt = $pdo->prepare('SELECT id FROM orders WHERE customer_email = ? AND product_id = ?');
         $check_stmt->execute([$user_email, $id]);
         if (!$check_stmt->fetch()) {
-            // Insert as completed order
-            $pdo->prepare('INSERT INTO orders (customer_email, product_id, status) VALUES (?, ?, "completed")')
-                ->execute([$user_email, $id]);
+            // Insert as completed order with WAV/STEMS license tier so they can download all files in their library
+            $pdo->prepare('INSERT INTO orders (customer_email, product_id, license_tier, status) VALUES (?, ?, ?, "completed")')
+                ->execute([$user_email, $id, 'WAV/STEMS']);
                 
             // Also insert into user_saved_products (just in case)
             $pdo->prepare('INSERT IGNORE INTO user_saved_products (user_id, product_id) VALUES (?, ?)')
                 ->execute([$user_id, $id]);
                 
-            log_action($pdo, "User {$_SESSION['username']} downloaded free kit/beat '{$product['title']}' and added it to library.");
+            log_action($pdo, "User {$_SESSION['username']} downloaded free kit/beat '{$product['title']}' ({$format}) and added it to library.");
         }
     }
 } else {
-    log_action($pdo, "Anonymous visitor downloaded free kit/beat '{$product['title']}'");
+    log_action($pdo, "Anonymous visitor downloaded free kit/beat '{$product['title']}' ({$format})");
 }
 
-// Redirect the browser to the actual direct ZIP file
-$zip_url = UPLOAD_URL . $product['zip_file'];
-header('Location: ' . $zip_url);
+// Redirect the browser to the actual direct file
+$download_path = UPLOAD_URL . $product[$file_column];
+header('Location: ' . $download_path);
 exit;

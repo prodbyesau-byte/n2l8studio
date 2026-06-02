@@ -29,6 +29,13 @@ CREATE TABLE IF NOT EXISTS `products` (
   `key`            VARCHAR(20)     NULL,
   `cover_image`    VARCHAR(255)    NULL,
   `zip_file`       VARCHAR(255)    NULL,
+  `wav_file`       VARCHAR(255)    NULL,
+  `mp3_file`       VARCHAR(255)    NULL,
+  `stems_file`     VARCHAR(255)    NULL,
+  `mp3_mastered`   VARCHAR(255)    NULL,
+  `mp3_unmastered` VARCHAR(255)    NULL,
+  `wav_mastered`   VARCHAR(255)    NULL,
+  `wav_unmastered` VARCHAR(255)    NULL,
   `is_active`      TINYINT(1)      NOT NULL DEFAULT 1,
   `position`       INT             NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -50,6 +57,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `id`             INT AUTO_INCREMENT PRIMARY KEY,
   `customer_email` VARCHAR(100) NOT NULL,
   `product_id`     INT          NULL,
+  `license_tier`   VARCHAR(50)  NULL,
   `status`         VARCHAR(50)  NOT NULL DEFAULT 'completed',
   FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

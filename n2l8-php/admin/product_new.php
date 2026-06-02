@@ -25,12 +25,17 @@ $is_preorder     = isset($_POST['is_preorder']) ? 1 : 0;
 $rd              = trim($_POST['release_date'] ?? '');
 $release_date    = $rd !== '' ? $rd : null;
 
-$cover_image = save_upload('cover_image', ALLOWED_IMAGES);
-$zip_file    = save_upload('zip_file', ALLOWED_FILES);
-$terms_pdf   = save_upload('terms_pdf', ['pdf']);
+$cover_image    = save_upload('cover_image', ALLOWED_IMAGES);
+$zip_file       = save_upload('zip_file', ALLOWED_FILES);
+$mp3_mastered   = save_upload('mp3_mastered', ALLOWED_AUDIO);
+$mp3_unmastered = save_upload('mp3_unmastered', ALLOWED_AUDIO);
+$wav_mastered   = save_upload('wav_mastered', ALLOWED_AUDIO);
+$wav_unmastered = save_upload('wav_unmastered', ALLOWED_AUDIO);
+$stems_file     = save_upload('stems_file', ALLOWED_FILES);
+$terms_pdf      = save_upload('terms_pdf', ['pdf']);
 
-$stmt = $pdo->prepare('INSERT INTO products (title,type,genre,price,price_premium,price_exclusive,original_price,author,description,bpm,`key`,cover_image,zip_file,terms_pdf,is_active,allow_download,is_preorder,release_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-$stmt->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover_image,$zip_file,$terms_pdf,$is_active,$allow_download,$is_preorder,$release_date]);
+$stmt = $pdo->prepare('INSERT INTO products (title,type,genre,price,price_premium,price_exclusive,original_price,author,description,bpm,`key`,cover_image,zip_file,mp3_mastered,mp3_unmastered,wav_mastered,wav_unmastered,stems_file,terms_pdf,is_active,allow_download,is_preorder,release_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+$stmt->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover_image,$zip_file,$mp3_mastered,$mp3_unmastered,$wav_mastered,$wav_unmastered,$stems_file,$terms_pdf,$is_active,$allow_download,$is_preorder,$release_date]);
 $product_id = $pdo->lastInsertId();
 
 // Handle multiple preview tracks

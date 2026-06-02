@@ -37,16 +37,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rd              = trim($_POST['release_date'] ?? '');
     $release_date    = $rd !== '' ? $rd : null;
 
+    // File deletion logic
+    $cover = $product['cover_image'];
+    if (isset($_POST['delete_cover_image']) && $cover) {
+        @unlink(UPLOAD_DIR . '/' . $cover);
+        $cover = null;
+    }
+    $zip = $product['zip_file'];
+    if (isset($_POST['delete_zip_file']) && $zip) {
+        @unlink(UPLOAD_DIR . '/' . $zip);
+        $zip = null;
+    }
+    $pdf = $product['terms_pdf'];
+    if (isset($_POST['delete_terms_pdf']) && $pdf) {
+        @unlink(UPLOAD_DIR . '/' . $pdf);
+        $pdf = null;
+    }
+    $mp3_m = $product['mp3_mastered'];
+    if (isset($_POST['delete_mp3_mastered']) && $mp3_m) {
+        @unlink(UPLOAD_DIR . '/' . $mp3_m);
+        $mp3_m = null;
+    }
+    $mp3_u = $product['mp3_unmastered'];
+    if (isset($_POST['delete_mp3_unmastered']) && $mp3_u) {
+        @unlink(UPLOAD_DIR . '/' . $mp3_u);
+        $mp3_u = null;
+    }
+    $wav_m = $product['wav_mastered'];
+    if (isset($_POST['delete_wav_mastered']) && $wav_m) {
+        @unlink(UPLOAD_DIR . '/' . $wav_m);
+        $wav_m = null;
+    }
+    $wav_u = $product['wav_unmastered'];
+    if (isset($_POST['delete_wav_unmastered']) && $wav_u) {
+        @unlink(UPLOAD_DIR . '/' . $wav_u);
+        $wav_u = null;
+    }
+    $stems = $product['stems_file'];
+    if (isset($_POST['delete_stems_file']) && $stems) {
+        @unlink(UPLOAD_DIR . '/' . $stems);
+        $stems = null;
+    }
+
     $new_cover = save_upload('cover_image', ALLOWED_IMAGES);
     $new_zip   = save_upload('zip_file', ALLOWED_FILES);
     $new_pdf   = save_upload('terms_pdf', ['pdf']);
+    $new_mp3_m = save_upload('mp3_mastered', ALLOWED_AUDIO);
+    $new_mp3_u = save_upload('mp3_unmastered', ALLOWED_AUDIO);
+    $new_wav_m = save_upload('wav_mastered', ALLOWED_AUDIO);
+    $new_wav_u = save_upload('wav_unmastered', ALLOWED_AUDIO);
+    $new_stems = save_upload('stems_file', ALLOWED_FILES);
 
-    $cover = $new_cover ?? $product['cover_image'];
-    $zip   = $new_zip   ?? $product['zip_file'];
-    $pdf   = $new_pdf   ?? $product['terms_pdf'];
+    if ($new_cover) { if ($cover) @unlink(UPLOAD_DIR . '/' . $cover); $cover = $new_cover; }
+    if ($new_zip)   { if ($zip)   @unlink(UPLOAD_DIR . '/' . $zip);   $zip = $new_zip; }
+    if ($new_pdf)   { if ($pdf)   @unlink(UPLOAD_DIR . '/' . $pdf);   $pdf = $new_pdf; }
+    if ($new_mp3_m) { if ($mp3_m) @unlink(UPLOAD_DIR . '/' . $mp3_m); $mp3_m = $new_mp3_m; }
+    if ($new_mp3_u) { if ($mp3_u) @unlink(UPLOAD_DIR . '/' . $mp3_u); $mp3_u = $new_mp3_u; }
+    if ($new_wav_m) { if ($wav_m) @unlink(UPLOAD_DIR . '/' . $wav_m); $wav_m = $new_wav_m; }
+    if ($new_wav_u) { if ($wav_u) @unlink(UPLOAD_DIR . '/' . $wav_u); $wav_u = $new_wav_u; }
+    if ($new_stems) { if ($stems) @unlink(UPLOAD_DIR . '/' . $stems); $stems = $new_stems; }
 
-    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,terms_pdf=?,is_active=?,allow_download=?,is_preorder=?,release_date=? WHERE id=?')
-        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$pdf,$is_active,$allow_download,$is_preorder,$release_date,$id]);
+    $pdo->prepare('UPDATE products SET title=?,type=?,genre=?,price=?,price_premium=?,price_exclusive=?,original_price=?,author=?,description=?,bpm=?,`key`=?,cover_image=?,zip_file=?,terms_pdf=?,mp3_mastered=?,mp3_unmastered=?,wav_mastered=?,wav_unmastered=?,stems_file=?,is_active=?,allow_download=?,is_preorder=?,release_date=? WHERE id=?')
+        ->execute([$title,$type,$genre,$price,$price_premium,$price_exclusive,$original_price,$author,$description,$bpm,$key,$cover,$zip,$pdf,$mp3_m,$mp3_u,$wav_m,$wav_u,$stems,$is_active,$allow_download,$is_preorder,$release_date,$id]);
 
     log_action($pdo, "Edited product: '{$title}'");
     flash("Product '{$title}' updated.");
@@ -212,22 +264,83 @@ $flash_msgs = get_flash();
                 <label>Cover Art</label>
                 <?php if ($product['cover_image']): ?>
                 <img src="/static/uploads/<?= h($product['cover_image']) ?>" class="thumb" alt="">
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_cover_image" value="1" style="width:14px; height:14px;"> Delete cover image
+                </label>
                 <?php endif; ?>
                 <input type="file" name="cover_image" accept=".jpg,.jpeg,.png,.webp">
             </div>
             <div class="form-group">
-                <label>Full Product ZIP</label>
-                <?php if ($product['zip_file']): ?><p style="color:var(--text-muted);font-size:0.9rem;"><?= h($product['zip_file']) ?></p><?php endif; ?>
+                <label>Full Product ZIP (Legacy/Kits)</label>
+                <?php if ($product['zip_file']): ?>
+                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;"><?= h($product['zip_file']) ?></p>
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_zip_file" value="1" style="width:14px; height:14px;"> Delete file
+                </label>
+                <?php endif; ?>
                 <input type="file" name="zip_file" accept=".zip,.rar,.7z">
             </div>
             <div class="form-group">
                 <label>Rules/Rights PDF</label>
                 <?php if (!empty($product['terms_pdf'])): ?>
-                <p style="color:var(--text-muted);font-size:0.9rem;">
+                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;">
                     <a href="/static/uploads/<?= h($product['terms_pdf']) ?>" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:700;">📄 View PDF (<?= h($product['terms_pdf']) ?>)</a>
                 </p>
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_terms_pdf" value="1" style="width:14px; height:14px;"> Delete PDF
+                </label>
                 <?php endif; ?>
                 <input type="file" name="terms_pdf" accept=".pdf">
+            </div>
+            <div class="form-group">
+                <label>Delivery MP3 (Mastered)</label>
+                <?php if (!empty($product['mp3_mastered'])): ?>
+                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;"><?= h($product['mp3_mastered']) ?></p>
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_mp3_mastered" value="1" style="width:14px; height:14px;"> Delete file
+                </label>
+                <?php endif; ?>
+                <input type="file" name="mp3_mastered" accept=".mp3,.wav">
+            </div>
+            <div class="form-group">
+                <label>Delivery MP3 (Unmastered)</label>
+                <?php if (!empty($product['mp3_unmastered'])): ?>
+                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;"><?= h($product['mp3_unmastered']) ?></p>
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_mp3_unmastered" value="1" style="width:14px; height:14px;"> Delete file
+                </label>
+                <?php endif; ?>
+                <input type="file" name="mp3_unmastered" accept=".mp3,.wav">
+            </div>
+            <div class="form-group">
+                <label>Delivery WAV (Mastered)</label>
+                <?php if (!empty($product['wav_mastered'])): ?>
+                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;"><?= h($product['wav_mastered']) ?></p>
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_wav_mastered" value="1" style="width:14px; height:14px;"> Delete file
+                </label>
+                <?php endif; ?>
+                <input type="file" name="wav_mastered" accept=".wav,.mp3">
+            </div>
+            <div class="form-group">
+                <label>Delivery WAV (Unmastered)</label>
+                <?php if (!empty($product['wav_unmastered'])): ?>
+                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;"><?= h($product['wav_unmastered']) ?></p>
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_wav_unmastered" value="1" style="width:14px; height:14px;"> Delete file
+                </label>
+                <?php endif; ?>
+                <input type="file" name="wav_unmastered" accept=".wav,.mp3">
+            </div>
+            <div class="form-group">
+                <label>Delivery Stems ZIP</label>
+                <?php if (!empty($product['stems_file'])): ?>
+                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;"><?= h($product['stems_file']) ?></p>
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_stems_file" value="1" style="width:14px; height:14px;"> Delete file
+                </label>
+                <?php endif; ?>
+                <input type="file" name="stems_file" accept=".zip,.rar,.7z">
             </div>
         </div>
         <div class="checkbox-row" style="margin-bottom:0.8rem;">

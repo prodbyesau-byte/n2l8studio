@@ -739,7 +739,12 @@ try {
                     <div class="form-group"><label>Key</label><input type="text" name="key" placeholder="F Minor"></div>
                     <div class="form-group form-full"><label>Popup Description</label><textarea name="description" placeholder="Describe the contents..."></textarea></div>
                     <div class="form-group"><label style="color:var(--accent);">1. Cover Image (JPG/PNG)</label><input type="file" name="cover_image" accept=".jpg,.jpeg,.png,.webp"></div>
-                    <div class="form-group"><label style="color:var(--accent);">2. Full Product ZIP</label><input type="file" name="zip_file" accept=".zip,.rar,.7z"></div>
+                    <div class="form-group"><label style="color:var(--accent);">2. Full Product ZIP (Legacy/Kits)</label><input type="file" name="zip_file" accept=".zip,.rar,.7z"></div>
+                    <div class="form-group"><label style="color:var(--accent);">2b. Delivery MP3 (Mastered)</label><input type="file" name="mp3_mastered" accept=".mp3,.wav"></div>
+                    <div class="form-group"><label style="color:var(--accent);">2c. Delivery MP3 (Unmastered)</label><input type="file" name="mp3_unmastered" accept=".mp3,.wav"></div>
+                    <div class="form-group"><label style="color:var(--accent);">2d. Delivery WAV (Mastered)</label><input type="file" name="wav_mastered" accept=".wav,.mp3"></div>
+                    <div class="form-group"><label style="color:var(--accent);">2e. Delivery WAV (Unmastered)</label><input type="file" name="wav_unmastered" accept=".wav,.mp3"></div>
+                    <div class="form-group"><label style="color:var(--accent);">2f. Delivery Stems ZIP</label><input type="file" name="stems_file" accept=".zip,.rar,.7z"></div>
                     <div class="form-group"><label style="color:var(--accent);">3. Rules/Rights PDF</label><input type="file" name="terms_pdf" accept=".pdf"></div>
                     <div class="form-group form-full" style="background:rgba(57,255,20,0.03);padding:1rem;border:1px dashed var(--text-muted);">
                         <label style="color:var(--text-main);font-size:1.1rem;">4. Preview Tracks (WAV / MP3)</label>

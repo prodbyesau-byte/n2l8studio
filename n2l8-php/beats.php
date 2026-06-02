@@ -594,8 +594,22 @@ log_visitor($pdo, 'page_view', '/beats.php');
         wrap.innerHTML = '';
 
         if (parseFloat(price) <= 0) {
-            if (data.allow_download && data.zip_file) {
-                wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;width:100%;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
+            if (data.allow_download) {
+                const hasCustom = (data.mp3_mastered || data.mp3_unmastered || data.wav_mastered || data.wav_unmastered || data.stems_file);
+                if (hasCustom) {
+                    let html = '<div style="display:flex; flex-direction:column; gap:0.4rem; width:100%;">';
+                    if (data.mp3_mastered)   html += `<a href="${data.mp3_mastered}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;font-size:0.85rem;" download>⬇ FREE MP3 (MASTERED)</a>`;
+                    if (data.mp3_unmastered) html += `<a href="${data.mp3_unmastered}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;font-size:0.85rem;" download>⬇ FREE MP3 (UNMASTERED)</a>`;
+                    if (data.wav_mastered)   html += `<a href="${data.wav_mastered}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;font-size:0.85rem;" download>⬇ FREE WAV (MASTERED)</a>`;
+                    if (data.wav_unmastered) html += `<a href="${data.wav_unmastered}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;font-size:0.85rem;" download>⬇ FREE WAV (UNMASTERED)</a>`;
+                    if (data.stems_file)     html += `<a href="${data.stems_file}" class="cta-btn" style="display:block;text-align:center;text-decoration:none;font-size:0.85rem;background:#d97706;" download>⬇ FREE STEMS (.ZIP)</a>`;
+                    html += '</div>';
+                    wrap.innerHTML = html;
+                } else if (data.zip_file) {
+                    wrap.innerHTML = `<a href="${data.zip_file}" class="cta-btn" style="display:block;width:100%;text-align:center;text-decoration:none;" download>FREE DOWNLOAD</a>`;
+                } else {
+                    wrap.innerHTML = `<button disabled class="cta-btn" style="display:block;width:100%;text-align:center;opacity:0.4;cursor:not-allowed;">FREE DOWNLOAD — NO FILES LOADED</button>`;
+                }
             } else {
                 wrap.innerHTML = `<button disabled class="cta-btn" style="display:block;width:100%;text-align:center;opacity:0.4;cursor:not-allowed;border:1px solid rgba(123,225,168,0.2);background:rgba(123,225,168,0.04);color:rgba(123,225,168,0.3);">FREE DOWNLOAD — COMING SOON</button>`;
             }
@@ -676,16 +690,60 @@ log_visitor($pdo, 'page_view', '/beats.php');
             if (_ppButtons) { try { _ppButtons.close(); } catch(e) {} }
             _ppButtons = paypal.Buttons({
                 style: { layout: 'horizontal', color: 'gold', shape: 'rect', height: 45 },
-                createOrder: (data, actions) => actions.order.create({
-                    purchase_units: [{ 
-                        description: `Beat License: ${tierName}`,
-                        amount: { value: price } 
-                    }]
-                }),
-                onApprove: (data, actions) => actions.order.capture().then(details => {
-                    alert('Transaction completed by ' + details.payer.name.given_name);
-                    logAction('purchase_success', `${productId} - ${tierName}`);
-                })
+                createOrder: function() {
+                    return fetch('/payment/create-order.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'product_id=' + productId + '&license_tier=' + encodeURIComponent(tierName),
+                    }).then(r => r.json()).then(data => {
+                        if (data.error) throw new Error(data.error);
+                        return data.id;
+                    });
+                },
+                onApprove: function(data) {
+                    wrap.innerHTML = '<div style="color:var(--text-muted);font-family:\'Montserrat\',sans-serif;text-align:center;padding:1rem;font-weight:500;">Processing payment...</div>';
+                    return fetch('/payment/capture-order.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'order_id=' + data.orderID + '&product_id=' + productId + '&license_tier=' + encodeURIComponent(tierName),
+                    }).then(r => r.json()).then(result => {
+                        if (result.success) {
+                            logAction('purchase_success', `${productId} - ${tierName}`);
+                            
+                            let linksHtml = '';
+                            if (result.download_urls) {
+                                if (result.download_urls.mp3_mastered) {
+                                    linksHtml += `<a href="${result.download_urls.mp3_mastered}" class="cta-btn" style="display:block;text-align:center;margin-bottom:0.5rem;" download>⬇ DOWNLOAD MP3 (MASTERED)</a>`;
+                                }
+                                if (result.download_urls.mp3_unmastered) {
+                                    linksHtml += `<a href="${result.download_urls.mp3_unmastered}" class="cta-btn" style="display:block;text-align:center;margin-bottom:0.5rem;" download>⬇ DOWNLOAD MP3 (UNMASTERED)</a>`;
+                                }
+                                if (result.download_urls.wav_mastered) {
+                                    linksHtml += `<a href="${result.download_urls.wav_mastered}" class="cta-btn" style="display:block;text-align:center;margin-bottom:0.5rem;" download>⬇ DOWNLOAD WAV (MASTERED)</a>`;
+                                }
+                                if (result.download_urls.wav_unmastered) {
+                                    linksHtml += `<a href="${result.download_urls.wav_unmastered}" class="cta-btn" style="display:block;text-align:center;margin-bottom:0.5rem;" download>⬇ DOWNLOAD WAV (UNMASTERED)</a>`;
+                                }
+                                if (result.download_urls.stems_file) {
+                                    linksHtml += `<a href="${result.download_urls.stems_file}" class="cta-btn" style="display:block;text-align:center;margin-bottom:0.5rem;background:#d97706;" download>⬇ DOWNLOAD STEMS (.ZIP)</a>`;
+                                }
+                            } else if (result.download_url) {
+                                linksHtml += `<a href="${result.download_url}" class="cta-btn" style="display:block;text-align:center;" download>DOWNLOAD NOW</a>`;
+                            } else {
+                                linksHtml += `<div style="color:var(--text-muted);font-size:0.9rem;">Processing completed. File delivery pending.</div>`;
+                            }
+                            
+                            wrap.innerHTML =
+                                '<div style="text-align:center;">'+
+                                '<div style="color:var(--text-main);font-family:\'Syncopate\',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:0.8rem;letter-spacing:1px;">✓ PAYMENT CONFIRMED</div>'+
+                                linksHtml +
+                                '<div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Receipt sent to ' + result.email + '</div>'+
+                                '</div>';
+                        } else {
+                            wrap.innerHTML = '<div style="color:#ff5c5c;text-align:center;font-family:\'Montserrat\',sans-serif;font-weight:600;">Payment error — please try again.</div>';
+                        }
+                    });
+                }
             });
             _ppButtons.render('#paypal-button-container-inner');
         } else {
