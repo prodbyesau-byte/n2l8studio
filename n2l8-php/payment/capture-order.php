@@ -82,16 +82,27 @@ log_action($pdo, "PayPal purchase: {$product['title']}{$tier_log} by {$payer_ema
 // Generate authorized format URLs
 $download_urls = [];
 $is_beat = ($product['type'] === 'beat');
-$tier = strtoupper($license_tier);
-$has_stems_access = ($tier === 'EXCLUSIVE' || $tier === 'WAV/STEMS' || $tier === 'PREMIUM' || $tier === 'STEMS');
+$tier = strtoupper($license_tier ?? '');
 
 if ($is_beat) {
-    if (!empty($product['mp3_mastered']))   { $download_urls['mp3_mastered']   = UPLOAD_URL . $product['mp3_mastered']; }
-    if (!empty($product['mp3_unmastered'])) { $download_urls['mp3_unmastered'] = UPLOAD_URL . $product['mp3_unmastered']; }
-    if (!empty($product['wav_mastered']))   { $download_urls['wav_mastered']   = UPLOAD_URL . $product['wav_mastered']; }
-    if (!empty($product['wav_unmastered'])) { $download_urls['wav_unmastered'] = UPLOAD_URL . $product['wav_unmastered']; }
-    if ($has_stems_access && !empty($product['stems_file'])) {
-        $download_urls['stems_file'] = UPLOAD_URL . $product['stems_file'];
+    $pfiles_stmt = $pdo->prepare('SELECT * FROM product_files WHERE product_id = ?');
+    $pfiles_stmt->execute([$product['id']]);
+    $all_files = $pfiles_stmt->fetchAll();
+    
+    foreach ($all_files as $f) {
+        $ftier = strtoupper($f['license_tier']);
+        if ($tier === 'EXCLUSIVE') {
+            $download_urls[$f['original_name']] = UPLOAD_URL . $f['filename'];
+        } elseif ($tier === 'PREMIUM') {
+            if ($ftier === 'BASIC' || $ftier === 'PREMIUM') {
+                $download_urls[$f['original_name']] = UPLOAD_URL . $f['filename'];
+            }
+        } else {
+            // Basic
+            if ($ftier === 'BASIC') {
+                $download_urls[$f['original_name']] = UPLOAD_URL . $f['filename'];
+            }
+        }
     }
 }
 

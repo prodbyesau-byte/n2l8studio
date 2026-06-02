@@ -117,6 +117,16 @@ SCHEMA = [
       FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """),
+    ("product_files", """
+    CREATE TABLE IF NOT EXISTS `product_files` (
+      `id`           INT AUTO_INCREMENT PRIMARY KEY,
+      `product_id`   INT          NOT NULL,
+      `license_tier` VARCHAR(50)  NOT NULL,
+      `filename`     VARCHAR(255) NOT NULL,
+      `original_name` VARCHAR(255) NOT NULL,
+      FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """),
     ("orders", """
     CREATE TABLE IF NOT EXISTS `orders` (
       `id`             INT AUTO_INCREMENT PRIMARY KEY,

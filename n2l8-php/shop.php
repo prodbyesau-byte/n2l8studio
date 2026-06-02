@@ -871,29 +871,35 @@ log_visitor($pdo, 'page_view', $is_graphics_page ? '/graphics.php' : '/shop.php'
                     }
                 }
 
-                // Reset terms checkbox state
+                // Show PDF link if available
+                const pdfLinkWrap = document.getElementById('modalPdfLinkWrap');
+                const termsSection = document.getElementById('modalTermsSection');
                 const termsCheckbox = document.getElementById('termsCheckbox');
+                
                 if (termsCheckbox) {
                     termsCheckbox.checked = false;
                 }
 
-                // Show PDF link if available
-                const pdfLinkWrap = document.getElementById('modalPdfLinkWrap');
-                if (pdfLinkWrap) {
-                    if (p.terms_pdf) {
+                if (p.terms_pdf) {
+                    if (termsSection) termsSection.style.display = 'block';
+                    if (pdfLinkWrap) {
                         pdfLinkWrap.innerHTML = `
                             <a href="${p.terms_pdf}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--accent); text-decoration:none; font-weight:700;">
                                 📄 READ TERMS &amp; RIGHTS (PDF)
                             </a>
                         `;
-                    } else {
-                        pdfLinkWrap.innerHTML = '';
                     }
+                    // Disable the checkout/download button block until checkbox is checked
+                    wrap.style.pointerEvents = 'none';
+                    wrap.style.opacity = '0.4';
+                } else {
+                    if (termsSection) termsSection.style.display = 'none';
+                    if (pdfLinkWrap) pdfLinkWrap.innerHTML = '';
+                    
+                    // Enable the checkout/download button block since there are no terms
+                    wrap.style.pointerEvents = 'auto';
+                    wrap.style.opacity = '1';
                 }
-
-                // Initially disable the checkout/download button block
-                wrap.style.pointerEvents = 'none';
-                wrap.style.opacity = '0.4';
 
                 tracks = p.tracks || [];
                 renderTrackList();

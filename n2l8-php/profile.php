@@ -4,39 +4,8 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/helpers.php';
 
 require_login();
-if (is_owner()) {
-    redirect('/admin/index.php');
-}
-
-$pdo = get_pdo();
-$stmt = $pdo->prepare('SELECT id, username, role FROM users WHERE id = ?');
-$stmt->execute([$_SESSION['user_id']]);
-$user = $stmt->fetch();
-if (!$user) {
-    session_destroy();
-    redirect('/login.php');
-}
-
-$saved_stmt = $pdo->prepare(
-    "SELECT p.*, s.created_at AS saved_at
-     FROM user_saved_products s
-     JOIN products p ON p.id = s.product_id
-     WHERE s.user_id = ?
-     ORDER BY s.created_at DESC"
-);
-$saved_stmt->execute([$user['id']]);
-$saved_products = $saved_stmt->fetchAll();
-
-$history_stmt = $pdo->prepare(
-    "SELECT a.*, p.title, p.type, p.cover_image, p.price
-     FROM user_activity a
-     LEFT JOIN products p ON p.id = a.product_id
-     WHERE a.user_id = ? AND a.action IN ('view_product', 'save_product', 'unsave_product')
-     ORDER BY a.created_at DESC
-     LIMIT 20"
-);
-$history_stmt->execute([$user['id']]);
-$history = $history_stmt->fetchAll();
+redirect('/portal/index.php');
+exit;
 
 log_visitor($pdo, 'page_view', '/profile.php');
 ?>

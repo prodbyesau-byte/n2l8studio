@@ -17,6 +17,17 @@ $tracks = $pdo->prepare('SELECT * FROM product_tracks WHERE product_id = ? ORDER
 $tracks->execute([$id]);
 $tracks = $tracks->fetchAll();
 
+// Fetch custom product files (for beats)
+$pfiles_stmt = $pdo->prepare('SELECT * FROM product_files WHERE product_id = ?');
+$pfiles_stmt->execute([$id]);
+$product_files = $pfiles_stmt->fetchAll();
+$files_by_tier = ['Basic' => [], 'Premium' => [], 'Exclusive' => []];
+foreach ($product_files as $pf) {
+    if (isset($files_by_tier[$pf['license_tier']])) {
+        $files_by_tier[$pf['license_tier']][] = $pf;
+    }
+}
+
 // Handle POST (save product settings)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title          = trim($_POST['title'] ?? $product['title']);
@@ -251,9 +262,9 @@ $flash_msgs = get_flash();
                     <option value="all"     <?= $product['genre']==='all'     ?'selected':'' ?>>Multi</option>
                 </select>
             </div>
-            <div class="form-group"><label>Price ($)</label><input type="number" step="0.01" name="price" value="<?= h($product['price']) ?>"></div>
-            <div class="form-group"><label>Premium Price (Stems) ($)</label><input type="number" step="0.01" name="price_premium" value="<?= h($product['price_premium'] ?? '') ?>" placeholder="Leave empty for 2x"></div>
-            <div class="form-group"><label>Exclusive Price ($)</label><input type="number" step="0.01" name="price_exclusive" value="<?= h($product['price_exclusive'] ?? '') ?>" placeholder="Leave empty for 10x"></div>
+            <span id="orig_base_price"><div class="form-group" id="base_price_group"><label>Price ($)</label><input type="number" step="0.01" name="price" value="<?= h($product['price']) ?>"></div></span>
+            <span id="orig_premium_price"><div class="form-group" id="premium_price_group"><label>Premium Price (Stems) ($)</label><input type="number" step="0.01" name="price_premium" value="<?= h($product['price_premium'] ?? '') ?>" placeholder="Leave empty for 2x"></div></span>
+            <span id="orig_exclusive_price"><div class="form-group" id="exclusive_price_group"><label>Exclusive Price ($)</label><input type="number" step="0.01" name="price_exclusive" value="<?= h($product['price_exclusive'] ?? '') ?>" placeholder="Leave empty for 10x"></div></span>
             <div class="form-group"><label>Original Price ($)</label><input type="number" step="0.01" name="original_price" value="<?= h($product['original_price'] ?? '') ?>"></div>
             <div class="form-group"><label>BPM</label><input type="text" name="bpm" value="<?= h($product['bpm'] ?? '') ?>"></div>
             <div class="form-group"><label>Key</label><input type="text" name="key" value="<?= h($product['key'] ?? '') ?>"></div>
@@ -271,16 +282,6 @@ $flash_msgs = get_flash();
                 <input type="file" name="cover_image" accept=".jpg,.jpeg,.png,.webp">
             </div>
             <div class="form-group">
-                <label>Full Product ZIP (Legacy/Kits)</label>
-                <?php if ($product['zip_file']): ?>
-                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;"><?= h($product['zip_file']) ?></p>
-                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
-                    <input type="checkbox" name="delete_zip_file" value="1" style="width:14px; height:14px;"> Delete file
-                </label>
-                <?php endif; ?>
-                <input type="file" name="zip_file" accept=".zip,.rar,.7z">
-            </div>
-            <div class="form-group">
                 <label>Rules/Rights PDF</label>
                 <?php if (!empty($product['terms_pdf'])): ?>
                 <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;">
@@ -291,6 +292,17 @@ $flash_msgs = get_flash();
                 </label>
                 <?php endif; ?>
                 <input type="file" name="terms_pdf" accept=".pdf">
+            </div>
+            <div id="legacy_files_group" style="display:contents;">
+            <div class="form-group">
+                <label>Full Product ZIP (Legacy/Kits)</label>
+                <?php if ($product['zip_file']): ?>
+                <p style="color:var(--text-muted);font-size:0.9rem; margin-bottom:0.2rem;"><?= h($product['zip_file']) ?></p>
+                <label style="font-size:0.8rem; color:#ff5c5c; display:inline-flex; align-items:center; gap:0.3rem; cursor:pointer; margin-bottom: 0.5rem;">
+                    <input type="checkbox" name="delete_zip_file" value="1" style="width:14px; height:14px;"> Delete file
+                </label>
+                <?php endif; ?>
+                <input type="file" name="zip_file" accept=".zip,.rar,.7z">
             </div>
             <div class="form-group">
                 <label>Delivery MP3 (Mastered)</label>
@@ -341,6 +353,62 @@ $flash_msgs = get_flash();
                 </label>
                 <?php endif; ?>
                 <input type="file" name="stems_file" accept=".zip,.rar,.7z">
+            </div>
+            </div> <!-- end legacy_files_group -->
+
+            <div id="beat_lease_boxes" style="display:none; grid-column: 1 / -1; margin-top: 1rem;">
+                <div class="section-label">Lease Packages (Drag & Drop Files)</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    
+                    <!-- Basic Box -->
+                    <div class="upload-box" id="box-Basic" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';" ondragleave="this.style.borderColor='rgba(164,74,94,0.2)';" ondrop="handleDrop(event, 'Basic')">
+                        <h3 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:1rem; margin-bottom:1rem;">Basic Lease</h3>
+                        <div id="mount_base_price"></div>
+                        <p style="color:var(--text-muted); font-size:0.8rem; margin:1rem 0;">Drag & drop MP3s or WAVs here</p>
+                        <input type="file" multiple onchange="handleFileSelect(event, 'Basic')" style="font-size:0.8rem; width:100%; color:var(--text-main);">
+                        <div id="files-Basic" style="margin-top:1rem;">
+                            <?php foreach($files_by_tier['Basic'] as $f): ?>
+                            <div class="pfile" id="pfile-<?= $f['id'] ?>" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; font-size:0.8rem; background:rgba(0,0,0,0.3); padding:0.4rem; border-radius:4px;">
+                                <span style="color:var(--text-main); word-break:break-all; padding-right:1rem;"><?= h($f['original_name']) ?></span>
+                                <button type="button" onclick="deleteBeatFile(<?= $f['id'] ?>)" style="color:#ff5c5c; background:none; border:none; cursor:pointer; font-weight:bold;">X</button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Premium Box -->
+                    <div class="upload-box" id="box-Premium" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';" ondragleave="this.style.borderColor='rgba(164,74,94,0.2)';" ondrop="handleDrop(event, 'Premium')">
+                        <h3 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:1rem; margin-bottom:1rem;">Premium Lease</h3>
+                        <div id="mount_premium_price"></div>
+                        <p style="color:var(--text-muted); font-size:0.8rem; margin:1rem 0;">Drag & drop MP3s, WAVs, STEMS here</p>
+                        <input type="file" multiple onchange="handleFileSelect(event, 'Premium')" style="font-size:0.8rem; width:100%; color:var(--text-main);">
+                        <div id="files-Premium" style="margin-top:1rem;">
+                            <?php foreach($files_by_tier['Premium'] as $f): ?>
+                            <div class="pfile" id="pfile-<?= $f['id'] ?>" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; font-size:0.8rem; background:rgba(0,0,0,0.3); padding:0.4rem; border-radius:4px;">
+                                <span style="color:var(--text-main); word-break:break-all; padding-right:1rem;"><?= h($f['original_name']) ?></span>
+                                <button type="button" onclick="deleteBeatFile(<?= $f['id'] ?>)" style="color:#ff5c5c; background:none; border:none; cursor:pointer; font-weight:bold;">X</button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Exclusive Box -->
+                    <div class="upload-box" id="box-Exclusive" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';" ondragleave="this.style.borderColor='rgba(164,74,94,0.2)';" ondrop="handleDrop(event, 'Exclusive')">
+                        <h3 style="color:var(--accent); font-family:'Syncopate',sans-serif; font-size:1rem; margin-bottom:1rem;">Exclusive</h3>
+                        <div id="mount_exclusive_price"></div>
+                        <p style="color:var(--text-muted); font-size:0.8rem; margin:1rem 0;">Drag & drop everything here</p>
+                        <input type="file" multiple onchange="handleFileSelect(event, 'Exclusive')" style="font-size:0.8rem; width:100%; color:var(--text-main);">
+                        <div id="files-Exclusive" style="margin-top:1rem;">
+                            <?php foreach($files_by_tier['Exclusive'] as $f): ?>
+                            <div class="pfile" id="pfile-<?= $f['id'] ?>" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; font-size:0.8rem; background:rgba(0,0,0,0.3); padding:0.4rem; border-radius:4px;">
+                                <span style="color:var(--text-main); word-break:break-all; padding-right:1rem;"><?= h($f['original_name']) ?></span>
+                                <button type="button" onclick="deleteBeatFile(<?= $f['id'] ?>)" style="color:#ff5c5c; background:none; border:none; cursor:pointer; font-weight:bold;">X</button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
         <div class="checkbox-row" style="margin-bottom:0.8rem;">
@@ -444,6 +512,118 @@ function showConfirm(id) {
     document.getElementById('confirm-' + id).classList.add('show');
 }
 function hideConfirm(id) { document.getElementById('confirm-' + id).classList.remove('show'); }
+
+// UI toggle for Beats vs Loopkits
+function toggleCategoryUI() {
+    const typeSelect = document.querySelector('select[name="type"]');
+    if (!typeSelect) return;
+    const type = typeSelect.value;
+    const legacyFiles = document.getElementById('legacy_files_group');
+    const beatBoxes = document.getElementById('beat_lease_boxes');
+    
+    const bGroup = document.getElementById('base_price_group');
+    const pGroup = document.getElementById('premium_price_group');
+    const eGroup = document.getElementById('exclusive_price_group');
+    
+    if (type === 'beat') {
+        if (legacyFiles) legacyFiles.style.display = 'none';
+        if (beatBoxes) beatBoxes.style.display = 'block';
+        
+        document.getElementById('mount_base_price').appendChild(bGroup);
+        document.getElementById('mount_premium_price').appendChild(pGroup);
+        document.getElementById('mount_exclusive_price').appendChild(eGroup);
+        pGroup.style.display = 'block';
+        eGroup.style.display = 'block';
+    } else {
+        if (legacyFiles) legacyFiles.style.display = 'contents';
+        if (beatBoxes) beatBoxes.style.display = 'none';
+        
+        document.getElementById('orig_base_price').appendChild(bGroup);
+        document.getElementById('orig_premium_price').appendChild(pGroup);
+        document.getElementById('orig_exclusive_price').appendChild(eGroup);
+        pGroup.style.display = 'block';
+        eGroup.style.display = 'block';
+    }
+}
+document.querySelector('select[name="type"]')?.addEventListener('change', toggleCategoryUI);
+toggleCategoryUI();
+
+const PRODUCT_ID = <?= (int)$product['id'] ?>;
+
+function handleDrop(e, tier) {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = 'rgba(164,74,94,0.2)';
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        uploadBeatFiles(e.dataTransfer.files, tier);
+    }
+}
+
+function handleFileSelect(e, tier) {
+    if (e.target.files && e.target.files.length > 0) {
+        uploadBeatFiles(e.target.files, tier);
+    }
+}
+
+async function uploadBeatFiles(files, tier) {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('active');
+    
+    for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        formData.append('product_id', PRODUCT_ID);
+        formData.append('license_tier', tier);
+        
+        try {
+            const res = await fetch('/admin/upload_beat_file.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                const container = document.getElementById('files-' + tier);
+                const pfile = document.createElement('div');
+                pfile.className = 'pfile';
+                pfile.id = 'pfile-' + data.id;
+                pfile.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; font-size:0.8rem; background:rgba(0,0,0,0.3); padding:0.4rem; border-radius:4px;';
+                pfile.innerHTML = `<span style="color:var(--text-main); word-break:break-all; padding-right:1rem;">${data.original_name}</span><button type="button" onclick="deleteBeatFile(${data.id})" style="color:#ff5c5c; background:none; border:none; cursor:pointer; font-weight:bold;">X</button>`;
+                container.appendChild(pfile);
+            } else {
+                alert('Upload failed: ' + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Upload failed for ' + files[i].name);
+        }
+    }
+    
+    // Clear input so same file can be selected again
+    const inputs = document.querySelectorAll(`input[type="file"][onchange*="'${tier}'"]`);
+    inputs.forEach(input => input.value = '');
+    
+    overlay.classList.remove('active');
+}
+
+async function deleteBeatFile(id) {
+    if (!confirm('Delete this file?')) return;
+    try {
+        const res = await fetch('/admin/delete_beat_file.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: id})
+        });
+        const data = await res.json();
+        if (data.success) {
+            const el = document.getElementById('pfile-' + id);
+            if (el) el.remove();
+        } else {
+            alert('Delete failed');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Delete failed');
+    }
+}
 </script>
 </body>
 </html>

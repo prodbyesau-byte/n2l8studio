@@ -527,31 +527,36 @@ log_visitor($pdo, 'page_view', '/beats.php');
                 
                 logAction('modal_open_beat', data.title);
 
-                // Reset terms checkbox state
+                // Show PDF link if available
+                const pdfLinkWrap = document.getElementById('modalPdfLinkWrap');
+                const termsSection = document.getElementById('modalTermsSection');
+                const btnWrap = document.getElementById('paypal-btn-wrap');
                 const termsCheckbox = document.getElementById('termsCheckbox');
+
                 if (termsCheckbox) {
                     termsCheckbox.checked = false;
                 }
-                
-                // Show PDF link if available
-                const pdfLinkWrap = document.getElementById('modalPdfLinkWrap');
-                if (pdfLinkWrap) {
-                    if (data.terms_pdf) {
+
+                if (data.terms_pdf) {
+                    if (termsSection) termsSection.style.display = 'block';
+                    if (pdfLinkWrap) {
                         pdfLinkWrap.innerHTML = `
                             <a href="${data.terms_pdf}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--accent); text-decoration:none; font-weight:700;">
                                 📄 READ TERMS &amp; RIGHTS (PDF)
                             </a>
                         `;
-                    } else {
-                        pdfLinkWrap.innerHTML = '';
                     }
-                }
-
-                // Initially disable the checkout/download button block
-                const btnWrap = document.getElementById('paypal-btn-wrap');
-                if (btnWrap) {
-                    btnWrap.style.pointerEvents = 'none';
-                    btnWrap.style.opacity = '0.4';
+                    if (btnWrap) {
+                        btnWrap.style.pointerEvents = 'none';
+                        btnWrap.style.opacity = '0.4';
+                    }
+                } else {
+                    if (termsSection) termsSection.style.display = 'none';
+                    if (pdfLinkWrap) pdfLinkWrap.innerHTML = '';
+                    if (btnWrap) {
+                        btnWrap.style.pointerEvents = 'auto';
+                        btnWrap.style.opacity = '1';
+                    }
                 }
 
                 // Bind checkbox change

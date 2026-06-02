@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `key`            VARCHAR(20)     NULL,
   `cover_image`    VARCHAR(255)    NULL,
   `zip_file`       VARCHAR(255)    NULL,
+  `terms_pdf`      VARCHAR(255)    NULL,
   `wav_file`       VARCHAR(255)    NULL,
   `mp3_file`       VARCHAR(255)    NULL,
   `stems_file`     VARCHAR(255)    NULL,
@@ -51,6 +52,17 @@ CREATE TABLE IF NOT EXISTS `product_tracks` (
   `position`   INT          NOT NULL DEFAULT 0,
   FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Product custom files (for beats)
+CREATE TABLE IF NOT EXISTS `product_files` (
+  `id`           INT AUTO_INCREMENT PRIMARY KEY,
+  `product_id`   INT          NOT NULL,
+  `license_tier` VARCHAR(50)  NOT NULL,
+  `filename`     VARCHAR(255) NOT NULL,
+  `original_name` VARCHAR(255) NOT NULL,
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- Orders
 CREATE TABLE IF NOT EXISTS `orders` (

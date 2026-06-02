@@ -732,19 +732,23 @@ try {
                         </select>
                     </div>
                     <div class="form-group"><label>Price ($) — 0 for Free</label><input type="number" step="0.01" min="0" name="price" value="0"></div>
-                    <div class="form-group"><label>Premium Price (Stems) ($)</label><input type="number" step="0.01" min="0" name="price_premium" placeholder="Leave empty for 2x"></div>
-                    <div class="form-group"><label>Exclusive Price ($)</label><input type="number" step="0.01" min="0" name="price_exclusive" placeholder="Leave empty for 10x"></div>
+                    <div class="form-group" id="premium_price_group"><label>Premium Price (Stems) ($)</label><input type="number" step="0.01" min="0" name="price_premium" placeholder="Leave empty for 2x"></div>
+                    <div class="form-group" id="exclusive_price_group"><label>Exclusive Price ($)</label><input type="number" step="0.01" min="0" name="price_exclusive" placeholder="Leave empty for 10x"></div>
                     <div class="form-group"><label>Original Price ($) — for sale</label><input type="number" step="0.01" min="0" name="original_price" placeholder="49.99"></div>
                     <div class="form-group"><label>BPM</label><input type="text" name="bpm" placeholder="140"></div>
                     <div class="form-group"><label>Key</label><input type="text" name="key" placeholder="F Minor"></div>
                     <div class="form-group form-full"><label>Popup Description</label><textarea name="description" placeholder="Describe the contents..."></textarea></div>
                     <div class="form-group"><label style="color:var(--accent);">1. Cover Image (JPG/PNG)</label><input type="file" name="cover_image" accept=".jpg,.jpeg,.png,.webp"></div>
-                    <div class="form-group"><label style="color:var(--accent);">2. Full Product ZIP (Legacy/Kits)</label><input type="file" name="zip_file" accept=".zip,.rar,.7z"></div>
-                    <div class="form-group"><label style="color:var(--accent);">2b. Delivery MP3 (Mastered)</label><input type="file" name="mp3_mastered" accept=".mp3,.wav"></div>
-                    <div class="form-group"><label style="color:var(--accent);">2c. Delivery MP3 (Unmastered)</label><input type="file" name="mp3_unmastered" accept=".mp3,.wav"></div>
-                    <div class="form-group"><label style="color:var(--accent);">2d. Delivery WAV (Mastered)</label><input type="file" name="wav_mastered" accept=".wav,.mp3"></div>
-                    <div class="form-group"><label style="color:var(--accent);">2e. Delivery WAV (Unmastered)</label><input type="file" name="wav_unmastered" accept=".wav,.mp3"></div>
-                    <div class="form-group"><label style="color:var(--accent);">2f. Delivery Stems ZIP</label><input type="file" name="stems_file" accept=".zip,.rar,.7z"></div>
+                    
+                    <!-- Legacy Uploads (Hidden for Beats) -->
+                    <div class="form-full" id="legacy_files_group" style="display:contents;">
+                        <div class="form-group"><label style="color:var(--accent);">2. Full Product ZIP (Legacy/Kits)</label><input type="file" name="zip_file" accept=".zip,.rar,.7z"></div>
+                        <div class="form-group"><label style="color:var(--accent);">2b. Delivery MP3 (Mastered)</label><input type="file" name="mp3_mastered" accept=".mp3,.wav"></div>
+                        <div class="form-group"><label style="color:var(--accent);">2c. Delivery MP3 (Unmastered)</label><input type="file" name="mp3_unmastered" accept=".mp3,.wav"></div>
+                        <div class="form-group"><label style="color:var(--accent);">2d. Delivery WAV (Mastered)</label><input type="file" name="wav_mastered" accept=".wav,.mp3"></div>
+                        <div class="form-group"><label style="color:var(--accent);">2e. Delivery WAV (Unmastered)</label><input type="file" name="wav_unmastered" accept=".wav,.mp3"></div>
+                        <div class="form-group"><label style="color:var(--accent);">2f. Delivery Stems ZIP</label><input type="file" name="stems_file" accept=".zip,.rar,.7z"></div>
+                    </div>
                     <div class="form-group"><label style="color:var(--accent);">3. Rules/Rights PDF</label><input type="file" name="terms_pdf" accept=".pdf"></div>
                     <div class="form-group form-full" style="background:rgba(57,255,20,0.03);padding:1rem;border:1px dashed var(--text-muted);">
                         <label style="color:var(--text-main);font-size:1.1rem;">4. Preview Tracks (WAV / MP3)</label>
@@ -1572,6 +1576,28 @@ setInterval(() => {
 // Init — wait for layout so slider can measure button positions
 window.addEventListener('load', () => {
     showTab(INITIAL_TAB);
+    
+    // UI toggle for Beats vs Loopkits
+    function toggleCategoryUI() {
+        const typeSelect = document.querySelector('select[name="type"]');
+        if (!typeSelect) return;
+        const type = typeSelect.value;
+        const legacyFiles = document.getElementById('legacy_files_group');
+        const premiumPrice = document.getElementById('premium_price_group');
+        const exclusivePrice = document.getElementById('exclusive_price_group');
+        
+        if (type === 'beat') {
+            if (legacyFiles) legacyFiles.style.display = 'none';
+            if (premiumPrice) premiumPrice.style.display = 'block';
+            if (exclusivePrice) exclusivePrice.style.display = 'block';
+        } else {
+            if (legacyFiles) legacyFiles.style.display = 'contents';
+            if (premiumPrice) premiumPrice.style.display = 'none';
+            if (exclusivePrice) exclusivePrice.style.display = 'none';
+        }
+    }
+    document.querySelector('select[name="type"]')?.addEventListener('change', toggleCategoryUI);
+    toggleCategoryUI();
 });
 </script>
 </body>

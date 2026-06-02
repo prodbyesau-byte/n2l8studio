@@ -63,8 +63,17 @@ if (empty($product['allow_download']) || empty($product[$file_column])) {
 
 // Record the free purchase inside orders if they are logged in
 if (is_logged_in()) {
-    $user_email = $_SESSION['email'] ?? '';
     $user_id = $_SESSION['user_id'];
+    $user_email = $_SESSION['email'] ?? '';
+    
+    if (empty($user_email)) {
+        $u_stmt = $pdo->prepare('SELECT email FROM users WHERE id = ?');
+        $u_stmt->execute([$user_id]);
+        $user_email = $u_stmt->fetchColumn();
+        if ($user_email) {
+            $_SESSION['email'] = $user_email;
+        }
+    }
     
     if ($user_email) {
         $check_stmt = $pdo->prepare('SELECT id FROM orders WHERE customer_email = ? AND product_id = ?');

@@ -160,13 +160,22 @@ function save_upload_multiple(string $file_key, array $allowed_exts): array {
         if (!in_array($ext, $allowed_exts, true)) continue;
 
         $filename = pathinfo($name, PATHINFO_FILENAME);
-        $safe_name = preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
-        // Generate an unguessable 16-character random hex string
-        $hash = bin2hex(random_bytes(8));
-        $safe = $safe_name . '_' . $hash . '.' . $ext;
+        $safe_name = preg_replace('/[^a-zA-Z0-9_\-\s]/', '_', $filename);
+        $safe_name = str_replace(' ', '_', $safe_name); // replace spaces with underscores for web safety
+        
+        $safe = $safe_name . '.' . $ext;
         $dest = rtrim(UPLOAD_DIR, '/') . '/' . $safe;
 
         if (!is_dir(UPLOAD_DIR)) mkdir(UPLOAD_DIR, 0755, true);
+        
+        // Handle collisions cleanly: append _1, _2, etc. if file exists
+        $counter = 1;
+        while (file_exists($dest)) {
+            $safe = $safe_name . '_' . $counter . '.' . $ext;
+            $dest = rtrim(UPLOAD_DIR, '/') . '/' . $safe;
+            $counter++;
+        }
+
         if (move_uploaded_file($tmp_name, $dest)) {
             $saved[] = ['filename' => $safe, 'original' => $name];
         }
