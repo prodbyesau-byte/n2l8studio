@@ -43,7 +43,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beats - N2L8 STUDIO</title>
     <meta name="description" content="Premium beats from n2l8studio.">
-    <link rel="stylesheet" href="/static/style.css?v=21">
+    <link rel="stylesheet" href="/static/style.css?v=22">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/static/logo.png">
     <link rel="apple-touch-icon" href="/static/logo.png">
@@ -105,7 +105,7 @@ log_visitor($pdo, 'page_view', '/beats.php');
         
         <div class="beats-list">
             <?php foreach ($beats as $beat): ?>
-            <div class="beat-row" data-id="<?= $beat['id'] ?>">
+            <div class="beat-row" data-id="<?= $beat['id'] ?>" style="grid-template-columns: 60px minmax(0, 1fr) 100px 140px max-content;">
                 <button class="beat-play-btn btn-play" data-id="<?= $beat['id'] ?>">▶</button>
                 <div class="beat-info">
                     <h3><?= h($beat['title'] ?? '') ?></h3>

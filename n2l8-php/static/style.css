@@ -670,7 +670,7 @@ h1 span.highlight {
 
 .beat-row {
     display: grid;
-    grid-template-columns: 60px 1fr 140px 150px 110px;
+    grid-template-columns: 60px 1fr 140px 150px auto;
     align-items: center;
     padding: 1.2rem 1.5rem;
     background: rgba(26, 26, 31, 0.55);
